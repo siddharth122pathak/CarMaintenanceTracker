@@ -50,7 +50,7 @@
                         android:layout_height="wrap_content" android:layout_weight="20"/>
                 <ImageView
                         android:layout_width="match_parent"
-                        android:layout_height="0dp" app:srcCompat="@drawable/baseline_assignment_24"
+                        android:layout_height="52dp" app:srcCompat="@drawable/baseline_assignment_24"
                         android:id="@+id/imageView7" android:layout_weight="60"
                 />
                 <TextView
