@@ -32,6 +32,5 @@ public class MainActivity extends AppCompatActivity {
         tutorialButton.setOnClickListener(view -> showTutorialDialog());
 
         //Set up Home Button click listener
-
     }
 }
