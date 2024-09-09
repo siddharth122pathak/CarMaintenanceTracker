@@ -28,12 +28,12 @@
                 <ImageView
                         android:layout_width="match_parent"
                         android:layout_height="0dp" app:srcCompat="@drawable/baseline_menu_book_24"
-                        android:id="@+id/imageView5" android:layout_weight="60"
+                        android:id="@+id/tutorial_icon" android:layout_weight="60"
                 />
                 <TextView
                         android:text="Tutorial"
                         android:layout_width="match_parent"
-                        android:layout_height="0dp" android:id="@+id/textView" android:layout_weight="20"
+                        android:layout_height="0dp" android:id="@+id/textView_tutorial" android:layout_weight="20"
                         android:textAlignment="center" android:textSize="12sp"/>
             </LinearLayout>
             <ImageView
@@ -51,12 +51,12 @@
                 <ImageView
                         android:layout_width="match_parent"
                         android:layout_height="0dp" app:srcCompat="@drawable/baseline_assignment_24"
-                        android:id="@+id/imageView7" android:layout_weight="60"
+                        android:id="@+id/notes_icon" android:layout_weight="60"
                 />
                 <TextView
                         android:text="Notes"
                         android:layout_width="match_parent"
-                        android:layout_height="0dp" android:id="@+id/textView2" android:layout_weight="20"
+                        android:layout_height="0dp" android:id="@+id/textView_notes" android:layout_weight="20"
                         android:textAlignment="center" android:textSize="12sp"/>
             </LinearLayout>
         </LinearLayout>
