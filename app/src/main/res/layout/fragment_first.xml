@@ -42,13 +42,11 @@
                 <Space
                         android:layout_width="0dp"
                         android:layout_height="wrap_content" android:layout_weight="5"/>
-                <TextView
+                <Button
                         android:text="Update"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content" android:id="@+id/btn_selected_car_mileage_update"
-                        android:layout_weight="20" android:background="@drawable/gray_button_border_gradient"
-                        android:textAlignment="center" android:textSize="20sp"
-                        android:padding="4dp"/>
+                        android:layout_weight="20" android:paddingLeft="6dp" android:paddingRight="6dp"/>
                 <Space
                         android:layout_width="0dp"
                         android:layout_height="wrap_content" android:layout_weight="1"/>
@@ -94,13 +92,11 @@
                 <Space
                         android:layout_width="0dp"
                         android:layout_height="wrap_content" android:layout_weight="5"/>
-                <TextView
+                <Button
                         android:text="Turn on"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content" android:id="@+id/btn_selected_car_notifications_setting"
-                        android:layout_weight="20" android:background="@drawable/gray_button_border_gradient"
-                        android:textAlignment="center" android:textSize="14sp"
-                        android:padding="2dp"/>
+                        android:layout_weight="20" android:paddingLeft="6dp" android:paddingRight="6dp"/>
                 <Space
                         android:layout_width="0dp"
                         android:layout_height="wrap_content" android:layout_weight="1"/>
@@ -165,13 +161,11 @@
                 <Space
                         android:layout_width="0dp"
                         android:layout_height="wrap_content" android:layout_weight="5"/>
-                <TextView
+                <Button
                         android:text="Add new maintenance"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content" android:id="@+id/btn_add_new_maintenance"
-                        android:background="@drawable/gray_button_border_gradient"
-                        android:textAlignment="center" android:textSize="20sp"
-                        android:padding="6dp" android:layout_weight="90"/>
+                        android:layout_weight="90"/>
                 <Space
                         android:layout_width="0dp"
                         android:layout_height="wrap_content" android:layout_weight="5"/>
@@ -186,13 +180,11 @@
                 <Space
                         android:layout_width="0dp"
                         android:layout_height="wrap_content" android:layout_weight="5"/>
-                <TextView
+                <Button
                         android:text="View upcoming maintenance"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content" android:id="@+id/btn_view_upcoming_maintenance"
-                        android:background="@drawable/gray_button_border_gradient"
-                        android:textAlignment="center" android:textSize="20sp"
-                        android:padding="6dp" android:layout_weight="90"/>
+                        android:layout_weight="90"/>
                 <Space
                         android:layout_width="0dp"
                         android:layout_height="wrap_content" android:layout_weight="5"/>
@@ -203,19 +195,22 @@
             <LinearLayout
                     android:orientation="horizontal"
                     android:layout_width="match_parent"
-                    android:layout_height="0dp" android:layout_weight="50">
-                <ImageView
-                        android:src="@drawable/circle_button_add"
+                    android:layout_height="wrap_content">
+                <Button
+                        android:text="Add new vehicle"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" android:id="@+id/btn_vehicle_1" android:layout_weight="1"/>
-                <ImageView
-                        android:src="@drawable/circle_button_add"
+                        android:layout_height="wrap_content" android:id="@+id/btn_vehicle_1" android:layout_weight="1"
+                        android:paddingLeft="6dp" android:paddingRight="6dp"/>
+                <Button
+                        android:text="Add new vehicle"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" android:id="@+id/btn_vehicle_2" android:layout_weight="1"/>
-                <ImageView
-                        android:src="@drawable/circle_button_add"
+                        android:layout_height="wrap_content" android:id="@+id/btn_vehicle_2" android:layout_weight="1"
+                        android:paddingLeft="6dp" android:paddingRight="6dp"/>
+                <Button
+                        android:text="Add new vehicle"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" android:id="@+id/btn_vehicle_3" android:layout_weight="1"/>
+                        android:layout_height="wrap_content" android:id="@+id/btn_vehicle_3" android:layout_weight="1"
+                        android:paddingLeft="6dp" android:paddingRight="6dp"/>
             </LinearLayout>
             <Space
                     android:layout_width="wrap_content"
