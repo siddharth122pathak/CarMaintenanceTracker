@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Rounded rectangle with border and gradient -->
+    <item android:left="-200dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="200dp" />
+            <stroke
+                    android:width="2dp"
+                    android:color="@color/black" />
+            <gradient
+                    android:startColor="#8E0000"
+                    android:centerColor="@color/white"
+                    android:centerX="0.15"
+                    android:endColor="#FF0000"
+                    android:angle="270" />
+        </shape>
+    </item>
+</layer-list>
