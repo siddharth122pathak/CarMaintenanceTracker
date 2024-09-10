@@ -1,6 +1,8 @@
 package com.example.carmaintenancetracker;
 
 import android.os.Bundle;
+import android.view.View;
+import android.widget.ImageView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
@@ -28,26 +30,22 @@ public class MainActivity extends AppCompatActivity {
 
         //Set up navigation controller for navigating between fragments
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
-
         // AppBarConfiguration to handle navigation with a toolbar
         AppBarConfiguration appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();
-
         //Link the navigation controller with the toolbar
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
 
         //Set up the toolbar buttons
 
-        //Tutorial Button: Shows the tutorial when clicked
-        //ImageButton tutorialButton = findViewById(R.id.tutorial_button);
-        //tutorialButton.setOnClickListener(view -> showTutorial());
+        //Set up the ImageView buttons
+        ImageView tutorialButton = findViewById(R.id.imageView5);
+        ImageView homeButton = findViewById(R.id.logo_icon);
+        ImageView notesButton = findViewById(R.id.imageView7);
 
-        //Home Button: Navigates the user back to the home screen
-        //ImageButton homeButton = findViewById(R.id.home_Button);
-        //homeButton.setOnClickListener(view -> navigateHome());
-
-        //Notes Button: Opens the notes section when clicked
-        //ImageButton notesButton = findViewById(R.id.notes_button);
-        //notesButton.setOnClickListener(view -> openNotes());
+        //Add OnClickListener for each button
+        //tutorialButton.setOnClickListener(v -> showTutorial());
+        homeButton.setOnClickListener(v -> navigateHome());
+        //notesButton.setOnClickListener(v -> openNotes());
     }
 
     //Method to display the tutorial
@@ -56,9 +54,11 @@ public class MainActivity extends AppCompatActivity {
    // }
 
     //Method to navigate to the home screen
-   // private void navigateHome(){
-        //Logic to navigate back to the home page
-   // }
+   private void navigateHome(){
+        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
+        //Navigate to the MainActivity
+        navController.navigate(R.id.FirstFragment);
+    }
 
     //Method to open the notes screen
     //private void openNotes(){
