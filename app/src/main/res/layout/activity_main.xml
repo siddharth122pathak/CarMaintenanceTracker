@@ -39,7 +39,7 @@
             <ImageView
                     android:layout_width="0dp"
                     android:layout_height="match_parent" app:srcCompat="@drawable/logo" android:id="@+id/imageView_logo"
-                    android:layout_weight="60"/>
+                    android:layout_weight="60" android:contentDescription="@string/logo"/>
             <LinearLayout
                     android:orientation="vertical"
                     android:layout_width="0dp"
