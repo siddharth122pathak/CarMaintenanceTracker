@@ -14,7 +14,7 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            android:padding="16dp">
+    >
         <LinearLayout
                 android:orientation="vertical"
                 android:layout_width="match_parent"
@@ -25,34 +25,37 @@
                     android:text="Add a vehicle to begin!"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" android:id="@+id/selected_car_title"
-                    android:textAlignment="center" android:background="#6FE7F8" android:textSize="24sp"
-                    android:textStyle="bold"/>
-            <Space
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"/>
+                    android:textAlignment="center" android:background="@drawable/title_border_gradient"
+                    android:textSize="24sp"
+                    android:textStyle="bold" android:padding="1dp"/>
             <LinearLayout
                     android:orientation="horizontal"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content" android:paddingTop="2dp">
                 <TextView
                         android:text="0 miles"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content" android:id="@+id/textView_selected_car_mileage"
-                        android:layout_weight="75" android:textAlignment="textEnd" android:textSize="16sp"
-                        android:background="#90F07F"/>
-                <Space
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content" android:layout_weight="5"/>
-                <Button
-                        android:text="Update"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content" android:id="@+id/btn_selected_car_mileage_update"
-                        android:layout_weight="20" android:paddingLeft="6dp" android:paddingRight="6dp"
+                        android:layout_weight="75" android:textAlignment="textEnd" android:textSize="24sp"
+                        android:background="@drawable/green_border_gradient" android:paddingRight="10dp"
                 />
                 <Space
                         android:layout_width="0dp"
-                        android:layout_height="wrap_content" android:layout_weight="0"/>
+                        android:layout_height="wrap_content" android:layout_weight="5"/>
+                <TextView
+                        android:text="Update"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content" android:id="@+id/btn_selected_car_mileage_update"
+                        android:layout_weight="20" android:background="@drawable/gray_button_border_gradient"
+                        android:textAlignment="center" android:textSize="20sp"
+                        android:padding="4dp"/>
+                <Space
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content" android:layout_weight="1"/>
             </LinearLayout>
+            <Space
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"/>
             <LinearLayout
                     android:orientation="horizontal"
                     android:layout_width="match_parent"
@@ -84,18 +87,23 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:id="@+id/textView_selected_car_notifications_setting" android:layout_weight="75"
-                        android:textAlignment="textEnd" android:textSize="10sp" android:background="#FD8C8C"/>
+                        android:textAlignment="textEnd" android:textSize="10sp"
+                        android:background="@drawable/red_border_gradient"
+                        android:paddingRight="10dp" android:paddingTop="2dp" android:paddingBottom="2dp"
+                />
                 <Space
                         android:layout_width="0dp"
                         android:layout_height="wrap_content" android:layout_weight="5"/>
-                <Button
-                        android:text="Turn On"
+                <TextView
+                        android:text="Turn on"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content" android:id="@+id/btn_selected_car_notifications_setting"
-                        android:layout_weight="20" android:paddingLeft="6dp" android:paddingRight="6dp"/>
+                        android:layout_weight="20" android:background="@drawable/gray_button_border_gradient"
+                        android:textAlignment="center" android:textSize="14sp"
+                        android:padding="2dp"/>
                 <Space
                         android:layout_width="0dp"
-                        android:layout_height="wrap_content" android:layout_weight="0"/>
+                        android:layout_height="wrap_content" android:layout_weight="1"/>
             </LinearLayout>
             <ImageView
                     android:src="@android:drawable/ic_dialog_alert"
@@ -147,31 +155,71 @@
                             android:layout_weight="40" android:textAlignment="center" android:textSize="14sp"/>
                 </LinearLayout>
             </LinearLayout>
-            <Button
-                    android:text="Add new maintenance"
+            <Space
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content" android:id="@+id/btn_add_new_maintenance"/>
-            <Button
-                    android:text="View upcoming maintenance"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content" android:id="@+id/btn_view_upcoming_maintenance"/>
+                    android:layout_height="0dp" android:layout_weight="5"/>
             <LinearLayout
                     android:orientation="horizontal"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
-                <Button
-                        android:text="Add new vehicle"
+                <Space
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content" android:layout_weight="5"/>
+                <TextView
+                        android:text="Add new maintenance"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content" android:id="@+id/btn_add_new_maintenance"
+                        android:background="@drawable/gray_button_border_gradient"
+                        android:textAlignment="center" android:textSize="20sp"
+                        android:padding="6dp" android:layout_weight="90"/>
+                <Space
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content" android:layout_weight="5"/>
+            </LinearLayout>
+            <Space
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp" android:layout_weight="3"/>
+            <LinearLayout
+                    android:orientation="horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+                <Space
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content" android:layout_weight="5"/>
+                <TextView
+                        android:text="View upcoming maintenance"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content" android:id="@+id/btn_view_upcoming_maintenance"
+                        android:background="@drawable/gray_button_border_gradient"
+                        android:textAlignment="center" android:textSize="20sp"
+                        android:padding="6dp" android:layout_weight="90"/>
+                <Space
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content" android:layout_weight="5"/>
+            </LinearLayout>
+            <Space
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp" android:layout_weight="3"/>
+            <LinearLayout
+                    android:orientation="horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp" android:layout_weight="50">
+                <ImageView
+                        android:src="@drawable/circle_button_add"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content" android:id="@+id/btn_vehicle_1" android:layout_weight="1"/>
-                <Button
-                        android:text="Add new vehicle"
+                <ImageView
+                        android:src="@drawable/circle_button_add"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content" android:id="@+id/btn_vehicle_2" android:layout_weight="1"/>
-                <Button
-                        android:text="Add new vehicle"
+                <ImageView
+                        android:src="@drawable/circle_button_add"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content" android:id="@+id/btn_vehicle_3" android:layout_weight="1"/>
             </LinearLayout>
+            <Space
+                    android:layout_width="wrap_content"
+                    android:layout_height="0dp" android:layout_weight="3"/>
         </LinearLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.core.widget.NestedScrollView>
