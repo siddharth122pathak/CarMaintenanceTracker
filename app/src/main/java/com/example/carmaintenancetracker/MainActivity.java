@@ -1,23 +1,18 @@
 package com.example.carmaintenancetracker;
 
 import android.os.Bundle;
-import android.widget.ImageButton;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
-
 import com.example.carmaintenancetracker.databinding.ActivityMainBinding;
 
 public class MainActivity extends AppCompatActivity {
 
     // AppBarConfiguration to handle navigation with a toolbar
-    private final AppBarConfiguration appBarConfiguration;
-
-    public MainActivity(AppBarConfiguration appBarConfiguration) {
-        this.appBarConfiguration = appBarConfiguration;
-    }
+    private AppBarConfiguration appBarConfiguration;
+    private ActivityMainBinding binding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,7 +20,7 @@ public class MainActivity extends AppCompatActivity {
 
         //Inflate the layout and get a binding instance
         // View binding for the activity's main layout
-        com.example.carmaintenancetracker.databinding.ActivityMainBinding binding = ActivityMainBinding.inflate(getLayoutInflater());
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot()); //Set the content to the activity's main view
 
         //Set up the toolbar as the app's action bar
@@ -33,8 +28,10 @@ public class MainActivity extends AppCompatActivity {
 
         //Set up navigation controller for navigating between fragments
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
+
         // AppBarConfiguration to handle navigation with a toolbar
         AppBarConfiguration appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();
+
         //Link the navigation controller with the toolbar
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
 
