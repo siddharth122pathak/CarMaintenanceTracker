@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:app="http://schemas.android.com/apk/res-auto"
+                xmlns:tools="http://schemas.android.com/tools"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="16dp">
+
+    <!-- Car Animation at the Top -->
+    <com.airbnb.lottie.LottieAnimationView
+            android:id="@+id/carAnimation"
+            android:layout_width="wrap_content"
+            android:layout_height="200dp"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="20dp"
+            app:lottie_rawRes="@raw/car_animation"
+            app:lottie_autoPlay="true"
+            app:lottie_loop="true" />
+
+    <!-- Centered Form Layout -->
+    <LinearLayout
+            android:id="@+id/formLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+        <!-- Vehicle Name Input -->
+        <EditText
+                android:id="@+id/vehicleName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Vehicle Name"
+                android:layout_marginBottom="16dp" />
+
+        <!-- Vehicle Model Input -->
+        <EditText
+                android:id="@+id/vehicleModel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Vehicle Model"
+                android:layout_marginBottom="16dp" />
+
+        <!-- Vehicle Year Input -->
+        <EditText
+                android:id="@+id/vehicleYear"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Year"
+                android:inputType="number"
+                android:layout_marginBottom="16dp" />
+
+        <!-- License Plate Number Input -->
+        <EditText
+                android:id="@+id/licensePlate"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="License Plate Number"
+                android:layout_marginBottom="16dp" />
+
+        <!-- Save Button -->
+        <Button
+                android:id="@+id/saveButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Save"
+                android:layout_gravity="center" />
+
+    </LinearLayout>
+
+</RelativeLayout>

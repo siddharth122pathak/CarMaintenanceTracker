@@ -125,7 +125,7 @@
                         android:layout_height="wrap_content" android:id="@+id/textView_next_maintenance_title"
                         android:layout_weight="50"
                         android:textAlignment="center" android:layout_gravity="center_vertical"
-                        android:textSize="20sp" android:textStyle="bold"/>
+                        android:textSize="20sp" android:textStyle="bold" tools:ignore="RtlCompat"/>
                 <LinearLayout
                         android:orientation="vertical"
                         android:layout_width="0dp"

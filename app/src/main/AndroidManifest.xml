@@ -22,6 +22,12 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+
+        <!-- Add Vehicle Activity Declaration -->
+        <activity
+                android:name=".AddVehicleActivity"
+                android:exported="true"
+                android:theme="@style/Theme.CarMaintenanceTracker" />
     </application>
 
 </manifest>
