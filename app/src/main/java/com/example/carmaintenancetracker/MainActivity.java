@@ -38,9 +38,9 @@ public class MainActivity extends AppCompatActivity {
         //Set up the toolbar buttons
 
         //Set up the ImageView buttons
-        ImageView tutorialButton = findViewById(R.id.imageView5);
-        ImageView homeButton = findViewById(R.id.logo_icon);
-        ImageView notesButton = findViewById(R.id.imageView7);
+        ImageView tutorialButton = findViewById(R.id.btn_tutorial);
+        ImageView homeButton = findViewById(R.id.imageView_logo);
+        ImageView notesButton = findViewById(R.id.btn_notes);
 
         //Add OnClickListener for each button
         //tutorialButton.setOnClickListener(v -> showTutorial());

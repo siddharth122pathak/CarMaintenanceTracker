@@ -2,6 +2,7 @@ package com.example.carmaintenancetracker;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.content.Intent;
 import android.view.LayoutInflater;
@@ -13,12 +14,14 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import com.example.carmaintenancetracker.databinding.FragmentFirstBinding;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class FirstFragment extends Fragment {
 
@@ -28,6 +31,7 @@ public class FirstFragment extends Fragment {
     private TextView mileageText;
     private Button notificationToggleButton;
     private View notificationBar;
+    private TextView notificationText;
     private boolean notificationsOn = true; //Default state for notifications
 
     //List to store chicle mileage and names (IDs or names)
@@ -52,6 +56,7 @@ public class FirstFragment extends Fragment {
         mileageText = view.findViewById(R.id.textView_selected_car_mileage);
         notificationToggleButton = view.findViewById(R.id.btn_selected_car_notifications_setting);
         notificationBar = view.findViewById(R.id.textView_selected_car_notifications_setting);
+        notificationText = notificationBar.findViewById(R.id.textView_selected_car_notifications_setting);
 
         //Initialize the vehicle list if empty
         if (vehicleList.isEmpty()) {
@@ -139,11 +144,15 @@ public class FirstFragment extends Fragment {
         if (notificationsOn) {
             // Set the button text and bar color when notifications are ON
             notificationToggleButton.setText("Turn Off");
-            notificationBar.setBackgroundColor(0xFF00FF00);
+            Drawable greenGradient = ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.green_border_gradient);
+            notificationBar.setBackground(greenGradient);
+            notificationText.setText("Notifications for this vehicle are ON");
         } else {
             // Set the button text and bar color when notifications are OFF
             notificationToggleButton.setText("Turn On");
-            notificationBar.setBackgroundColor(0xFFFF0000);
+            Drawable redGradient = ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.red_border_gradient);
+            notificationBar.setBackground(redGradient);
+            notificationText.setText("Notifications for this vehicle are OFF");
         }
     }
 
