@@ -1,40 +1,41 @@
 <resources>
-    <string name="app_name">CarMaintenanceTracker</string>
+    <!-- Strings that are not going to be used, please delete these when all instances are removed -->
+    <string name="lorem_ipsum">Lorem ipsum dolor sit amet.</string>
     <string name="action_settings">Settings</string>
-    <!-- Strings used for fragments for navigation -->
-    <string name="first_fragment_label">First Fragment</string>
-    <string name="second_fragment_label">Second Fragment</string>
-    <string name="next">Next</string>
     <string name="previous">Previous</string>
 
-    <string name="lorem_ipsum">
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam in scelerisque sem. Mauris volutpat, dolor id
-        interdum ullamcorper, risus dolor egestas lectus, sit amet mattis purus dui nec risus. Maecenas non sodales
-        nisi, vel dictum dolor. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos
-        himenaeos. Suspendisse blandit eleifend diam, vel rutrum tellus vulputate quis. Aliquam eget libero aliquet,
-        imperdiet nisl a, ornare ex. Sed rhoncus est ut libero porta lobortis. Fusce in dictum tellus.\n\n
-        Suspendisse interdum ornare ante. Aliquam nec cursus lorem. Morbi id magna felis. Vivamus egestas, est a
-        condimentum egestas, turpis nisl iaculis ipsum, in dictum tellus dolor sed neque. Morbi tellus erat, dapibus ut
-        sem a, iaculis tincidunt dui. Interdum et malesuada fames ac ante ipsum primis in faucibus. Curabitur et eros
-        porttitor, ultricies urna vitae, molestie nibh. Phasellus at commodo eros, non aliquet metus. Sed maximus nisl
-        nec dolor bibendum, vel congue leo egestas.\n\n
-        Sed interdum tortor nibh, in sagittis risus mollis quis. Curabitur mi odio, condimentum sit amet auctor at,
-        mollis non turpis. Nullam pretium libero vestibulum, finibus orci vel, molestie quam. Fusce blandit tincidunt
-        nulla, quis sollicitudin libero facilisis et. Integer interdum nunc ligula, et fermentum metus hendrerit id.
-        Vestibulum lectus felis, dictum at lacinia sit amet, tristique id quam. Cras eu consequat dui. Suspendisse
-        sodales nunc ligula, in lobortis sem porta sed. Integer id ultrices magna, in luctus elit. Sed a pellentesque
-        est.\n\n
-        Aenean nunc velit, lacinia sed dolor sed, ultrices viverra nulla. Etiam a venenatis nibh. Morbi laoreet, tortor
-        sed facilisis varius, nibh orci rhoncus nulla, id elementum leo dui non lorem. Nam mollis ipsum quis auctor
-        varius. Quisque elementum eu libero sed commodo. In eros nisl, imperdiet vel imperdiet et, scelerisque a mauris.
-        Pellentesque varius ex nunc, quis imperdiet eros placerat ac. Duis finibus orci et est auctor tincidunt. Sed non
-        viverra ipsum. Nunc quis augue egestas, cursus lorem at, molestie sem. Morbi a consectetur ipsum, a placerat
-        diam. Etiam vulputate dignissim convallis. Integer faucibus mauris sit amet finibus convallis.\n\n
-        Phasellus in aliquet mi. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis
-        egestas. In volutpat arcu ut felis sagittis, in finibus massa gravida. Pellentesque id tellus orci. Integer
-        dictum, lorem sed efficitur ullamcorper, libero justo consectetur ipsum, in mollis nisl ex sed nisl. Donec
-        maximus ullamcorper sodales. Praesent bibendum rhoncus tellus nec feugiat. In a ornare nulla. Donec rhoncus
-        libero vel nunc consequat, quis tincidunt nisl eleifend. Cras bibendum enim a justo luctus vestibulum. Fusce
-        dictum libero quis erat maximus, vitae volutpat diam dignissim.
-    </string>
+    <!-- Strings used for titles and text -->
+    <string name="app_name">AutoIQ</string>
+    <string name="homepage_selected_car">Add a vehicle to begin!</string>
+    <string name="mileage">0 miles</string>
+    <string name="mileage_last_updated">Last updated: never</string>
+    <string name="notification_setting">Notifications for this vehicle are OFF</string>
+    <string name="coming_up">Coming up:</string>
+    <string name="next_maintenance">Next maintenance</string>
+    <string name="next_maintenance_mileage">0 miles</string>
+    <string name="next_maintenance_or">- OR -</string>
+    <string name="next_maintenance_date">Jan 01, 2020</string>
+    <string name="tutorial">Tutorial</string>
+    <string name="notes">Notes</string>
+
+    <!-- Strings used for fragments for navigation -->
+    <string name="first_fragment_label">Homepage</string>
+    <string name="second_fragment_label">Second Fragment</string>
+
+    <!-- Strings used for buttons -->
+    <string name="logo">Auto IQ Logo</string>
+    <string name="btn_tutorial">Tutorial Button</string>
+    <string name="btn_notes">Notes Button</string>
+    <string name="next">Next</string>
+    <string name="submit">Submit</string>
+    <string name="update">Update</string>
+    <string name="turn_on">Turn on</string>
+    <string name="turn_off">Turn off</string>
+    <string name="add_new_maintenance">Add new maintenance</string>
+    <string name="view_upcoming_maintenance">View upcoming maintenance</string>
+    <string name="add_new_vehicle">Add new vehicle</string>
+
+    <!-- Strings used for content descriptions -->
+    <string name="mileage_last_updated_late_icon">It\'s been a while since the last update!</string>
+    <string name="currently_selected_vehicle_image">There is no vehicle displayed.</string>
 </resources>
