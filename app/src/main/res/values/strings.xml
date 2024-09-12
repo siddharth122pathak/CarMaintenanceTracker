@@ -38,4 +38,17 @@
     <!-- Strings used for content descriptions -->
     <string name="mileage_last_updated_late_icon">It\'s been a while since the last update!</string>
     <string name="currently_selected_vehicle_image">There is no vehicle displayed.</string>
+    <string name="current_mileage">Current Mileage</string>
+    <string name="add_new_maintanance">Add New Maintanance</string>
+    <string name="_add_new_maintenance">Add New Maintenance</string>
+
+
+
+<!-- Define the list of items for the Spinner -->
+<string-array name="spinner_items">
+    <item>Choose one</item>  <!-- Placeholder item -->
+    <item>Item 1</item>
+    <item>Item 2</item>
+    <!-- Add other items as necessary -->
+</string-array>
 </resources>
