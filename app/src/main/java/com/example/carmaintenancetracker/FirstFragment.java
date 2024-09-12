@@ -1,5 +1,6 @@
 package com.example.carmaintenancetracker;
 
+import android.content.Intent;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.graphics.drawable.Drawable;
@@ -44,7 +45,8 @@ public class FirstFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         // Inflate the fragment layout using binding
         binding = FragmentFirstBinding.inflate(inflater, container, false);
-        return binding.getRoot(); // Return the root view of the fragment's layout
+        return binding.getRoot();
+
     }
 
     @SuppressLint("SetTextI18n")
@@ -83,6 +85,24 @@ public class FirstFragment extends Fragment {
         //View Upcoming Maintenance Button: Opens the screen showing upcoming maintenance
         Button viewMaintenanceButton = view.findViewById(R.id.btn_view_upcoming_maintenance);
         viewMaintenanceButton.setOnClickListener(v -> viewUpcomingMaintenance());
+
+        // Set up the click listener to open AddVehicleActivity
+        View.OnClickListener addVehicleClickListener = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    Intent intent = new Intent(getActivity(), AddVehicleActivity.class);
+                    startActivity(intent);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+
+        // Use binding to set click listeners
+        binding.btnVehicle1.setOnClickListener(addVehicleClickListener);
+        binding.btnVehicle2.setOnClickListener(addVehicleClickListener);
+        binding.btnVehicle3.setOnClickListener(addVehicleClickListener);
     }
 
     //Method to set up vehicle buttons
