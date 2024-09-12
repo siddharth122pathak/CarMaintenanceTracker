@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Triple-color gradient -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                    android:startColor="#3FA7CE"
+                    android:centerColor="@color/white"
+                    android:centerX="0.8"
+                    android:endColor="#00384E"
+                    android:angle="270" />
+        </shape>
+    </item>
+    <!-- Top and Bottom border -->
+    <item android:right="-2dp" android:left="-2dp">
+        <shape android:shape="rectangle">
+            <stroke
+                    android:width="2dp"
+                    android:color="@color/black" />
+        </shape>
+    </item>
+</layer-list>
