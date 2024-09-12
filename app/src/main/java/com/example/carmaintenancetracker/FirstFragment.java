@@ -85,6 +85,24 @@ public class FirstFragment extends Fragment {
         //View Upcoming Maintenance Button: Opens the screen showing upcoming maintenance
         Button viewMaintenanceButton = view.findViewById(R.id.btn_view_upcoming_maintenance);
         viewMaintenanceButton.setOnClickListener(v -> viewUpcomingMaintenance());
+
+        // Set up the click listener to open AddVehicleActivity
+        View.OnClickListener addVehicleClickListener = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    Intent intent = new Intent(getActivity(), AddVehicleActivity.class);
+                    startActivity(intent);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+
+        // Use binding to set click listeners
+        binding.btnVehicle1.setOnClickListener(addVehicleClickListener);
+        binding.btnVehicle2.setOnClickListener(addVehicleClickListener);
+        binding.btnVehicle3.setOnClickListener(addVehicleClickListener);
     }
 
     //Method to set up vehicle buttons
@@ -221,20 +239,6 @@ public class FirstFragment extends Fragment {
         } else {
             vehicle3Button.setText("Add New Vehicle");
         }
-
-        // Set up the click listener to open AddVehicleActivity
-        View.OnClickListener addVehicleClickListener = new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(getActivity(), AddVehicleActivity.class);
-                startActivity(intent);
-            }
-        };
-
-        // Use binding to set click listeners
-        binding.btnVehicle1.setOnClickListener(addVehicleClickListener);
-        binding.btnVehicle2.setOnClickListener(addVehicleClickListener);
-        binding.btnVehicle3.setOnClickListener(addVehicleClickListener);
     }
 
     @Override
