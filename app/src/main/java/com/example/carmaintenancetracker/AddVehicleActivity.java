@@ -39,6 +39,31 @@ public class AddVehicleActivity extends AppCompatActivity {
         adapterCarYear.setDropDownViewResource(R.layout.spinner_item);
         spinnerCarYear.setAdapter(adapterCarYear);
 
+        //Save button functionality
+        Button saveButton = findViewById(R.id.btnSave);
+
+        saveButton.setOnClickListener(v -> {
+            String make = spinnerCarMake.getSelectedItem().toString();
+            String model = spinnerCarModel.getSelectedItem().toString();
+            String year = spinnerCarYear.getSelectedItem().toString();
+            String licensePlate = ((EditText) findViewById(R.id.inputCarLicence)).getText().toString();
+            String miles = ((EditText) findViewById(R.id.inputCarMiles)).getText().toString();
+
+            //Save the vehicle data to the Sqlite database
+            VehicleDatabaseHelper dbHelper = new VehicleDatabaseHelper(this);
+            dbHelper.addVehicle(make, model, year, licensePlate, miles);
+
+            Intent resultIntent = new Intent();
+            resultIntent.putExtra("vehicleMake", make);
+            resultIntent.putExtra("vehicleModel", model);
+            resultIntent.putExtra("vehicleYear", year);
+            resultIntent.putExtra("vehicleLicensePlate", licensePlate);
+            resultIntent.putExtra("vehicleMiles", miles);
+
+            setResult(RESULT_OK, resultIntent);
+            finish();
+        });
+
         // Listener for Car Make Spinner to change the animation dynamically
         spinnerCarMake.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -52,28 +77,6 @@ public class AddVehicleActivity extends AppCompatActivity {
                 // No action needed
             }
         });
-
-        //Save button functionality
-        Button saveButton = findViewById(R.id.btnSave);
-
-        saveButton.setOnClickListener(v -> {
-            String make = spinnerCarMake.getSelectedItem().toString();
-            String model = spinnerCarModel.getSelectedItem().toString();
-            String year = spinnerCarYear.getSelectedItem().toString();
-            String licensePlate = ((EditText) findViewById(R.id.inputCarLicence)).getText().toString();
-            String miles = ((EditText) findViewById(R.id.inputCarMiles)).getText().toString();
-
-            Intent resultIntent = new Intent();
-            resultIntent.putExtra("vehicleMake", make);
-            resultIntent.putExtra("vehicleModel", model);
-            resultIntent.putExtra("vehicleYear", year);
-            resultIntent.putExtra("vehicleLicensePlate", licensePlate);
-            resultIntent.putExtra("vehicleMiles", miles);
-
-            setResult(RESULT_OK, resultIntent);
-            finish();
-        });
-
     }
 
     private void updateCarAnimation(String carMake) {

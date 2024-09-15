@@ -3,6 +3,7 @@ package com.example.carmaintenancetracker;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -72,14 +73,16 @@ public class FirstFragment extends Fragment {
             String licensePlate = data.getStringExtra("vehicleLicensePlate");
             String milesStr = data.getStringExtra("vehicleMiles");
 
-            // Parse miles, add the vehicle to the list
             int miles = milesStr != null && !milesStr.isEmpty() ? Integer.parseInt(milesStr) : 0;
             vehicleList.add(make + " " + model + " " + year + " " + licensePlate);
             vehicleMileage.add(miles);
 
-            // Update the UI with the new vehicle and show it
+            // If this is the first vehicle, display it as default
+            if (vehicleList.size() == 1) {
+                showVehicle(0); // Show the first vehicle
+            }
+
             updateVehicleButtons();
-            showVehicle(vehicleList.size() - 1); // Show the newly added vehicle
         }
     }
 
@@ -94,6 +97,35 @@ public class FirstFragment extends Fragment {
         notificationBar = view.findViewById(R.id.textView_selected_car_notifications_setting);
         notificationText = notificationBar.findViewById(R.id.textView_selected_car_notifications_setting);
         titleText = view.findViewById(R.id.selected_car_title);
+
+        VehicleDatabaseHelper dbHelper = new VehicleDatabaseHelper(getContext());
+
+        //Load the default (first vehicle from the database if available
+        Cursor cursor = dbHelper.getFirstVehicle();
+        if (cursor != null && cursor.moveToFirst()) {
+            @SuppressLint("Range") String make = cursor.getString(cursor.getColumnIndex("make"));
+            @SuppressLint("Range") String model = cursor.getString(cursor.getColumnIndex("model"));
+            @SuppressLint("Range") String year = cursor.getString(cursor.getColumnIndex("year"));
+            @SuppressLint("Range") String licensePlate = cursor.getString(cursor.getColumnIndex("license"));
+            @SuppressLint("Range") String miles = cursor.getString(cursor.getColumnIndex("miles"));
+
+            // Set the title to the license plate if available, otherwise use make, model, year
+            if (licensePlate != null && !licensePlate.isEmpty()) {
+                titleText.setText(licensePlate);
+            } else {
+                titleText.setText(year + " " + make + " " + model);
+            }
+            mileageText.setText(miles + " miles");
+
+            vehicleList.add(make + " " + model + " " + year + " " + licensePlate);
+            vehicleMileage.add(Integer.parseInt(miles));
+
+            updateVehicleButtons();
+        } else {
+            promptAddVehicle(); // No vehicles found, prompt the user to add one
+        }
+
+        Objects.requireNonNull(cursor).close();
 
         //Restore state of application
         if (savedInstanceState != null) {
@@ -272,7 +304,7 @@ public class FirstFragment extends Fragment {
         Button vehicle3Button = Objects.requireNonNull(getView()).findViewById(R.id.btn_vehicle_3);
 
         if (!vehicleList.isEmpty()) {
-            vehicle1Button.setText(vehicleList.get(0));
+            vehicle1Button.setText(vehicleList.get(0)); // Default vehicle is Vehicle 1
         }
 
         if (vehicleList.size() > 1) {
