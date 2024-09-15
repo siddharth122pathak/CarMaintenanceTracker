@@ -1,7 +1,6 @@
 package com.example.carmaintenancetracker;
 
 import android.os.Bundle;
-import android.view.View;
 import android.widget.ImageView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.navigation.NavController;
@@ -14,7 +13,6 @@ public class MainActivity extends AppCompatActivity {
 
     // AppBarConfiguration to handle navigation with a toolbar
     private AppBarConfiguration appBarConfiguration;
-    private ActivityMainBinding binding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,7 +20,7 @@ public class MainActivity extends AppCompatActivity {
 
         //Inflate the layout and get a binding instance
         // View binding for the activity's main layout
-        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        com.example.carmaintenancetracker.databinding.ActivityMainBinding binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot()); //Set the content to the activity's main view
 
         //Set up the toolbar as the app's action bar

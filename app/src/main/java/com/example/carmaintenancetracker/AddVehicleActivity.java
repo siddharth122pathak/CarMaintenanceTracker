@@ -1,12 +1,11 @@
 package com.example.carmaintenancetracker;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.Spinner;
-import com.airbnb.lottie.LottieAnimationView;
+import android.widget.*;
 import androidx.appcompat.app.AppCompatActivity;
+import com.airbnb.lottie.LottieAnimationView;
 
 public class AddVehicleActivity extends AppCompatActivity {
 
@@ -53,6 +52,28 @@ public class AddVehicleActivity extends AppCompatActivity {
                 // No action needed
             }
         });
+
+        //Save button functionality
+        Button saveButton = findViewById(R.id.btnSave);
+
+        saveButton.setOnClickListener(v -> {
+            String make = spinnerCarMake.getSelectedItem().toString();
+            String model = spinnerCarModel.getSelectedItem().toString();
+            String year = spinnerCarYear.getSelectedItem().toString();
+            String licensePlate = ((EditText) findViewById(R.id.inputCarLicence)).getText().toString();
+            String miles = ((EditText) findViewById(R.id.inputCarMiles)).getText().toString();
+
+            Intent resultIntent = new Intent();
+            resultIntent.putExtra("vehicleMake", make);
+            resultIntent.putExtra("vehicleModel", model);
+            resultIntent.putExtra("vehicleYear", year);
+            resultIntent.putExtra("vehicleLicensePlate", licensePlate);
+            resultIntent.putExtra("vehicleMiles", miles);
+
+            setResult(RESULT_OK, resultIntent);
+            finish();
+        });
+
     }
 
     private void updateCarAnimation(String carMake) {

@@ -1,31 +1,31 @@
 package com.example.carmaintenancetracker;
 
-import android.content.Intent;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
-
 import com.example.carmaintenancetracker.databinding.FragmentFirstBinding;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import static android.app.Activity.RESULT_OK;
+
 public class FirstFragment extends Fragment {
 
+    private static final int ADD_VEHICLE_REQUEST_CODE = 1;
     //View binding for the fragment's layout
     private FragmentFirstBinding binding;
     //Views to handle mileage, notifications, and buttons
@@ -33,7 +33,7 @@ public class FirstFragment extends Fragment {
     private Button notificationToggleButton;
     private View notificationBar;
     private TextView notificationText;
-    private boolean notificationsOn = true; //Default state for notifications
+    private boolean notificationsOn = false; //Default state for notifications
 
     //List to store chicle mileage and names (IDs or names)
     private final List<Integer> vehicleMileage = new ArrayList<>();
@@ -47,6 +47,29 @@ public class FirstFragment extends Fragment {
         binding = FragmentFirstBinding.inflate(inflater, container, false);
         return binding.getRoot();
 
+    }
+
+    //AddVehicleActivity save button storage
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == ADD_VEHICLE_REQUEST_CODE && resultCode == RESULT_OK && data != null) {
+            String make = data.getStringExtra("vehicleMake");
+            String model = data.getStringExtra("vehicleModel");
+            String year = data.getStringExtra("vehicleYear");
+            String licensePlate = data.getStringExtra("vehicleLicensePlate");
+            String milesStr = data.getStringExtra("vehicleMiles");
+
+            // Parse miles, add the vehicle to the list
+            int miles = milesStr != null && !milesStr.isEmpty() ? Integer.parseInt(milesStr) : 0;
+            vehicleList.add(make + " " + model + " " + year + " " + licensePlate);
+            vehicleMileage.add(miles);
+
+            // Update the UI with the new vehicle and show it
+            updateVehicleButtons();
+            showVehicle(vehicleList.size() - 1); // Show the newly added vehicle
+        }
     }
 
     @SuppressLint("SetTextI18n")
@@ -85,24 +108,6 @@ public class FirstFragment extends Fragment {
         //View Upcoming Maintenance Button: Opens the screen showing upcoming maintenance
         Button viewMaintenanceButton = view.findViewById(R.id.btn_view_upcoming_maintenance);
         viewMaintenanceButton.setOnClickListener(v -> viewUpcomingMaintenance());
-
-        // Set up the click listener to open AddVehicleActivity
-        View.OnClickListener addVehicleClickListener = new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                try {
-                    Intent intent = new Intent(getActivity(), AddVehicleActivity.class);
-                    startActivity(intent);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        };
-
-        // Use binding to set click listeners
-        binding.btnVehicle1.setOnClickListener(addVehicleClickListener);
-        binding.btnVehicle2.setOnClickListener(addVehicleClickListener);
-        binding.btnVehicle3.setOnClickListener(addVehicleClickListener);
     }
 
     //Method to set up vehicle buttons
@@ -110,15 +115,15 @@ public class FirstFragment extends Fragment {
 
         //Vehicle 1 Button: Switches to Vehicle 1
         Button vehicle1Button = view.findViewById(R.id.btn_vehicle_1);
-        vehicle1Button.setOnClickListener(v -> switchVehicle(0));
+        vehicle1Button.setOnClickListener(v -> switchOrAddVehicle(0));
 
         //Vehicle 2 Button: Switches to Vehicle 2
         Button vehicle2Button = view.findViewById(R.id.btn_vehicle_2);
-        vehicle2Button.setOnClickListener(v -> switchVehicle(1));
+        vehicle2Button.setOnClickListener(v -> switchOrAddVehicle(1));
 
         //Vehicle 3 Button: Switches to Vehicle 3
         Button vehicle3Button = view.findViewById(R.id.btn_vehicle_3);
-        vehicle3Button.setOnClickListener(v -> switchVehicle(2));
+        vehicle3Button.setOnClickListener(v -> switchOrAddVehicle(2));
     }
 
     //Method to show a dialog for updating the mileage
@@ -214,15 +219,16 @@ public class FirstFragment extends Fragment {
 
     //Prompt user to add new vehicle
     private void promptAddVehicle() {
-        //Intent intent = new Intent(getContext(), activity_add_vehicle);
-        //startActivity(intent);
+        Intent intent = new Intent(getContext(), AddVehicleActivity.class);
+        startActivityForResult(intent, 1);
     }
 
     //Update the button text dynamically based on the number of vehicles
+    @SuppressLint("SetTextI18n")
     private void updateVehicleButtons() {
-        Button vehicle1Button = getView().findViewById(R.id.btn_vehicle_1);
-        Button vehicle2Button = getView().findViewById(R.id.btn_vehicle_2);
-        Button vehicle3Button = getView().findViewById(R.id.btn_vehicle_3);
+        Button vehicle1Button = Objects.requireNonNull(getView()).findViewById(R.id.btn_vehicle_1);
+        Button vehicle2Button = Objects.requireNonNull(getView()).findViewById(R.id.btn_vehicle_2);
+        Button vehicle3Button = Objects.requireNonNull(getView()).findViewById(R.id.btn_vehicle_3);
 
         if (!vehicleList.isEmpty()) {
             vehicle1Button.setText(vehicleList.get(0));
