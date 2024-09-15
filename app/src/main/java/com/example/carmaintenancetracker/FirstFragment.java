@@ -34,6 +34,7 @@ public class FirstFragment extends Fragment {
     private View notificationBar;
     private TextView notificationText;
     private boolean notificationsOn = false; //Default state for notifications
+    private TextView titleText;
 
     //List to store chicle mileage and names (IDs or names)
     private final List<Integer> vehicleMileage = new ArrayList<>();
@@ -47,6 +48,16 @@ public class FirstFragment extends Fragment {
         binding = FragmentFirstBinding.inflate(inflater, container, false);
         return binding.getRoot();
 
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        // Save the current vehicle data
+        outState.putStringArrayList("vehicleList", new ArrayList<>(vehicleList));
+        outState.putIntegerArrayList("vehicleMileage", new ArrayList<>(vehicleMileage));
+        outState.putInt("currentVehicleIndex", currentVehicleIndex);
     }
 
     //AddVehicleActivity save button storage
@@ -82,13 +93,26 @@ public class FirstFragment extends Fragment {
         notificationToggleButton = view.findViewById(R.id.btn_selected_car_notifications_setting);
         notificationBar = view.findViewById(R.id.textView_selected_car_notifications_setting);
         notificationText = notificationBar.findViewById(R.id.textView_selected_car_notifications_setting);
+        titleText = view.findViewById(R.id.selected_car_title);
 
-        //Initialize the vehicle list if empty
-        if (vehicleList.isEmpty()) {
-            promptAddVehicle();
-        } else {
+        //Restore state of application
+        if (savedInstanceState != null) {
+            // Restore the saved state
+            vehicleList.addAll(savedInstanceState.getStringArrayList("vehicleList"));
+            vehicleMileage.addAll(savedInstanceState.getIntegerArrayList("vehicleMileage"));
+            currentVehicleIndex = savedInstanceState.getInt("currentVehicleIndex");
+
+            // Update the UI
             updateVehicleButtons();
             showVehicle(currentVehicleIndex);
+        } else {
+            //Initialize the vehicle list if empty
+            if (vehicleList.isEmpty()) {
+                promptAddVehicle();
+            } else {
+                updateVehicleButtons();
+                showVehicle(currentVehicleIndex);
+            }
         }
         setupVehicleButtons(view);
 
@@ -196,7 +220,24 @@ public class FirstFragment extends Fragment {
     private void showVehicle(int vehicleIndex) {
         if (vehicleIndex >= 0 && vehicleIndex < vehicleList.size()) {
             currentVehicleIndex = vehicleIndex;
-            mileageText.setText(vehicleList.get(vehicleIndex) + " miles");
+
+            //Place the make, model, year of vehicle in blue gradient
+            String makeModelYear = vehicleList.get(vehicleIndex);
+            String[] vehicleDetails = makeModelYear.split(" ");
+            String licensePlate = vehicleDetails.length > 3 ? vehicleDetails[3] : "";
+
+            //If there is a license plate entered or not
+            Drawable blueGradient = ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.title_border_gradient);
+            if (!licensePlate.isEmpty()) {
+                //Set license plate in the blue gradient if it's filled
+                binding.selectedCarTitle.setText(licensePlate);
+            } else{
+                //Otherwise, set year, make, model in the blue gradient
+                binding.selectedCarTitle.setText(vehicleDetails[2] + " " + vehicleDetails[0] + " " + vehicleDetails[1]);
+            }
+            titleText.setBackground(blueGradient);
+
+            mileageText.setText(vehicleMileage.get(vehicleIndex) + " miles");
         }
     }
 

@@ -9,6 +9,8 @@ import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 import com.example.carmaintenancetracker.databinding.ActivityMainBinding;
 
+import java.util.Objects;
+
 public class MainActivity extends AppCompatActivity {
 
     // AppBarConfiguration to handle navigation with a toolbar
@@ -53,9 +55,12 @@ public class MainActivity extends AppCompatActivity {
 
     //Method to navigate to the home screen
    private void navigateHome(){
+       //Navigate to the MainActivity
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
-        //Navigate to the MainActivity
-        navController.navigate(R.id.FirstFragment);
+       // Check if the current destination is already FirstFragment
+       if (Objects.requireNonNull(navController.getCurrentDestination()).getId() != R.id.FirstFragment) {
+           navController.navigate(R.id.FirstFragment); // Only navigate if it's not already there
+       }
     }
 
     //Method to open the notes screen
@@ -70,5 +75,17 @@ public class MainActivity extends AppCompatActivity {
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
         //Handle the "Up" button in the action bar
         return NavigationUI.navigateUp(navController, appBarConfiguration) || super.onSupportNavigateUp();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // Save data if needed
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Restore data if needed
     }
 }
