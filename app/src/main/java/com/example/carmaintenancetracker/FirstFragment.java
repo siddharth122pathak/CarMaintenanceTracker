@@ -231,7 +231,7 @@ public class FirstFragment extends Fragment {
         } else {
             // Set the button text and bar color when notifications are OFF
             notificationToggleButton.setText("Turn On");
-            Drawable redGradient = ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.red_border_gradient);
+            Drawable redGradient = ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.gray_border_gradient);
             notificationBar.setBackground(redGradient);
             notificationText.setText("Notifications for this vehicle are OFF");
         }

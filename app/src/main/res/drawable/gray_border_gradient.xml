@@ -8,10 +8,10 @@
                     android:width="2dp"
                     android:color="@color/black" />
             <gradient
-                    android:startColor="#8E0000"
+                    android:startColor="#999999"
                     android:centerColor="@color/white"
                     android:centerX="0.15"
-                    android:endColor="#FF0000"
+                    android:endColor="#999999"
                     android:angle="270" />
         </shape>
     </item>
