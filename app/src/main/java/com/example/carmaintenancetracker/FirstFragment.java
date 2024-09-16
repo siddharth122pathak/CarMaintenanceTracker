@@ -245,6 +245,8 @@ public class FirstFragment extends Fragment {
     //Method to handle viewing upcoming maintenance
     private void viewUpcomingMaintenance() {
         //Logic to navigate to the "Upcoming Maintenance" screen or fragment
+        //Intent intent = new Intent(getContext(), UpcomingMaintenanceActivity.class);
+        //startActivityForResult(intent, 1);
     }
 
     //Method to display mileage for the selected vehicle
