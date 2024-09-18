@@ -40,43 +40,4 @@
     <!-- Strings used for content descriptions -->
     <string name="mileage_last_updated_late_icon">It\'s been a while since the last update!</string>
     <string name="currently_selected_vehicle_image">There is no vehicle displayed.</string>
-
-    <string-array name="car_makes">
-        <item>Toyota</item>
-        <item>Honda</item>
-        <item>Ford</item>
-        <item>Chevrolet</item>
-        <item>BMW</item>
-        <!-- Add more car makes as needed -->
-    </string-array>
-
-    <!-- Car Model Options -->
-    <string-array name="car_models">
-        <item>Camry</item>
-        <item>Civic</item>
-        <item>Mustang</item>
-        <item>Impala</item>
-        <item>3 Series</item>
-        <!-- Add more car models as needed -->
-    </string-array>
-
-    <!-- Year Options -->
-    <string-array name="car_years">
-        <item>2024</item>
-        <item>2023</item>
-        <item>2022</item>
-        <item>2021</item>
-        <item>2020</item>
-        <item>2019</item>
-        <item>2018</item>
-        <item>2017</item>
-        <item>2016</item>
-        <item>2015</item>
-        <item>2014</item>
-        <item>2013</item>
-        <item>2012</item>
-        <item>2011</item>
-        <item>2010</item>
-        <!-- Add more years as needed -->
-    </string-array>
 </resources>

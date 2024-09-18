@@ -33,7 +33,7 @@
                     android:textSize="18sp"
                     android:textStyle="bold"
                     android:textAlignment="center"
-                    android:layout_width="wrap_content" android:background="@drawable/ic_launcher_background"
+                    android:layout_width="wrap_content" android:background="#82FD97"
                     android:layout_height="match_parent" android:id="@+id/textView10" android:layout_weight="1"/>
             <TextView
                     android:text="Make"
@@ -41,7 +41,7 @@
                     android:textSize="18sp"
                     android:textStyle="bold"
                     android:textAlignment="center"
-                    android:layout_width="wrap_content" android:background="@drawable/ic_launcher_background"
+                    android:layout_width="wrap_content" android:background="#82FD97"
                     android:layout_height="match_parent" android:id="@+id/textView11" android:layout_weight="1"/>
             <TextView
                     android:text="Model"
@@ -49,7 +49,7 @@
                     android:textSize="18sp"
                     android:textStyle="bold"
                     android:textAlignment="center"
-                    android:layout_width="wrap_content" android:background="@drawable/ic_launcher_background"
+                    android:layout_width="wrap_content" android:background="#82FD97"
                     android:layout_height="match_parent" android:id="@+id/textView12" android:layout_weight="1"/>
         </LinearLayout>
         <LinearLayout
@@ -69,9 +69,8 @@
                     android:padding="10dp"
                     android:textSize="20sp"
                     android:textStyle="bold"
-                    android:layout_width="wrap_content"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content" android:id="@+id/textView13" android:layout_marginLeft="15dp"/>
+                    android:layout_height="wrap_content" android:id="@+id/textView13" android:layout_marginStart="15dp"/>
             <Space
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"/>
@@ -111,7 +110,6 @@
                     android:layout_height="65dp">
                 <TextView
                         android:text="Last maintenance performed on"
-                        android:layout_height="wrap_content"
                         android:padding="10dp"
                         android:textSize="20sp"
                         android:textStyle="bold"
@@ -130,7 +128,7 @@
             <LinearLayout
                     android:orientation="horizontal"
                     android:layout_width="362dp"
-                    android:layout_height="wrap_content" android:layout_marginLeft="20dp">
+                    android:layout_height="wrap_content" android:layout_marginStart="20dp">
                 <LinearLayout
                         android:orientation="horizontal"
                         android:layout_width="194dp"
@@ -147,10 +145,10 @@
                 <LinearLayout
                         android:orientation="horizontal"
                         android:layout_width="95dp"
-                        android:layout_height="match_parent" android:layout_marginLeft="67dp">
+                        android:layout_height="match_parent" android:layout_marginStart="67dp">
                     <ImageButton
-                            android:layout_width="wrap_content"
-                            android:layout_height="match_parent" app:srcCompat="@android:drawable/ic_menu_my_calendar"
+                            android:layout_width="0dp"
+                            android:layout_height="40dp" app:srcCompat="@android:drawable/ic_menu_my_calendar"
                             android:id="@+id/imageButton3" android:layout_weight="1"/>
                 </LinearLayout>
             </LinearLayout>
@@ -168,7 +166,6 @@
                     android:layout_height="42dp">
                 <TextView
                         android:text="What maintenance action was performed?"
-                        android:layout_height="wrap_content"
                         android:padding="10dp"
                         android:textSize="18sp"
                         android:textStyle="bold"
@@ -207,8 +204,8 @@
                             android:layout_width="50dp"
                             android:layout_height="42dp" android:paddingLeft="10dp">
                         <ImageButton
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content" app:srcCompat="@android:drawable/ic_menu_add"
+                                android:layout_width="0dp"
+                                android:layout_height="40dp" app:srcCompat="@android:drawable/ic_menu_add"
                                 android:id="@+id/imageButton5" android:layout_weight="1"/>
                     </LinearLayout>
                     <LinearLayout
@@ -270,7 +267,7 @@
                             android:layout_width="182dp"
                             android:layout_height="match_parent">
                         <Button
-                                android:text="Submit"
+                                android:text="Save"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content" android:id="@+id/button2"
                                 android:layout_weight="1" android:layout_marginTop="30dp"/>
