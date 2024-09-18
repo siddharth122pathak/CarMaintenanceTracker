@@ -33,7 +33,7 @@
                     android:textSize="18sp"
                     android:textStyle="bold"
                     android:textAlignment="center"
-                    android:layout_width="wrap_content" android:background="@drawable/ic_launcher_background"
+                    android:layout_width="wrap_content" android:background="@color/design_default_color_secondary"
                     android:layout_height="match_parent" android:id="@+id/textView10" android:layout_weight="1"/>
             <TextView
                     android:text="Make"
@@ -41,7 +41,7 @@
                     android:textSize="18sp"
                     android:textStyle="bold"
                     android:textAlignment="center"
-                    android:layout_width="wrap_content" android:background="@drawable/ic_launcher_background"
+                    android:layout_width="wrap_content" android:background="@color/design_default_color_secondary"
                     android:layout_height="match_parent" android:id="@+id/textView11" android:layout_weight="1"/>
             <TextView
                     android:text="Model"
@@ -49,7 +49,7 @@
                     android:textSize="18sp"
                     android:textStyle="bold"
                     android:textAlignment="center"
-                    android:layout_width="wrap_content" android:background="@drawable/ic_launcher_background"
+                    android:layout_width="wrap_content" android:background="@color/design_default_color_secondary"
                     android:layout_height="match_parent" android:id="@+id/textView12" android:layout_weight="1"/>
         </LinearLayout>
         <LinearLayout
@@ -149,7 +149,7 @@
                         android:layout_width="95dp"
                         android:layout_height="match_parent" android:layout_marginLeft="67dp">
                     <ImageButton
-                            android:layout_width="wrap_content"
+                            android:layout_width="0dp"
                             android:layout_height="match_parent" app:srcCompat="@android:drawable/ic_menu_my_calendar"
                             android:id="@+id/imageButton3" android:layout_weight="1"/>
                 </LinearLayout>
