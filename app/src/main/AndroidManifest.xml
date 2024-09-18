@@ -28,6 +28,13 @@
                 android:name=".AddVehicleActivity"
                 android:exported="true"
                 android:theme="@style/Theme.CarMaintenanceTracker" />
+
+        <!-- Upcoming Maintenance Activity Declaration -->
+        <activity
+                android:name=".UpcomingMaintenanceActivity"
+                android:exported="true"
+                android:theme="@style/Theme.CarMaintenanceTracker" />
+
     </application>
 
 </manifest>

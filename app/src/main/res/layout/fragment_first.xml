@@ -83,7 +83,7 @@
                         android:layout_height="wrap_content"
                         android:id="@+id/textView_selected_car_notifications_setting" android:layout_weight="75"
                         android:textAlignment="textEnd" android:textSize="12sp"
-                        android:background="@drawable/red_border_gradient"
+                        android:background="@drawable/gray_border_gradient"
                         android:paddingTop="2dp" android:paddingBottom="2dp"
                         android:paddingEnd="10dp" android:paddingStart="0dp" android:textStyle="bold"
                         android:textColor="#000000"/>

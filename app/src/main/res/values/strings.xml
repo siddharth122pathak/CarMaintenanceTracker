@@ -17,6 +17,8 @@
     <string name="next_maintenance_date">Jan 01, 2020</string>
     <string name="tutorial">Tutorial</string>
     <string name="notes">Notes</string>
+    <string name="maintenance_by_miles_title">Maintenance by Miles</string>
+    <string name="maintenance_by_time_title">Maintenance by Time</string>
 
     <!-- Strings used for fragments for navigation -->
     <string name="first_fragment_label">Homepage</string>

@@ -1,31 +1,32 @@
 package com.example.carmaintenancetracker;
 
-import android.content.Intent;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
-
 import com.example.carmaintenancetracker.databinding.FragmentFirstBinding;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import static android.app.Activity.RESULT_OK;
+
 public class FirstFragment extends Fragment {
 
+    private static final int ADD_VEHICLE_REQUEST_CODE = 1;
     //View binding for the fragment's layout
     private FragmentFirstBinding binding;
     //Views to handle mileage, notifications, and buttons
@@ -33,7 +34,8 @@ public class FirstFragment extends Fragment {
     private Button notificationToggleButton;
     private View notificationBar;
     private TextView notificationText;
-    private boolean notificationsOn = true; //Default state for notifications
+    private boolean notificationsOn = false; //Default state for notifications
+    private TextView titleText;
 
     //List to store chicle mileage and names (IDs or names)
     private final List<Integer> vehicleMileage = new ArrayList<>();
@@ -49,6 +51,41 @@ public class FirstFragment extends Fragment {
 
     }
 
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        // Save the current vehicle data
+        outState.putStringArrayList("vehicleList", new ArrayList<>(vehicleList));
+        outState.putIntegerArrayList("vehicleMileage", new ArrayList<>(vehicleMileage));
+        outState.putInt("currentVehicleIndex", currentVehicleIndex);
+    }
+
+    //AddVehicleActivity save button storage
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == ADD_VEHICLE_REQUEST_CODE && resultCode == RESULT_OK && data != null) {
+            String make = data.getStringExtra("vehicleMake");
+            String model = data.getStringExtra("vehicleModel");
+            String year = data.getStringExtra("vehicleYear");
+            String licensePlate = data.getStringExtra("vehicleLicensePlate");
+            String milesStr = data.getStringExtra("vehicleMiles");
+
+            int miles = milesStr != null && !milesStr.isEmpty() ? Integer.parseInt(milesStr) : 0;
+            vehicleList.add(make + " " + model + " " + year + " " + licensePlate);
+            vehicleMileage.add(miles);
+
+            // If this is the first vehicle, display it as default
+            if (vehicleList.size() == 1) {
+                showVehicle(0); // Show the first vehicle
+            }
+
+            updateVehicleButtons();
+        }
+    }
+
     @SuppressLint("SetTextI18n")
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
@@ -59,13 +96,55 @@ public class FirstFragment extends Fragment {
         notificationToggleButton = view.findViewById(R.id.btn_selected_car_notifications_setting);
         notificationBar = view.findViewById(R.id.textView_selected_car_notifications_setting);
         notificationText = notificationBar.findViewById(R.id.textView_selected_car_notifications_setting);
+        titleText = view.findViewById(R.id.selected_car_title);
 
-        //Initialize the vehicle list if empty
-        if (vehicleList.isEmpty()) {
-            promptAddVehicle();
+        VehicleDatabaseHelper dbHelper = new VehicleDatabaseHelper(getContext());
+
+        //Load the default (first vehicle from the database if available
+        Cursor cursor = dbHelper.getFirstVehicle();
+        if (cursor != null && cursor.moveToFirst()) {
+            @SuppressLint("Range") String make = cursor.getString(cursor.getColumnIndex("make"));
+            @SuppressLint("Range") String model = cursor.getString(cursor.getColumnIndex("model"));
+            @SuppressLint("Range") String year = cursor.getString(cursor.getColumnIndex("year"));
+            @SuppressLint("Range") String licensePlate = cursor.getString(cursor.getColumnIndex("license"));
+            @SuppressLint("Range") String miles = cursor.getString(cursor.getColumnIndex("miles"));
+
+            // Set the title to the license plate if available, otherwise use make, model, year
+            if (licensePlate != null && !licensePlate.isEmpty()) {
+                titleText.setText(licensePlate);
+            } else {
+                titleText.setText(year + " " + make + " " + model);
+            }
+            mileageText.setText(miles + " miles");
+
+            vehicleList.add(make + " " + model + " " + year + " " + licensePlate);
+            vehicleMileage.add(Integer.parseInt(miles));
+
+            updateVehicleButtons();
         } else {
+            promptAddVehicle(); // No vehicles found, prompt the user to add one
+        }
+
+        Objects.requireNonNull(cursor).close();
+
+        //Restore state of application
+        if (savedInstanceState != null) {
+            // Restore the saved state
+            vehicleList.addAll(savedInstanceState.getStringArrayList("vehicleList"));
+            vehicleMileage.addAll(savedInstanceState.getIntegerArrayList("vehicleMileage"));
+            currentVehicleIndex = savedInstanceState.getInt("currentVehicleIndex");
+
+            // Update the UI
             updateVehicleButtons();
             showVehicle(currentVehicleIndex);
+        } else {
+            //Initialize the vehicle list if empty
+            if (vehicleList.isEmpty()) {
+                promptAddVehicle();
+            } else {
+                updateVehicleButtons();
+                showVehicle(currentVehicleIndex);
+            }
         }
         setupVehicleButtons(view);
 
@@ -85,24 +164,6 @@ public class FirstFragment extends Fragment {
         //View Upcoming Maintenance Button: Opens the screen showing upcoming maintenance
         Button viewMaintenanceButton = view.findViewById(R.id.btn_view_upcoming_maintenance);
         viewMaintenanceButton.setOnClickListener(v -> viewUpcomingMaintenance());
-
-        // Set up the click listener to open AddVehicleActivity
-        View.OnClickListener addVehicleClickListener = new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                try {
-                    Intent intent = new Intent(getActivity(), AddVehicleActivity.class);
-                    startActivity(intent);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        };
-
-        // Use binding to set click listeners
-        binding.btnVehicle1.setOnClickListener(addVehicleClickListener);
-        binding.btnVehicle2.setOnClickListener(addVehicleClickListener);
-        binding.btnVehicle3.setOnClickListener(addVehicleClickListener);
     }
 
     //Method to set up vehicle buttons
@@ -110,15 +171,15 @@ public class FirstFragment extends Fragment {
 
         //Vehicle 1 Button: Switches to Vehicle 1
         Button vehicle1Button = view.findViewById(R.id.btn_vehicle_1);
-        vehicle1Button.setOnClickListener(v -> switchVehicle(0));
+        vehicle1Button.setOnClickListener(v -> switchOrAddVehicle(0));
 
         //Vehicle 2 Button: Switches to Vehicle 2
         Button vehicle2Button = view.findViewById(R.id.btn_vehicle_2);
-        vehicle2Button.setOnClickListener(v -> switchVehicle(1));
+        vehicle2Button.setOnClickListener(v -> switchOrAddVehicle(1));
 
         //Vehicle 3 Button: Switches to Vehicle 3
         Button vehicle3Button = view.findViewById(R.id.btn_vehicle_3);
-        vehicle3Button.setOnClickListener(v -> switchVehicle(2));
+        vehicle3Button.setOnClickListener(v -> switchOrAddVehicle(2));
     }
 
     //Method to show a dialog for updating the mileage
@@ -170,7 +231,7 @@ public class FirstFragment extends Fragment {
         } else {
             // Set the button text and bar color when notifications are OFF
             notificationToggleButton.setText("Turn On");
-            Drawable redGradient = ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.red_border_gradient);
+            Drawable redGradient = ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.gray_border_gradient);
             notificationBar.setBackground(redGradient);
             notificationText.setText("Notifications for this vehicle are OFF");
         }
@@ -184,6 +245,8 @@ public class FirstFragment extends Fragment {
     //Method to handle viewing upcoming maintenance
     private void viewUpcomingMaintenance() {
         //Logic to navigate to the "Upcoming Maintenance" screen or fragment
+        //Intent intent = new Intent(getContext(), UpcomingMaintenanceActivity.class);
+        //startActivityForResult(intent, 1);
     }
 
     //Method to display mileage for the selected vehicle
@@ -191,7 +254,24 @@ public class FirstFragment extends Fragment {
     private void showVehicle(int vehicleIndex) {
         if (vehicleIndex >= 0 && vehicleIndex < vehicleList.size()) {
             currentVehicleIndex = vehicleIndex;
-            mileageText.setText(vehicleList.get(vehicleIndex) + " miles");
+
+            //Place the make, model, year of vehicle in blue gradient
+            String makeModelYear = vehicleList.get(vehicleIndex);
+            String[] vehicleDetails = makeModelYear.split(" ");
+            String licensePlate = vehicleDetails.length > 3 ? vehicleDetails[3] : "";
+
+            //If there is a license plate entered or not
+            Drawable blueGradient = ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.title_border_gradient);
+            if (!licensePlate.isEmpty()) {
+                //Set license plate in the blue gradient if it's filled
+                binding.selectedCarTitle.setText(licensePlate);
+            } else{
+                //Otherwise, set year, make, model in the blue gradient
+                binding.selectedCarTitle.setText(vehicleDetails[2] + " " + vehicleDetails[0] + " " + vehicleDetails[1]);
+            }
+            titleText.setBackground(blueGradient);
+
+            mileageText.setText(vehicleMileage.get(vehicleIndex) + " miles");
         }
     }
 
@@ -214,18 +294,19 @@ public class FirstFragment extends Fragment {
 
     //Prompt user to add new vehicle
     private void promptAddVehicle() {
-        //Intent intent = new Intent(getContext(), activity_add_vehicle);
-        //startActivity(intent);
+        Intent intent = new Intent(getContext(), AddVehicleActivity.class);
+        startActivityForResult(intent, 1);
     }
 
     //Update the button text dynamically based on the number of vehicles
+    @SuppressLint("SetTextI18n")
     private void updateVehicleButtons() {
-        Button vehicle1Button = getView().findViewById(R.id.btn_vehicle_1);
-        Button vehicle2Button = getView().findViewById(R.id.btn_vehicle_2);
-        Button vehicle3Button = getView().findViewById(R.id.btn_vehicle_3);
+        Button vehicle1Button = Objects.requireNonNull(getView()).findViewById(R.id.btn_vehicle_1);
+        Button vehicle2Button = Objects.requireNonNull(getView()).findViewById(R.id.btn_vehicle_2);
+        Button vehicle3Button = Objects.requireNonNull(getView()).findViewById(R.id.btn_vehicle_3);
 
         if (!vehicleList.isEmpty()) {
-            vehicle1Button.setText(vehicleList.get(0));
+            vehicle1Button.setText(vehicleList.get(0)); // Default vehicle is Vehicle 1
         }
 
         if (vehicleList.size() > 1) {
