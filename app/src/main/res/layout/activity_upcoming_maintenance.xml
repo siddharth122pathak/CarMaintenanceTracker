@@ -13,22 +13,57 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 app:layout_constraintTop_toTopOf="parent" app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent">
+                app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent"
+                android:background="#FFFFFF">
+            <include android:layout_width="wrap_content" android:layout_height="0dp"
+                     layout="@layout/activity_main"
+                     android:layout_weight="11"/>
             <TextView
                     android:text="@string/maintenance_by_miles_title"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content" android:id="@+id/page_title"
+                    android:layout_height="0dp" android:id="@+id/page_title"
                     android:textAlignment="center" android:background="@drawable/title_border_gradient"
                     android:textSize="24sp"
-                    android:textStyle="bold" android:padding="1dp"/>
+                    android:textStyle="bold" android:padding="1dp" android:layout_weight="5"/>
             <TextView
                     android:text="@string/homepage_selected_car"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content" android:id="@+id/selected_car_title2"
+                    android:layout_height="0dp" android:id="@+id/selected_car_title2"
                     android:textAlignment="center"
                     android:textSize="24sp"
                     android:textStyle="bold" android:padding="1dp"
-                    android:background="@drawable/light_green_title_color"/>
+                    android:background="@drawable/light_green_title_color" android:layout_weight="5"/>
+            <TextView
+                    android:text="@string/lorem_ipsum"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp" android:id="@+id/textView_upcoming_maintenance_main"
+                    android:layout_weight="67" android:background="#FFFFFF" android:paddingHorizontal="20dp"
+                    android:paddingVertical="20dp"/>
+            <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp" android:layout_weight="12">
+
+                <com.google.android.material.tabs.TabLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="100dp" app:tabBackground="@drawable/tab_background"
+                        app:tabIndicatorHeight="0dp" android:background="#CACACA"
+                        app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintStart_toStartOf="parent"
+                >
+
+                    <com.google.android.material.tabs.TabItem
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/maintenance_by_miles_title"
+                            android:id="@+id/tab_maintenance_by_miles"/>
+
+                    <com.google.android.material.tabs.TabItem
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/maintenance_by_time_title" android:id="@+id/tab_maintenance_by_time"
+                    />
+
+                </com.google.android.material.tabs.TabLayout>
+            </androidx.constraintlayout.widget.ConstraintLayout>
         </LinearLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
 </LinearLayout>
