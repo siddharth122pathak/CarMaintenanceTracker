@@ -67,12 +67,6 @@ public class VehicleDatabaseHelper extends SQLiteOpenHelper {
         db.close();
     }
 
-    //Method to get the first vehicle from the database (default vehicle)
-    public Cursor getFirstVehicle() {
-        SQLiteDatabase db = this.getReadableDatabase();
-        return db.rawQuery("SELECT * FROM " + TABLE_NAME + " ORDER BY " + COLUMN_ID + " ASC LIMIT 1", null);
-    }
-
     //Method to retrieve all vehicles from the database
     public Cursor getAllVehicles() {
         SQLiteDatabase db = this.getWritableDatabase(); //Get a readable database
@@ -132,6 +126,17 @@ public class VehicleDatabaseHelper extends SQLiteOpenHelper {
 
         cursor1.close();
         cursor2.close();
+        db.close();
+    }
+
+    //Method to assist to update mileage with the update button
+    public void updateMileage(int vehicleId, int newMileage) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_MILES, String.valueOf(newMileage)); //Update the mileage column
+
+        //Update the vehicle with the new mileage where the id matches
+        db.update(TABLE_NAME, values, COLUMN_ID + "=?", new String[]{String.valueOf(vehicleId)});
         db.close();
     }
 }

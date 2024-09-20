@@ -214,8 +214,23 @@ public class FirstFragment extends Fragment {
                 String newMileageStr = input.getText().toString();
                 if (!newMileageStr.isEmpty()) {
                     int newMileage = Integer.parseInt(newMileageStr);
-                    vehicleMileage.set(currentVehicleIndex, newMileage); // Update the mileage for the current vehicle
-                    mileageText.setText(newMileage + " miles"); // Update the displayed mileage
+                    //Ensure the list is large enough
+                    if (vehicleMileage.size() > currentVehicleIndex) {
+                        vehicleMileage.set(currentVehicleIndex, newMileage); //Update the mileage for the current vehicle
+                    } else {
+                        vehicleMileage.add(newMileage); //Add the new mileage if the list is not large enough
+                    }
+
+                    mileageText.setText(newMileage + " miles"); //Update the displayed mileage
+
+                    //Update mileage in the database
+                    VehicleDatabaseHelper dbHelper = new VehicleDatabaseHelper(getContext());
+                    Cursor cursor = dbHelper.getActiveVehicle();  //Get the active vehicle
+                    if (cursor.moveToFirst()) {
+                        @SuppressLint("Range") int activeVehicleId = cursor.getInt(cursor.getColumnIndex(COLUMN_ID));  //Get the ID of the active vehicle
+                        dbHelper.updateMileage(activeVehicleId, newMileage);  //Update the mileage in the database
+                    }
+                    cursor.close();
                 }
             });
 
@@ -276,20 +291,26 @@ public class FirstFragment extends Fragment {
                 binding.selectedCarTitle.setText(yearMakeModel);
             }
 
-            //Display the correct mileage for the selected vehicle
-            if (vehicleIndex < vehicleMileage.size()) {
-                int mileage = vehicleMileage.get(vehicleIndex); //Retrieve the mileage from the list
-                if (mileage > 0) {
-                    mileageText.setText(mileage + " miles");  //Display mileage if available
-                } else {
-                    mileageText.setText("Mileage not available");  //Handle missing mileage
+            //Retrieve mileage from the database
+            VehicleDatabaseHelper dbHelper = new VehicleDatabaseHelper(getContext());
+            Cursor cursor = dbHelper.getActiveVehicle();
+            if (cursor.moveToFirst()) {
+                @SuppressLint("Range") String milesStr = cursor.getString(cursor.getColumnIndex(COLUMN_MILES));
+                int mileage = 0;
+                if (milesStr != null && !milesStr.isEmpty()) {
+                    try {
+                        mileage = Integer.parseInt(milesStr);
+                    } catch (NumberFormatException e) {
+                        mileage = 0; // Handle invalid mileage
+                    }
                 }
-            } else {
-                mileageText.setText("Mileage not available");
+                if (mileage > 0) {
+                    mileageText.setText(mileage + " miles");
+                } else {
+                    mileageText.setText("Mileage not available");
+                }
             }
-        } else {
-            binding.selectedCarTitle.setText("No Vehicle Available");
-            mileageText.setText("Mileage not available");
+            cursor.close();
         }
     }
 
@@ -328,18 +349,27 @@ public class FirstFragment extends Fragment {
         //Fetch the newly active vehicle
         Cursor activeVehicleCursor = dbHelper.getActiveVehicle();
         if (activeVehicleCursor != null && activeVehicleCursor.moveToFirst()) {
-            vehicleList.add(activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex(COLUMN_MAKE)) + " " +
-                    activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex(COLUMN_MODEL)) + " " +
-                    activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex(COLUMN_YEAR)) + " " +
-                    activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex(COLUMN_LICENSE)));
+            String make = activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex(COLUMN_MAKE));
+            String model = activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex(COLUMN_MODEL));
+            String year = activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex(COLUMN_YEAR));
+            String license = activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex(COLUMN_LICENSE));
+            String milesStr = activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex(COLUMN_MILES));
+
+            vehicleList.add(make + " " + model + " " + year + " " + license);
 
             //Update the mileage for the active vehicle
-            //Fetch the mileage correctly
-            int mileage = activeVehicleCursor.getInt(activeVehicleCursor.getColumnIndex(COLUMN_MILES));
             vehicleMileage.clear();
+            int mileage = 0;
+            if (milesStr != null && !milesStr.isEmpty()) {
+                try {
+                    mileage = Integer.parseInt(milesStr);
+                } catch (NumberFormatException e) {
+                    mileage = 0; // Handle invalid mileage
+                }
+            }
             vehicleMileage.add(mileage);
 
-            showVehicle(0);  //Show the updated active vehicle
+            showVehicle(0);  // Show the updated active vehicle
         }
 
         if (activeVehicleCursor != null) {
