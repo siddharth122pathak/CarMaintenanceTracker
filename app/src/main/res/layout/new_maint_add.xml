@@ -234,11 +234,10 @@
                 android:text="Save"
                 android:layout_width="150dp"
                 android:layout_height="55dp"
-                android:background="@drawable/save_button_background"
                 android:textColor="#F0F0F0"
                 android:padding="10dp"
                 android:textSize="18sp"
-                android:layout_margin="25dp"/>
+                android:layout_margin="25dp" android:backgroundTint="@color/button_color"/>
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
