@@ -1,0 +1,344 @@
+Index: app/src/main/java/com/example/carmaintenancetracker/FirstFragment.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.carmaintenancetracker;\r\n\r\nimport android.annotation.SuppressLint;\r\nimport android.app.AlertDialog;\r\nimport android.content.Intent;\r\nimport android.database.Cursor;\r\nimport android.graphics.drawable.Drawable;\r\nimport android.os.Bundle;\r\nimport android.view.LayoutInflater;\r\nimport android.view.View;\r\nimport android.view.ViewGroup;\r\nimport android.widget.Button;\r\nimport android.widget.EditText;\r\nimport android.widget.TextView;\r\nimport androidx.annotation.NonNull;\r\nimport androidx.annotation.Nullable;\r\nimport androidx.core.content.ContextCompat;\r\nimport androidx.fragment.app.Fragment;\r\nimport com.example.carmaintenancetracker.databinding.FragmentFirstBinding;\r\n\r\nimport java.util.ArrayList;\r\nimport java.util.List;\r\nimport java.util.Objects;\r\n\r\nimport static android.app.Activity.RESULT_OK;\r\nimport static com.example.carmaintenancetracker.VehicleDatabaseHelper.*;\r\n\r\npublic class FirstFragment extends Fragment {\r\n\r\n    private static final int ADD_VEHICLE_REQUEST_CODE = 1;\r\n    //View binding for the fragment's layout\r\n    private FragmentFirstBinding binding;\r\n    //Views to handle mileage, notifications, and buttons\r\n    private TextView mileageText;\r\n    private Button notificationToggleButton;\r\n    private View notificationBar;\r\n    private TextView notificationText;\r\n    private boolean notificationsOn = false; //Default state for notifications\r\n    private TextView titleText;\r\n\r\n    //List to store chicle mileage and names (IDs or names)\r\n    private final List<Integer> vehicleMileage = new ArrayList<>();\r\n    private final List<String> vehicleList = new ArrayList<>();\r\n    private int currentVehicleIndex = 0;\r\n\r\n    @Nullable\r\n    @Override\r\n    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {\r\n        // Inflate the fragment layout using binding\r\n        binding = FragmentFirstBinding.inflate(inflater, container, false);\r\n        return binding.getRoot();\r\n\r\n    }\r\n\r\n    @Override\r\n    public void onSaveInstanceState(@NonNull Bundle outState) {\r\n        super.onSaveInstanceState(outState);\r\n\r\n        // Save the current vehicle data\r\n        outState.putStringArrayList(\"vehicleList\", new ArrayList<>(vehicleList));\r\n        outState.putIntegerArrayList(\"vehicleMileage\", new ArrayList<>(vehicleMileage));\r\n        outState.putInt(\"currentVehicleIndex\", currentVehicleIndex);\r\n    }\r\n\r\n    //AddVehicleActivity save button storage\r\n    @Override\r\n    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {\r\n        super.onActivityResult(requestCode, resultCode, data);\r\n\r\n        if (requestCode == ADD_VEHICLE_REQUEST_CODE && resultCode == RESULT_OK && data != null) {\r\n            String make = data.getStringExtra(\"vehicleMake\");\r\n            String model = data.getStringExtra(\"vehicleModel\");\r\n            String year = data.getStringExtra(\"vehicleYear\");\r\n            String licensePlate = data.getStringExtra(\"vehicleLicensePlate\");\r\n            String milesStr = data.getStringExtra(\"vehicleMiles\");\r\n\r\n            int miles = milesStr != null && !milesStr.isEmpty() ? Integer.parseInt(milesStr) : 0;\r\n            vehicleList.add(make + \" \" + model + \" \" + year + \" \" + licensePlate);\r\n            vehicleMileage.add(miles);\r\n\r\n            VehicleDatabaseHelper dbHelper = new VehicleDatabaseHelper(getContext());\r\n\r\n            //If this is the first vehicle, set it as the default and active vehicle\r\n            if (vehicleList.size() == 1) {\r\n                dbHelper.setActiveVehicle(1);  //Set the first vehicle as active\r\n            }\r\n            showVehicle(0);  //Show the first vehicle\r\n            updateVehicleButtons();\r\n        }\r\n    }\r\n\r\n    @SuppressLint(\"SetTextI18n\")\r\n    @Override\r\n    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {\r\n        super.onViewCreated(view, savedInstanceState);\r\n\r\n        //Initialize the UI components with the fragment\r\n        mileageText = view.findViewById(R.id.textView_selected_car_mileage);\r\n        notificationToggleButton = view.findViewById(R.id.btn_selected_car_notifications_setting);\r\n        notificationBar = view.findViewById(R.id.textView_selected_car_notifications_setting);\r\n        notificationText = notificationBar.findViewById(R.id.textView_selected_car_notifications_setting);\r\n        titleText = view.findViewById(R.id.selected_car_title);\r\n\r\n        VehicleDatabaseHelper dbHelper = new VehicleDatabaseHelper(getContext());\r\n\r\n        //Load the active/default vehicle from the database\r\n        Cursor activeVehicleCursor = dbHelper.getActiveVehicle();\r\n        //If an active vehicle exists, show its details in the UI\r\n        if (activeVehicleCursor != null && activeVehicleCursor.moveToFirst()) {\r\n            @SuppressLint(\"Range\") String make = activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex(\"make\"));\r\n            @SuppressLint(\"Range\") String model = activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex(\"model\"));\r\n            @SuppressLint(\"Range\") String year = activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex(\"year\"));\r\n            @SuppressLint(\"Range\") String licensePlate = activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex(\"license\"));\r\n            @SuppressLint(\"Range\") String miles = activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex(\"miles\"));\r\n\r\n            //Update the UI with the active vehicle's information\r\n            titleText.setText(year + \" \" + make + \" \" + model);\r\n            mileageText.setText(miles + \" miles\");\r\n\r\n            //Add the vehicle to the list\r\n            vehicleList.add(make + \" \" + model + \" \" + year + \" \" + licensePlate);\r\n            vehicleMileage.add(Integer.parseInt(miles));\r\n            currentVehicleIndex = 0;  //This is the first vehicle\r\n\r\n            activeVehicleCursor.close();\r\n        } else {\r\n            //If no active vehicle, prompt the user to add one\r\n            promptAddVehicle();\r\n        }\r\n\r\n        //Update the vehicle buttons\r\n        updateVehicleButtons();\r\n\r\n        //Restore state of application\r\n        if (savedInstanceState != null) {\r\n            // Restore the saved state\r\n            vehicleList.addAll(savedInstanceState.getStringArrayList(\"vehicleList\"));\r\n            vehicleMileage.addAll(savedInstanceState.getIntegerArrayList(\"vehicleMileage\"));\r\n            currentVehicleIndex = savedInstanceState.getInt(\"currentVehicleIndex\");\r\n\r\n            // Update the UI\r\n            updateVehicleButtons();\r\n            showVehicle(currentVehicleIndex);\r\n        } else {\r\n            //Initialize the vehicle list if empty\r\n            if (vehicleList.isEmpty()) {\r\n                promptAddVehicle();\r\n            } else {\r\n                updateVehicleButtons();\r\n                showVehicle(currentVehicleIndex);\r\n            }\r\n        }\r\n        setupVehicleButtons(view);\r\n\r\n        //Set up listeners for buttons in this fragment\r\n\r\n        //Update Mileage Button: Triggers the mileage update dialog\r\n        Button updateButton = view.findViewById(R.id.btn_selected_car_mileage_update);\r\n        updateButton.setOnClickListener(v -> showUpdateMileageDialog());\r\n\r\n        //Notification Toggle Button: Toggles notification on or off\r\n        notificationToggleButton.setOnClickListener(v -> toggleNotifications());\r\n\r\n        //Add New Maintenance Button: Opens the add maintenance screen\r\n        Button addMaintenanceButton = view.findViewById(R.id.btn_add_new_maintenance);\r\n        addMaintenanceButton.setOnClickListener(v -> addNewMaintenance());\r\n\r\n        //View Upcoming Maintenance Button: Opens the screen showing upcoming maintenance\r\n        Button viewMaintenanceButton = view.findViewById(R.id.btn_view_upcoming_maintenance);\r\n        viewMaintenanceButton.setOnClickListener(v -> viewUpcomingMaintenance());\r\n    }\r\n\r\n    //Method to set up vehicle buttons\r\n    private void setupVehicleButtons(View view){\r\n        Button vehicle1Button = view.findViewById(R.id.btn_vehicle_1);\r\n        Button vehicle2Button = view.findViewById(R.id.btn_vehicle_2);\r\n        Button vehicle3Button = view.findViewById(R.id.btn_vehicle_3);\r\n\r\n        // Set up button click listeners to swap vehicles\r\n        vehicle1Button.setOnClickListener(v -> switchOrAddVehicle(1));\r\n        vehicle2Button.setOnClickListener(v -> switchOrAddVehicle(2));\r\n        vehicle3Button.setOnClickListener(v -> switchOrAddVehicle(3));\r\n    }\r\n\r\n    //Method to show a dialog for updating the mileage\r\n    @SuppressLint(\"SetTextI18n\")\r\n    private void showUpdateMileageDialog(){\r\n        //Check if there is an active vehicle selected\r\n        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());\r\n        if (vehicleList.isEmpty()) {\r\n            builder.setTitle(\"No Vehicle Selected\");\r\n            builder.setMessage(\"You need to add a vehicle first before updating mileage.\");\r\n            builder.setPositiveButton(\"OK\", (dialog, which) -> dialog.dismiss());\r\n        } else {\r\n            //If a vehicle is selected, show the mileage update dialog\r\n            builder.setTitle(\"Update Mileage\");\r\n\r\n            //Add input field to dialog\r\n            final EditText input = new EditText(getContext());\r\n            input.setHint(\"Enter new mileage\");\r\n            builder.setView(input);\r\n\r\n            //Set up the buttons for the dialog\r\n            builder.setPositiveButton(\"Update\", (dialog, which) -> {\r\n                //Get the new mileage from the input field\r\n                String newMileageStr = input.getText().toString();\r\n                if (!newMileageStr.isEmpty()) {\r\n                    int newMileage = Integer.parseInt(newMileageStr);\r\n                    vehicleMileage.set(currentVehicleIndex, newMileage); // Update the mileage for the current vehicle\r\n                    mileageText.setText(newMileage + \" miles\"); // Update the displayed mileage\r\n                }\r\n            });\r\n\r\n            builder.setNegativeButton(\"Cancel\", (dialog, which) -> dialog.cancel());\r\n\r\n            //Show the mileage update dialog\r\n        }\r\n        builder.show();\r\n    }\r\n\r\n    //Method to toggle notifications on/off\r\n    @SuppressLint(\"SetTextI18n\")\r\n    private void toggleNotifications() {\r\n        notificationsOn = !notificationsOn;// Toggle the boolean value\r\n        if (notificationsOn) {\r\n            // Set the button text and bar color when notifications are ON\r\n            notificationToggleButton.setText(\"Turn Off\");\r\n            Drawable greenGradient = ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.green_border_gradient);\r\n            notificationBar.setBackground(greenGradient);\r\n            notificationText.setText(\"Notifications for this vehicle are ON\");\r\n        } else {\r\n            // Set the button text and bar color when notifications are OFF\r\n            notificationToggleButton.setText(\"Turn On\");\r\n            Drawable redGradient = ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.gray_border_gradient);\r\n            notificationBar.setBackground(redGradient);\r\n            notificationText.setText(\"Notifications for this vehicle are OFF\");\r\n        }\r\n    }\r\n\r\n    //Method to handle adding new maintenance\r\n    private void addNewMaintenance() {\r\n        // Logic to open the \"Add New Maintenance\" screen or fragment\r\n    }\r\n\r\n    //Method to handle viewing upcoming maintenance\r\n    private void viewUpcomingMaintenance() {\r\n        Intent intent = new Intent(getContext(), UpcomingMaintenanceActivity.class);\r\n        startActivityForResult(intent, 1);\r\n    }\r\n\r\n    //Method to display mileage for the selected vehicle\r\n    @SuppressLint(\"SetTextI18n\")\r\n    private void showVehicle(int vehicleIndex) {\r\n        if (vehicleList.isEmpty()) {\r\n            //Log an error or prompt the user to add a vehicle\r\n            titleText.setText(\"No Vehicle Available\");\r\n            mileageText.setText(\"0 miles\");\r\n            return;\r\n        }\r\n\r\n        if (vehicleIndex >= 0 && vehicleIndex < vehicleList.size()) {\r\n            String makeModelYear = vehicleList.get(vehicleIndex);\r\n            String[] vehicleDetails = makeModelYear.split(\" \");\r\n            String licensePlate = vehicleDetails.length > 3 ? vehicleDetails[3] : \"\";\r\n\r\n            Drawable blueGradient = ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.title_border_gradient);\r\n            if (!licensePlate.isEmpty()) {\r\n                binding.selectedCarTitle.setText(licensePlate);\r\n            } else {\r\n                binding.selectedCarTitle.setText(vehicleDetails[2] + \" \" + vehicleDetails[0] + \" \" + vehicleDetails[1]);\r\n            }\r\n\r\n            titleText.setBackground(blueGradient);\r\n            mileageText.setText(vehicleMileage.get(vehicleIndex) + \" miles\");\r\n        }\r\n    }\r\n\r\n    //Method to switch between existing vehicles or add a new one\r\n    private void switchOrAddVehicle(int index) {\r\n        if (index < vehicleList.size()) {\r\n            switchVehicle(index);\r\n        }else {\r\n            promptAddVehicle();\r\n        }\r\n    }\r\n\r\n    //Switch between vehicles based on index\r\n    private void switchVehicle(int vehicleIndex) {\r\n        if (vehicleIndex >= 1 && vehicleIndex < vehicleList.size()) {\r\n            VehicleDatabaseHelper dbHelper = new VehicleDatabaseHelper(getContext());\r\n\r\n            //Swap the data between Vehicle 0 (id 1 in the database) and the selected vehicle (vehicleIndex + 1)\r\n            dbHelper.swapVehicles(1, vehicleIndex + 1);  //Swapping Vehicle 0 and the selected vehicle\r\n\r\n            // Set the newly active vehicle\r\n            dbHelper.setActiveVehicle(1);  //Vehicle 0 is now the active vehicle\r\n\r\n            //Update the UI after swapping vehicles\r\n            updateVehicleButtons();\r\n\r\n            //Show the newly active vehicle (Vehicle 0 in the database)\r\n            showVehicle(0);\r\n        }\r\n    }\r\n\r\n    //Prompt user to add new vehicle\r\n    private void promptAddVehicle() {\r\n        Intent intent = new Intent(getContext(), AddVehicleActivity.class);\r\n        startActivityForResult(intent, 1);\r\n    }\r\n\r\n    //Update the button text dynamically based on the number of vehicles\r\n    @SuppressLint({\"Range\", \"SetTextI18n\"})\r\n    private void updateVehicleButtons() {\r\n        Button vehicle1Button = Objects.requireNonNull(getView()).findViewById(R.id.btn_vehicle_1);\r\n        Button vehicle2Button = Objects.requireNonNull(getView()).findViewById(R.id.btn_vehicle_2);\r\n        Button vehicle3Button = Objects.requireNonNull(getView()).findViewById(R.id.btn_vehicle_3);\r\n\r\n        VehicleDatabaseHelper dbHelper = new VehicleDatabaseHelper(getContext());\r\n        Cursor cursor = dbHelper.getAllVehicles();\r\n\r\n        if (cursor != null && cursor.moveToFirst()) {\r\n            do {\r\n                String make = cursor.getString(cursor.getColumnIndex(COLUMN_MAKE));\r\n                String model = cursor.getString(cursor.getColumnIndex(COLUMN_MODEL));\r\n                String year = cursor.getString(cursor.getColumnIndex(COLUMN_YEAR));\r\n                String license = cursor.getString(cursor.getColumnIndex(COLUMN_LICENSE));\r\n\r\n                vehicleList.add(make + \" \" + model + \" \" + year + \" \" + license);\r\n            } while (cursor.moveToNext());\r\n        }\r\n        cursor.close();\r\n\r\n        // Button 1: Assign Vehicle 1 or \"Add New Vehicle\" if there's only 1 vehicle\r\n        if (vehicleList.size() > 1) {\r\n            vehicle1Button.setText(vehicleList.get(1));  // Second vehicle in the list\r\n        } else {\r\n            vehicle1Button.setText(\"Add New Vehicle\");\r\n        }\r\n\r\n        // Button 2: Assign Vehicle 2 or \"Add New Vehicle\"\r\n        if (vehicleList.size() > 2) {\r\n            vehicle2Button.setText(vehicleList.get(2));  // Third vehicle in the list\r\n        } else {\r\n            vehicle2Button.setText(\"Add New Vehicle\");\r\n        }\r\n\r\n        // Button 3: Always show \"Add New Vehicle\"\r\n        vehicle3Button.setText(\"Add New Vehicle\");\r\n    }\r\n\r\n    @Override\r\n    public void onDestroyView() {\r\n        super.onDestroyView();\r\n        // Nullify the binding to avoid memory leaks\r\n        binding = null;\r\n    }\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/carmaintenancetracker/FirstFragment.java b/app/src/main/java/com/example/carmaintenancetracker/FirstFragment.java
+--- a/app/src/main/java/com/example/carmaintenancetracker/FirstFragment.java	(revision 3392929954d3049ada814bf2046e8c829bfdc2b3)
++++ b/app/src/main/java/com/example/carmaintenancetracker/FirstFragment.java	(date 1726788738500)
+@@ -83,8 +83,9 @@
+             //If this is the first vehicle, set it as the default and active vehicle
+             if (vehicleList.size() == 1) {
+                 dbHelper.setActiveVehicle(1);  //Set the first vehicle as active
+-            }
+-            showVehicle(0);  //Show the first vehicle
++                showVehicle(0);  //Show the first vehicle
++            }
++
+             updateVehicleButtons();
+         }
+     }
+@@ -251,13 +252,6 @@
+     //Method to display mileage for the selected vehicle
+     @SuppressLint("SetTextI18n")
+     private void showVehicle(int vehicleIndex) {
+-        if (vehicleList.isEmpty()) {
+-            //Log an error or prompt the user to add a vehicle
+-            titleText.setText("No Vehicle Available");
+-            mileageText.setText("0 miles");
+-            return;
+-        }
+-
+         if (vehicleIndex >= 0 && vehicleIndex < vehicleList.size()) {
+             String makeModelYear = vehicleList.get(vehicleIndex);
+             String[] vehicleDetails = makeModelYear.split(" ");
+@@ -319,6 +313,9 @@
+         VehicleDatabaseHelper dbHelper = new VehicleDatabaseHelper(getContext());
+         Cursor cursor = dbHelper.getAllVehicles();
+ 
++        //Clear vehicleList to avoid duplication
++        vehicleList.clear();
++
+         if (cursor != null && cursor.moveToFirst()) {
+             do {
+                 String make = cursor.getString(cursor.getColumnIndex(COLUMN_MAKE));
+@@ -329,6 +326,7 @@
+                 vehicleList.add(make + " " + model + " " + year + " " + license);
+             } while (cursor.moveToNext());
+         }
++
+         cursor.close();
+ 
+         // Button 1: Assign Vehicle 1 or "Add New Vehicle" if there's only 1 vehicle
+Index: app/src/main/res/layout/new_maint_add.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/res/layout/new_maint_add.xml b/app/src/main/res/layout/new_maint_add.xml
+deleted file mode 100644
+--- a/app/src/main/res/layout/new_maint_add.xml	(revision 3392929954d3049ada814bf2046e8c829bfdc2b3)
++++ /dev/null	(revision 3392929954d3049ada814bf2046e8c829bfdc2b3)
+@@ -1,254 +0,0 @@
+-<?xml version="1.0" encoding="utf-8"?>
+-<androidx.constraintlayout.widget.ConstraintLayout
+-        xmlns:android="http://schemas.android.com/apk/res/android"
+-        xmlns:app="http://schemas.android.com/apk/res-auto"
+-        xmlns:tools="http://schemas.android.com/tools"
+-        android:layout_width="match_parent"
+-        android:layout_height="match_parent">
+-
+-    <!-- Title occupying the top part -->
+-    <TextView
+-            android:id="@+id/title_text"
+-            android:text="Add New Maintenance"
+-            android:layout_width="match_parent"
+-            android:layout_height="wrap_content"
+-            android:textAlignment="center"
+-            android:background="@drawable/title_border_gradient"
+-            android:textSize="32sp"
+-            android:textStyle="bold"
+-            android:padding="1dp"
+-            app:layout_constraintTop_toTopOf="parent"
+-            app:layout_constraintStart_toStartOf="parent"
+-            app:layout_constraintEnd_toEndOf="parent" />
+-
+-    <!-- Form content -->
+-    <LinearLayout
+-            android:orientation="vertical"
+-            android:layout_width="409dp"
+-            android:layout_height="0dp"
+-            app:layout_constraintTop_toBottomOf="@id/title_text"
+-            app:layout_constraintBottom_toTopOf="@+id/save_button_layout"
+-            app:layout_constraintStart_toStartOf="parent"
+-            app:layout_constraintEnd_toEndOf="parent">
+-
+-        <!-- Year, Make, Model Row (aligned with title) -->
+-        <LinearLayout
+-                android:orientation="horizontal"
+-                android:layout_width="match_parent"
+-                android:layout_height="58dp"
+-                android:layout_marginTop="0dp"
+-                android:layout_marginBottom="0dp">
+-            <TextView
+-                    android:text="Year"
+-                    android:padding="18dp"
+-                    android:textSize="18sp"
+-                    android:textStyle="bold"
+-                    android:textAlignment="center"
+-                    android:layout_width="0dp"
+-                    android:background="@drawable/light_green_title_color"
+-                    android:layout_height="match_parent"
+-                    android:id="@+id/textView10"
+-                    android:layout_weight="1" />
+-            <TextView
+-                    android:text="Make"
+-                    android:padding="18dp"
+-                    android:textSize="18sp"
+-                    android:textStyle="bold"
+-                    android:textAlignment="center"
+-                    android:layout_width="0dp"
+-                    android:background="@drawable/light_green_title_color"
+-                    android:layout_height="match_parent"
+-                    android:id="@+id/textView11"
+-                    android:layout_weight="1" />
+-            <TextView
+-                    android:text="Model"
+-                    android:padding="18dp"
+-                    android:textSize="18sp"
+-                    android:textStyle="bold"
+-                    android:textAlignment="center"
+-                    android:layout_width="0dp"
+-                    android:background="@drawable/light_green_title_color"
+-                    android:layout_height="match_parent"
+-                    android:id="@+id/textView12"
+-                    android:layout_weight="1" />
+-        </LinearLayout>
+-
+-        <!-- Current Mileage Input -->
+-        <TextView
+-                android:text="Current mileage"
+-                android:padding="10dp"
+-                android:textSize="20sp"
+-                android:textStyle="bold"
+-                android:layout_width="match_parent"
+-                android:layout_height="wrap_content"
+-                android:id="@+id/textView13"
+-                android:layout_marginLeft="15dp" />
+-
+-        <com.google.android.material.textfield.TextInputLayout
+-                android:layout_width="match_parent"
+-                android:layout_height="wrap_content">
+-            <com.google.android.material.textfield.TextInputEditText
+-                    android:layout_width="match_parent"
+-                    android:layout_height="wrap_content"
+-                    android:hint="Enter Current mileage here"
+-                    android:layout_marginLeft="20dp" />
+-        </com.google.android.material.textfield.TextInputLayout>
+-
+-        <!-- When was this maintenance performed? -->
+-        <TextView
+-                android:text="When was this maintenance performed?"
+-                android:padding="10dp"
+-                android:textSize="20sp"
+-                android:textStyle="bold"
+-                android:layout_width="match_parent"
+-                android:layout_height="wrap_content"
+-                android:layout_marginLeft="15dp" />
+-
+-        <!-- Date Input and Calendar Button -->
+-        <LinearLayout
+-                android:orientation="horizontal"
+-                android:layout_width="match_parent"
+-                android:layout_height="wrap_content"
+-                android:layout_marginLeft="20dp">
+-            <EditText
+-                    android:layout_width="230dp"
+-                    android:layout_height="wrap_content"
+-                    android:hint="MM/DD/YYYY"
+-                    android:textAlignment="center"
+-                    android:inputType="date"
+-                    android:id="@+id/editTextDate2" />
+-            <ImageButton
+-                    android:layout_width="wrap_content"
+-                    android:layout_height="wrap_content"
+-                    app:srcCompat="@android:drawable/ic_menu_my_calendar"
+-                    android:id="@+id/imageButton3"
+-                    android:layout_marginLeft="20dp" />
+-        </LinearLayout>
+-
+-        <!-- Maintenance Action Performed -->
+-        <TextView
+-                android:text="What maintenance action was performed?"
+-                android:padding="10dp"
+-                android:textSize="18sp"
+-                android:textStyle="bold"
+-                android:layout_width="match_parent"
+-                android:layout_height="wrap_content"
+-                android:layout_marginLeft="10dp" />
+-
+-        <!-- Spinner Section -->
+-        <Spinner
+-                android:id="@+id/spinner"
+-                android:layout_width="match_parent"
+-                android:layout_height="wrap_content"
+-                android:padding="16dp"
+-                android:textSize="18sp"
+-                android:layout_marginLeft="20dp"
+-                android:layout_marginRight="20dp"
+-                android:spinnerMode="dropdown"
+-                android:prompt="Choose one" />
+-
+-        <!-- Add More Button and Text Aligned with Spinner -->
+-        <LinearLayout
+-                android:orientation="horizontal"
+-                android:layout_width="match_parent"
+-                android:layout_height="wrap_content"
+-                android:layout_marginTop="10dp"
+-                android:layout_marginLeft="20dp"
+-                android:gravity="center_vertical">
+-
+-            <ImageButton
+-                    android:id="@+id/add_more_button"
+-                    android:layout_width="40dp"
+-                    android:layout_height="40dp"
+-                    android:background="@drawable/circle_button_white"
+-                    app:srcCompat="@drawable/ic_grey_cross"
+-                    android:contentDescription="Add More"
+-                    android:layout_marginRight="10dp"/>
+-
+-            <TextView
+-                    android:id="@+id/add_more_text"
+-                    android:layout_width="wrap_content"
+-                    android:layout_height="wrap_content"
+-                    android:text="Add More"
+-                    android:textSize="18sp"
+-                    android:textStyle="bold" />
+-        </LinearLayout>
+-
+-        <!-- Larger gap between Add More and Notification Text -->
+-        <Space
+-                android:layout_width="match_parent"
+-                android:layout_height="40dp" />
+-
+-        <!-- "Would you like to turn on notifications?" Text (Larger) -->
+-        <TextView
+-                android:id="@+id/notifications_text"
+-                android:text="Would you like to turn on notifications for this  vehicle?"
+-                android:layout_width="match_parent"
+-                android:layout_height="wrap_content"
+-                android:textSize="24sp"
+-                android:paddingLeft="20dp"
+-                android:layout_marginTop="10dp"
+-                android:textStyle="bold"
+-                android:maxLines="2"
+-                android:ellipsize="end" />
+-
+-        <!-- Subtext "(oil changes, upcoming maintenance, etc.)" -->
+-        <TextView
+-                android:id="@+id/notifications_subtext"
+-                android:text="(oil changes, upcoming maintenance, etc.)"
+-                android:layout_width="match_parent"
+-                android:layout_height="wrap_content"
+-                android:textSize="16sp"
+-                android:paddingLeft="20dp"
+-                android:layout_marginBottom="5dp" />
+-
+-        <!-- Checkbox Button with Text, Bigger and Closer to Notification Text -->
+-        <LinearLayout
+-                android:orientation="horizontal"
+-                android:layout_width="wrap_content"
+-                android:layout_height="wrap_content"
+-                android:layout_marginLeft="20dp"
+-                android:layout_marginTop="5dp">
+-
+-            <CheckBox
+-                    android:id="@+id/checkbox_notifications"
+-                    android:layout_width="wrap_content"
+-                    android:layout_height="wrap_content"
+-                    android:scaleX="1.5"
+-                    android:scaleY="1.5" />
+-
+-            <TextView
+-                    android:text="I don’t want to miss anything!"
+-                    android:layout_width="wrap_content"
+-                    android:layout_height="wrap_content"
+-                    android:textSize="16sp"
+-                    android:layout_marginLeft="10dp" />
+-        </LinearLayout>
+-
+-    </LinearLayout>
+-
+-    <!-- Save button inside grey square at the bottom -->
+-    <LinearLayout
+-            android:id="@+id/save_button_layout"
+-            android:orientation="horizontal"
+-            android:layout_width="match_parent"
+-            android:layout_height="wrap_content"
+-            android:background="@drawable/square_gradiant_grey"
+-            android:gravity="center"
+-            app:layout_constraintBottom_toBottomOf="parent"
+-            app:layout_constraintStart_toStartOf="parent"
+-            app:layout_constraintEnd_toEndOf="parent">
+-
+-        <Button
+-                android:id="@+id/button2"
+-                android:text="Save"
+-                android:layout_width="150dp"
+-                android:layout_height="55dp"
+-                android:background="@drawable/save_button_background"
+-                android:textColor="#F0F0F0"
+-                android:padding="10dp"
+-                android:textSize="18sp"
+-                android:layout_margin="25dp"/>
+-    </LinearLayout>
+-
+-</androidx.constraintlayout.widget.ConstraintLayout>
+\ No newline at end of file
+Index: .idea/deploymentTargetSelector.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<project version=\"4\">\r\n  <component name=\"deploymentTargetSelector\">\r\n    <selectionStates>\r\n      <SelectionState runConfigName=\"app\">\r\n        <option name=\"selectionMode\" value=\"DROPDOWN\" />\r\n      </SelectionState>\r\n    </selectionStates>\r\n  </component>\r\n</project>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/deploymentTargetSelector.xml b/.idea/deploymentTargetSelector.xml
+--- a/.idea/deploymentTargetSelector.xml	(revision 3392929954d3049ada814bf2046e8c829bfdc2b3)
++++ b/.idea/deploymentTargetSelector.xml	(date 1726788809314)
+@@ -4,6 +4,14 @@
+     <selectionStates>
+       <SelectionState runConfigName="app">
+         <option name="selectionMode" value="DROPDOWN" />
++        <DropdownSelection timestamp="2024-09-19T23:28:20.618659700Z">
++          <Target type="DEFAULT_BOOT">
++            <handle>
++              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\Thomas Andes\.android\avd\Medium_Phone_API_34.avd" />
++            </handle>
++          </Target>
++        </DropdownSelection>
++        <DialogSelection />
+       </SelectionState>
+     </selectionStates>
+   </component>
