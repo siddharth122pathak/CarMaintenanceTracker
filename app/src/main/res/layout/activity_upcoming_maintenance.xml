@@ -15,46 +15,45 @@
                 app:layout_constraintTop_toTopOf="parent" app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent"
                 android:background="#FFFFFF">
-            <include android:layout_width="wrap_content" android:layout_height="0dp"
-                     layout="@layout/activity_main"
-                     android:layout_weight="11"/>
             <TextView
                     android:text="@string/maintenance_by_miles_title"
                     android:layout_width="match_parent"
-                    android:layout_height="0dp" android:id="@+id/page_title"
+                    android:layout_height="wrap_content" android:id="@+id/page_title"
                     android:textAlignment="center" android:background="@drawable/title_border_gradient"
                     android:textSize="24sp"
-                    android:textStyle="bold" android:padding="1dp" android:layout_weight="5"/>
+                    android:textStyle="bold" android:padding="1dp"/>
             <TextView
                     android:text="@string/homepage_selected_car"
                     android:layout_width="match_parent"
-                    android:layout_height="0dp" android:id="@+id/selected_car_title2"
+                    android:layout_height="wrap_content" android:id="@+id/selected_car_title2"
                     android:textAlignment="center"
                     android:textSize="24sp"
                     android:textStyle="bold" android:padding="1dp"
-                    android:background="@drawable/light_green_title_color" android:layout_weight="5"/>
+                    android:background="@drawable/light_green_title_color"/>
             <TextView
-                    android:text="@string/lorem_ipsum"
+                    android:text="@string/upcoming_maintenance_main_text"
                     android:layout_width="match_parent"
                     android:layout_height="0dp" android:id="@+id/textView_upcoming_maintenance_main"
-                    android:layout_weight="67" android:background="@drawable/full_border_white_background"
+                    android:layout_weight="85" android:background="@drawable/full_border_white_background"
                     android:paddingHorizontal="20dp"
                     android:paddingVertical="20dp"/>
             <LinearLayout
                     android:orientation="horizontal"
                     android:layout_width="match_parent"
-                    android:layout_height="0dp" android:layout_weight="12">
+                    android:layout_height="0dp" android:layout_weight="15" android:background="#B6B6B6">
                 <TextView
                         android:text="@string/maintenance_by_miles_title"
                         android:layout_width="0dp"
-                        android:layout_height="match_parent" android:id="@+id/textView_tab_maintenance_by_miles" android:layout_weight="50"
+                        android:layout_height="match_parent" android:id="@+id/textView_tab_maintenance_by_miles"
+                        android:layout_weight="50"
                         android:textAlignment="center" android:paddingVertical="30dp"
                         android:background="@drawable/tab_background_selected" android:textSize="16sp"
                         android:textStyle="bold"/>
                 <TextView
                         android:text="@string/maintenance_by_time_title"
                         android:layout_width="0dp"
-                        android:layout_height="match_parent" android:id="@+id/textView_tab_maintenance_by_time" android:layout_weight="50"
+                        android:layout_height="match_parent" android:id="@+id/textView_tab_maintenance_by_time"
+                        android:layout_weight="50"
                         android:paddingVertical="30dp" android:textAlignment="center"
                         android:background="@drawable/tab_background_unselected" android:textSize="16sp"
                         android:textStyle="bold"/>
