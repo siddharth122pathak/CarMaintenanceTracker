@@ -83,8 +83,9 @@ public class FirstFragment extends Fragment {
             //If this is the first vehicle, set it as the default and active vehicle
             if (vehicleList.size() == 1) {
                 dbHelper.setActiveVehicle(1);  //Set the first vehicle as active
+                showVehicle(0);  //Show the first vehicle
             }
-            showVehicle(0);  //Show the first vehicle
+
             updateVehicleButtons();
         }
     }
@@ -251,13 +252,6 @@ public class FirstFragment extends Fragment {
     //Method to display mileage for the selected vehicle
     @SuppressLint("SetTextI18n")
     private void showVehicle(int vehicleIndex) {
-        if (vehicleList.isEmpty()) {
-            //Log an error or prompt the user to add a vehicle
-            titleText.setText("No Vehicle Available");
-            mileageText.setText("0 miles");
-            return;
-        }
-
         if (vehicleIndex >= 0 && vehicleIndex < vehicleList.size()) {
             String makeModelYear = vehicleList.get(vehicleIndex);
             String[] vehicleDetails = makeModelYear.split(" ");
@@ -319,6 +313,9 @@ public class FirstFragment extends Fragment {
         VehicleDatabaseHelper dbHelper = new VehicleDatabaseHelper(getContext());
         Cursor cursor = dbHelper.getAllVehicles();
 
+        //Clear vehicleList to avoid duplication
+        vehicleList.clear();
+
         if (cursor != null && cursor.moveToFirst()) {
             do {
                 String make = cursor.getString(cursor.getColumnIndex(COLUMN_MAKE));
@@ -329,6 +326,7 @@ public class FirstFragment extends Fragment {
                 vehicleList.add(make + " " + model + " " + year + " " + license);
             } while (cursor.moveToNext());
         }
+
         cursor.close();
 
         // Button 1: Assign Vehicle 1 or "Add New Vehicle" if there's only 1 vehicle
