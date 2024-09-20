@@ -90,7 +90,7 @@ public class FirstFragment extends Fragment {
         }
     }
 
-    @SuppressLint("SetTextI18n")
+    @SuppressLint({"SetTextI18n", "Range"})
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -103,55 +103,46 @@ public class FirstFragment extends Fragment {
         titleText = view.findViewById(R.id.selected_car_title);
 
         VehicleDatabaseHelper dbHelper = new VehicleDatabaseHelper(getContext());
+        //Check if any vehicle exists in the database
+        Cursor cursor = dbHelper.getAllVehicles();
+        vehicleList.clear();  //Ensure list is cleared before populating
 
-        //Load the active/default vehicle from the database
-        Cursor activeVehicleCursor = dbHelper.getActiveVehicle();
-        //If an active vehicle exists, show its details in the UI
-        if (activeVehicleCursor != null && activeVehicleCursor.moveToFirst()) {
-            @SuppressLint("Range") String make = activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex("make"));
-            @SuppressLint("Range") String model = activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex("model"));
-            @SuppressLint("Range") String year = activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex("year"));
-            @SuppressLint("Range") String licensePlate = activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex("license"));
-            @SuppressLint("Range") String miles = activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex("miles"));
-
-            //Update the UI with the active vehicle's information
-            titleText.setText(year + " " + make + " " + model);
-            mileageText.setText(miles + " miles");
-
-            //Add the vehicle to the list
-            vehicleList.add(make + " " + model + " " + year + " " + licensePlate);
-            vehicleMileage.add(Integer.parseInt(miles));
-            currentVehicleIndex = 0;  //This is the first vehicle
-
-            activeVehicleCursor.close();
-        } else {
-            //If no active vehicle, prompt the user to add one
+        if (cursor != null && cursor.getCount() == 0) {
+            //No vehicles found in the database, prompt user to add a vehicle
             promptAddVehicle();
+        } else {
+            //Vehicles found, show the first vehicle
+            Cursor activeVehicleCursor = dbHelper.getActiveVehicle();
+            if (activeVehicleCursor != null && activeVehicleCursor.moveToFirst()) {
+                // Ensure the active vehicle is populated in the list
+                vehicleList.clear();
+                vehicleList.add(activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex(COLUMN_MAKE)) + " " +
+                        activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex(COLUMN_MODEL)) + " " +
+                        activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex(COLUMN_YEAR)) + " " +
+                        activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex(COLUMN_LICENSE)));
+                showVehicle(0);  // Show the active vehicle
+            }
+            updateVehicleButtons();  //Update the UI with the available vehicles
         }
 
-        //Update the vehicle buttons
-        updateVehicleButtons();
+        if (cursor != null) {
+            cursor.close();
+        }
 
-        //Restore state of application
+        //If a saved state exists, restore the state (optional)
         if (savedInstanceState != null) {
-            // Restore the saved state
             vehicleList.addAll(savedInstanceState.getStringArrayList("vehicleList"));
             vehicleMileage.addAll(savedInstanceState.getIntegerArrayList("vehicleMileage"));
             currentVehicleIndex = savedInstanceState.getInt("currentVehicleIndex");
 
-            // Update the UI
-            updateVehicleButtons();
-            showVehicle(currentVehicleIndex);
-        } else {
-            //Initialize the vehicle list if empty
-            if (vehicleList.isEmpty()) {
-                promptAddVehicle();
-            } else {
+            //Only update the buttons and show the vehicle if there are vehicles in the list
+            if (vehicleList.size() > 0) {
                 updateVehicleButtons();
                 showVehicle(currentVehicleIndex);
             }
         }
-        setupVehicleButtons(view);
+
+        setupVehicleButtons(view);  //Set up the click listeners for vehicle buttons
 
         //Set up listeners for buttons in this fragment
 
@@ -280,6 +271,7 @@ public class FirstFragment extends Fragment {
     }
 
     //Switch between vehicles based on index
+    @SuppressLint("Range")
     private void switchVehicle(int vehicleIndex) {
         if (vehicleIndex >= 1 && vehicleIndex < vehicleList.size()) {
             VehicleDatabaseHelper dbHelper = new VehicleDatabaseHelper(getContext());
@@ -290,11 +282,17 @@ public class FirstFragment extends Fragment {
             // Set the newly active vehicle
             dbHelper.setActiveVehicle(1);  //Vehicle 0 is now the active vehicle
 
-            //Update the UI after swapping vehicles
+            //Refresh UI with the newly active vehicle
+            vehicleList.clear();
+            Cursor activeVehicleCursor = dbHelper.getActiveVehicle();
+            if (activeVehicleCursor != null && activeVehicleCursor.moveToFirst()) {
+                vehicleList.add(activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex(COLUMN_MAKE)) + " " +
+                        activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex(COLUMN_MODEL)) + " " +
+                        activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex(COLUMN_YEAR)) + " " +
+                        activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex(COLUMN_LICENSE)));
+                showVehicle(0);  // Show the newly active vehicle
+            }
             updateVehicleButtons();
-
-            //Show the newly active vehicle (Vehicle 0 in the database)
-            showVehicle(0);
         }
     }
 
@@ -344,8 +342,12 @@ public class FirstFragment extends Fragment {
             vehicle2Button.setText("Add New Vehicle");
         }
 
-        // Button 3: Always show "Add New Vehicle"
-        vehicle3Button.setText("Add New Vehicle");
+        //Button 3: Assign Vehicle 4 or "Add New Vehicle" if there's no fourth vehicle
+        if (vehicleList.size() > 3) {
+            vehicle3Button.setText(vehicleList.get(3));  //Fourth vehicle in the list
+        } else {
+            vehicle3Button.setText("Add New Vehicle");
+        }
     }
 
     @Override

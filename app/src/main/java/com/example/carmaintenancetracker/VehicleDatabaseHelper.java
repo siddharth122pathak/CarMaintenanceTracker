@@ -58,7 +58,13 @@ public class VehicleDatabaseHelper extends SQLiteOpenHelper {
         values.put(COLUMN_LICENSE, license);
         values.put(COLUMN_MILES, miles);
         db.insert(TABLE_NAME, null, values); //Insert the data into the table
-        db.close(); //Close the database connection
+
+        // After inserting the first vehicle, set it as active
+        if (getAllVehicles().getCount() == 1) {
+            setActiveVehicle(1);
+        }
+
+        db.close();
     }
 
     //Method to get the first vehicle from the database (default vehicle)
