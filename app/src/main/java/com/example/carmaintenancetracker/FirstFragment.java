@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Objects;
 
 import static android.app.Activity.RESULT_OK;
+import static com.example.carmaintenancetracker.VehicleDatabaseHelper.*;
 
 public class FirstFragment extends Fragment {
 
@@ -77,9 +78,12 @@ public class FirstFragment extends Fragment {
             vehicleList.add(make + " " + model + " " + year + " " + licensePlate);
             vehicleMileage.add(miles);
 
-            // If this is the first vehicle, display it as default
+            VehicleDatabaseHelper dbHelper = new VehicleDatabaseHelper(getContext());
+
+            //If this is the first vehicle, set it as the default and active vehicle
             if (vehicleList.size() == 1) {
-                showVehicle(0); // Show the first vehicle
+                dbHelper.setActiveVehicle(1);  //Set the first vehicle as active
+                showVehicle(0);  //Show the first vehicle
             }
 
             updateVehicleButtons();
@@ -100,32 +104,33 @@ public class FirstFragment extends Fragment {
 
         VehicleDatabaseHelper dbHelper = new VehicleDatabaseHelper(getContext());
 
-        //Load the default (first vehicle from the database if available
-        Cursor cursor = dbHelper.getFirstVehicle();
-        if (cursor != null && cursor.moveToFirst()) {
-            @SuppressLint("Range") String make = cursor.getString(cursor.getColumnIndex("make"));
-            @SuppressLint("Range") String model = cursor.getString(cursor.getColumnIndex("model"));
-            @SuppressLint("Range") String year = cursor.getString(cursor.getColumnIndex("year"));
-            @SuppressLint("Range") String licensePlate = cursor.getString(cursor.getColumnIndex("license"));
-            @SuppressLint("Range") String miles = cursor.getString(cursor.getColumnIndex("miles"));
+        //Load the active/default vehicle from the database
+        Cursor activeVehicleCursor = dbHelper.getActiveVehicle();
+        //If an active vehicle exists, show its details in the UI
+        if (activeVehicleCursor != null && activeVehicleCursor.moveToFirst()) {
+            @SuppressLint("Range") String make = activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex("make"));
+            @SuppressLint("Range") String model = activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex("model"));
+            @SuppressLint("Range") String year = activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex("year"));
+            @SuppressLint("Range") String licensePlate = activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex("license"));
+            @SuppressLint("Range") String miles = activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex("miles"));
 
-            // Set the title to the license plate if available, otherwise use make, model, year
-            if (licensePlate != null && !licensePlate.isEmpty()) {
-                titleText.setText(licensePlate);
-            } else {
-                titleText.setText(year + " " + make + " " + model);
-            }
+            //Update the UI with the active vehicle's information
+            titleText.setText(year + " " + make + " " + model);
             mileageText.setText(miles + " miles");
 
+            //Add the vehicle to the list
             vehicleList.add(make + " " + model + " " + year + " " + licensePlate);
             vehicleMileage.add(Integer.parseInt(miles));
+            currentVehicleIndex = 0;  //This is the first vehicle
 
-            updateVehicleButtons();
+            activeVehicleCursor.close();
         } else {
-            promptAddVehicle(); // No vehicles found, prompt the user to add one
+            //If no active vehicle, prompt the user to add one
+            promptAddVehicle();
         }
 
-        Objects.requireNonNull(cursor).close();
+        //Update the vehicle buttons
+        updateVehicleButtons();
 
         //Restore state of application
         if (savedInstanceState != null) {
@@ -168,18 +173,14 @@ public class FirstFragment extends Fragment {
 
     //Method to set up vehicle buttons
     private void setupVehicleButtons(View view){
-
-        //Vehicle 1 Button: Switches to Vehicle 1
         Button vehicle1Button = view.findViewById(R.id.btn_vehicle_1);
-        vehicle1Button.setOnClickListener(v -> switchOrAddVehicle(0));
-
-        //Vehicle 2 Button: Switches to Vehicle 2
         Button vehicle2Button = view.findViewById(R.id.btn_vehicle_2);
-        vehicle2Button.setOnClickListener(v -> switchOrAddVehicle(1));
-
-        //Vehicle 3 Button: Switches to Vehicle 3
         Button vehicle3Button = view.findViewById(R.id.btn_vehicle_3);
-        vehicle3Button.setOnClickListener(v -> switchOrAddVehicle(2));
+
+        // Set up button click listeners to swap vehicles
+        vehicle1Button.setOnClickListener(v -> switchOrAddVehicle(1));
+        vehicle2Button.setOnClickListener(v -> switchOrAddVehicle(2));
+        vehicle3Button.setOnClickListener(v -> switchOrAddVehicle(3));
     }
 
     //Method to show a dialog for updating the mileage
@@ -244,33 +245,26 @@ public class FirstFragment extends Fragment {
 
     //Method to handle viewing upcoming maintenance
     private void viewUpcomingMaintenance() {
-        //Logic to navigate to the "Upcoming Maintenance" screen or fragment
-        //Intent intent = new Intent(getContext(), UpcomingMaintenanceActivity.class);
-        //startActivityForResult(intent, 1);
+        Intent intent = new Intent(getContext(), UpcomingMaintenanceActivity.class);
+        startActivityForResult(intent, 1);
     }
 
     //Method to display mileage for the selected vehicle
     @SuppressLint("SetTextI18n")
     private void showVehicle(int vehicleIndex) {
         if (vehicleIndex >= 0 && vehicleIndex < vehicleList.size()) {
-            currentVehicleIndex = vehicleIndex;
-
-            //Place the make, model, year of vehicle in blue gradient
             String makeModelYear = vehicleList.get(vehicleIndex);
             String[] vehicleDetails = makeModelYear.split(" ");
             String licensePlate = vehicleDetails.length > 3 ? vehicleDetails[3] : "";
 
-            //If there is a license plate entered or not
             Drawable blueGradient = ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.title_border_gradient);
             if (!licensePlate.isEmpty()) {
-                //Set license plate in the blue gradient if it's filled
                 binding.selectedCarTitle.setText(licensePlate);
-            } else{
-                //Otherwise, set year, make, model in the blue gradient
+            } else {
                 binding.selectedCarTitle.setText(vehicleDetails[2] + " " + vehicleDetails[0] + " " + vehicleDetails[1]);
             }
-            titleText.setBackground(blueGradient);
 
+            titleText.setBackground(blueGradient);
             mileageText.setText(vehicleMileage.get(vehicleIndex) + " miles");
         }
     }
@@ -286,9 +280,20 @@ public class FirstFragment extends Fragment {
 
     //Switch between vehicles based on index
     private void switchVehicle(int vehicleIndex) {
-        if (vehicleIndex >= 0 && vehicleIndex < vehicleList.size()) {
-            currentVehicleIndex = vehicleIndex;
-            showVehicle(vehicleIndex);
+        if (vehicleIndex >= 1 && vehicleIndex < vehicleList.size()) {
+            VehicleDatabaseHelper dbHelper = new VehicleDatabaseHelper(getContext());
+
+            //Swap the data between Vehicle 0 (id 1 in the database) and the selected vehicle (vehicleIndex + 1)
+            dbHelper.swapVehicles(1, vehicleIndex + 1);  //Swapping Vehicle 0 and the selected vehicle
+
+            // Set the newly active vehicle
+            dbHelper.setActiveVehicle(1);  //Vehicle 0 is now the active vehicle
+
+            //Update the UI after swapping vehicles
+            updateVehicleButtons();
+
+            //Show the newly active vehicle (Vehicle 0 in the database)
+            showVehicle(0);
         }
     }
 
@@ -299,27 +304,47 @@ public class FirstFragment extends Fragment {
     }
 
     //Update the button text dynamically based on the number of vehicles
-    @SuppressLint("SetTextI18n")
+    @SuppressLint({"Range", "SetTextI18n"})
     private void updateVehicleButtons() {
         Button vehicle1Button = Objects.requireNonNull(getView()).findViewById(R.id.btn_vehicle_1);
         Button vehicle2Button = Objects.requireNonNull(getView()).findViewById(R.id.btn_vehicle_2);
         Button vehicle3Button = Objects.requireNonNull(getView()).findViewById(R.id.btn_vehicle_3);
 
-        if (!vehicleList.isEmpty()) {
-            vehicle1Button.setText(vehicleList.get(0)); // Default vehicle is Vehicle 1
+        VehicleDatabaseHelper dbHelper = new VehicleDatabaseHelper(getContext());
+        Cursor cursor = dbHelper.getAllVehicles();
+
+        //Clear vehicleList to avoid duplication
+        vehicleList.clear();
+
+        if (cursor != null && cursor.moveToFirst()) {
+            do {
+                String make = cursor.getString(cursor.getColumnIndex(COLUMN_MAKE));
+                String model = cursor.getString(cursor.getColumnIndex(COLUMN_MODEL));
+                String year = cursor.getString(cursor.getColumnIndex(COLUMN_YEAR));
+                String license = cursor.getString(cursor.getColumnIndex(COLUMN_LICENSE));
+
+                vehicleList.add(make + " " + model + " " + year + " " + license);
+            } while (cursor.moveToNext());
         }
 
+        cursor.close();
+
+        // Button 1: Assign Vehicle 1 or "Add New Vehicle" if there's only 1 vehicle
         if (vehicleList.size() > 1) {
-            vehicle2Button.setText(vehicleList.get(1));
+            vehicle1Button.setText(vehicleList.get(1));  // Second vehicle in the list
+        } else {
+            vehicle1Button.setText("Add New Vehicle");
+        }
+
+        // Button 2: Assign Vehicle 2 or "Add New Vehicle"
+        if (vehicleList.size() > 2) {
+            vehicle2Button.setText(vehicleList.get(2));  // Third vehicle in the list
         } else {
             vehicle2Button.setText("Add New Vehicle");
         }
 
-        if (vehicleList.size() > 2) {
-            vehicle3Button.setText(vehicleList.get(2));
-        } else {
-            vehicle3Button.setText("Add New Vehicle");
-        }
+        // Button 3: Always show "Add New Vehicle"
+        vehicle3Button.setText("Add New Vehicle");
     }
 
     @Override

@@ -1,280 +1,244 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                                                   xmlns:app="http://schemas.android.com/apk/res-auto"
-                                                   xmlns:tools="http://schemas.android.com/tools"
-                                                   android:layout_width="match_parent"
-                                                   android:layout_height="wrap_content"
-                                                   android:layout_marginTop="15dp">
+<androidx.constraintlayout.widget.ConstraintLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+    <!-- Title occupying the top part -->
+    <TextView
+            android:id="@+id/title_text"
+            android:text="Add New Maintenance"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAlignment="center"
+            android:background="@drawable/title_border_gradient"
+            android:textSize="32sp"
+            android:textStyle="bold"
+            android:padding="1dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Form content -->
     <LinearLayout
             android:orientation="vertical"
             android:layout_width="409dp"
-            android:layout_height="727dp"
-            app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" app:layout_constraintStart_toStartOf="parent"
-    >
-        <TextView
-                android:text="Add New Maintenance"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textAlignment="center" android:background="@drawable/title_border_gradient"
-                android:textSize="32sp"
-                android:textStyle="bold" android:padding="1dp"/>
+            android:layout_height="0dp"
+            app:layout_constraintTop_toBottomOf="@id/title_text"
+            app:layout_constraintBottom_toTopOf="@+id/save_button_layout"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- Year, Make, Model Row (aligned with title) -->
         <LinearLayout
                 android:orientation="horizontal"
                 android:layout_width="match_parent"
-                android:layout_height="58dp">
-            <androidx.constraintlayout.widget.Barrier
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    app:barrierDirection="top"/>
+                android:layout_height="58dp"
+                android:layout_marginTop="0dp"
+                android:layout_marginBottom="0dp">
             <TextView
                     android:text="Year"
                     android:padding="18dp"
                     android:textSize="18sp"
                     android:textStyle="bold"
                     android:textAlignment="center"
-                    android:layout_width="wrap_content" android:background="@drawable/light_green_title_color"
-                    android:layout_height="match_parent" android:id="@+id/textView10" android:layout_weight="1"/>
+                    android:layout_width="0dp"
+                    android:background="@drawable/light_green_title_color"
+                    android:layout_height="match_parent"
+                    android:id="@+id/textView10"
+                    android:layout_weight="1" />
             <TextView
                     android:text="Make"
                     android:padding="18dp"
                     android:textSize="18sp"
                     android:textStyle="bold"
                     android:textAlignment="center"
-                    android:layout_width="wrap_content" android:background="@drawable/light_green_title_color"
-                    android:layout_height="match_parent" android:id="@+id/textView11" android:layout_weight="1"/>
+                    android:layout_width="0dp"
+                    android:background="@drawable/light_green_title_color"
+                    android:layout_height="match_parent"
+                    android:id="@+id/textView11"
+                    android:layout_weight="1" />
             <TextView
                     android:text="Model"
                     android:padding="18dp"
                     android:textSize="18sp"
                     android:textStyle="bold"
                     android:textAlignment="center"
-                    android:layout_width="wrap_content" android:background="@drawable/light_green_title_color"
-                    android:layout_height="match_parent" android:id="@+id/textView12" android:layout_weight="1"/>
+                    android:layout_width="0dp"
+                    android:background="@drawable/light_green_title_color"
+                    android:layout_height="match_parent"
+                    android:id="@+id/textView12"
+                    android:layout_weight="1" />
         </LinearLayout>
-        <LinearLayout
-                android:orientation="vertical"
-                android:layout_width="match_parent"
-                android:layout_height="24dp">
-            <Space
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"/>
-        </LinearLayout>
-        <LinearLayout
-                android:orientation="vertical"
-                android:layout_width="match_parent"
-                android:layout_height="49dp">
-            <TextView
-                    android:text="Current mileage"
-                    android:padding="10dp"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
 
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content" android:id="@+id/textView13" android:layout_marginLeft="15dp"/>
-            <Space
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"/>
-            <Space
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"/>
-        </LinearLayout>
+        <!-- Current Mileage Input -->
+        <TextView
+                android:text="Current mileage"
+                android:padding="10dp"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/textView13"
+                android:layout_marginLeft="15dp" />
+
         <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
-                android:layout_height="17dp">
-            <Space
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" android:layout_weight="1"/>
+                android:layout_height="wrap_content">
+            <com.google.android.material.textfield.TextInputEditText
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Enter Current mileage here"
+                    android:layout_marginLeft="20dp" />
         </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- When was this maintenance performed? -->
+        <TextView
+                android:text="When was this maintenance performed?"
+                android:padding="10dp"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="15dp" />
+
+        <!-- Date Input and Calendar Button -->
+        <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="20dp">
+            <EditText
+                    android:layout_width="230dp"
+                    android:layout_height="wrap_content"
+                    android:hint="MM/DD/YYYY"
+                    android:textAlignment="center"
+                    android:inputType="date"
+                    android:id="@+id/editTextDate2" />
+            <ImageButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:srcCompat="@android:drawable/ic_menu_my_calendar"
+                    android:id="@+id/imageButton3"
+                    android:layout_marginLeft="20dp" />
+        </LinearLayout>
+
+        <!-- Maintenance Action Performed -->
+        <TextView
+                android:text="What maintenance action was performed?"
+                android:padding="10dp"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="10dp" />
+
+        <!-- Spinner Section -->
+
+        <!-- Add More Button and Text Aligned with Spinner -->
+        <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:layout_marginLeft="20dp"
+                android:gravity="center_vertical">
+
+            <ImageButton
+                    android:id="@+id/add_more_button"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="@drawable/circle_button_white"
+                    app:srcCompat="@drawable/ic_grey_cross"
+                    android:contentDescription="Add More"
+                    android:layout_marginRight="10dp"/>
+
+            <TextView
+                    android:id="@+id/add_more_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Add More"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Larger gap between Add More and Notification Text -->
         <Space
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
-        <com.google.android.material.textfield.TextInputLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="40dp" />
 
-            <LinearLayout
-                    android:orientation="vertical"
-                    android:layout_width="match_parent"
-                    android:layout_height="24dp">
-                <Space
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"/>
-            </LinearLayout>
-            <com.google.android.material.textfield.TextInputEditText
-                    android:layout_width="360dp"
-                    android:layout_height="45dp"
-                    android:hint="Enter Current mileage here" android:layout_marginLeft="20dp"/>
-            <LinearLayout
-                    android:orientation="vertical"
-                    android:layout_width="match_parent"
-                    android:layout_height="65dp">
-                <TextView
-                        android:text="Last maintenance performed on"
-                        android:layout_height="wrap_content"
-                        android:padding="10dp"
-                        android:textSize="20sp"
-                        android:textStyle="bold"
-                        android:layout_width="match_parent" android:layout_marginLeft="15dp"
-                        android:id="@+id/textView17"
-                        android:layout_marginTop="10dp"/>
-            </LinearLayout>
-            <LinearLayout
-                    android:orientation="vertical"
-                    android:layout_width="match_parent"
-                    android:layout_height="23dp">
-                <Space
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"/>
-            </LinearLayout>
-            <LinearLayout
-                    android:orientation="horizontal"
-                    android:layout_width="362dp"
-                    android:layout_height="wrap_content" android:layout_marginLeft="20dp">
-                <LinearLayout
-                        android:orientation="horizontal"
-                        android:layout_width="194dp"
-                        android:layout_height="match_parent">
-                    <EditText
-                            android:layout_width="230dp"
-                            android:layout_height="match_parent"
-                            android:inputType="date"
-                            android:textAlignment="center"
-                            android:hint="MM/DD/YYYY"
-                            android:ems="10"
-                            android:id="@+id/editTextDate2" android:layout_weight="1"/>
-                </LinearLayout>
-                <LinearLayout
-                        android:orientation="horizontal"
-                        android:layout_width="95dp"
-                        android:layout_height="match_parent" android:layout_marginLeft="67dp">
-                    <ImageButton
-                            android:layout_width="0dp"
-                            android:layout_height="match_parent" app:srcCompat="@android:drawable/ic_menu_my_calendar"
-                            android:id="@+id/imageButton3" android:layout_weight="1"/>
-                </LinearLayout>
-            </LinearLayout>
-            <LinearLayout
-                    android:orientation="vertical"
-                    android:layout_width="match_parent"
-                    android:layout_height="13dp">
-                <Space
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"/>
-            </LinearLayout>
-            <LinearLayout
-                    android:orientation="vertical"
-                    android:layout_width="match_parent"
-                    android:layout_height="42dp">
-                <TextView
-                        android:text="What maintenance action was performed?"
-                        android:layout_height="wrap_content"
-                        android:padding="10dp"
-                        android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:layout_width="match_parent" android:layout_marginLeft="10dp"
-                        android:id="@+id/textView18"/>
-            </LinearLayout>
-            <LinearLayout
-                    android:orientation="vertical"
-                    android:layout_width="match_parent"
-                    android:layout_height="59dp">
-                <LinearLayout
-                        android:orientation="vertical"
-                        android:layout_width="match_parent"
-                        android:layout_height="49dp" android:paddingLeft="5dp" android:paddingRight="5dp">
-                    <Spinner
-                            android:id="@+id/spinner"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:prompt="Choose one"
-                            android:paddingLeft="20dp"
-                            android:layout_marginRight="20dp"
-                            android:layout_marginLeft="20dp"
-                            android:outlineProvider="none"/>
-                </LinearLayout>
-            </LinearLayout>
-            <LinearLayout
-                    android:orientation="vertical"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-                <LinearLayout
-                        android:orientation="horizontal"
-                        android:layout_width="398dp"
-                        android:layout_height="wrap_content">
-                    <LinearLayout
-                            android:orientation="horizontal"
-                            android:layout_width="50dp"
-                            android:layout_height="42dp" android:paddingLeft="10dp">
-                        <ImageButton
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content" app:srcCompat="@android:drawable/ic_menu_add"
-                                android:id="@+id/imageButton5" android:layout_weight="1"/>
-                    </LinearLayout>
-                    <LinearLayout
-                            android:orientation="horizontal"
-                            android:layout_width="222dp"
-                            android:layout_height="40dp">
-                        <TextView
-                                android:text="Add more"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:textSize="22sp"
-                                android:id="@+id/textView22"
-                                android:layout_weight="1" android:layout_marginTop="5dp"
-                                android:layout_marginLeft="5dp"/>
-                    </LinearLayout>
-                </LinearLayout>
-            </LinearLayout>
-            <LinearLayout
-                    android:orientation="vertical"
-                    android:layout_width="match_parent"
-                    android:layout_height="60dp">
-                <LinearLayout
-                        android:orientation="horizontal"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent">
-                    <LinearLayout
-                            android:orientation="horizontal"
-                            android:layout_width="280dp"
-                            android:layout_height="match_parent" android:layout_marginLeft="40dp">
-                        <Switch
-                                android:text="Enable notification for next maintenance"
-                                android:layout_width="0dp"
-                                android:textStyle="bold"
-                                android:textSize="18sp"
-                                android:layout_height="match_parent" android:id="@+id/switch1"
-                                android:layout_weight="1"/>
-                    </LinearLayout>
-                </LinearLayout>
-            </LinearLayout>
-            <LinearLayout
-                    android:orientation="vertical"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-            >
-                <ImageView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content" app:srcCompat="@drawable/gray_button_border_gradient"
-                        android:id="@+id/imageView"/>
-                <LinearLayout
-                        android:orientation="horizontal"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent">
-                    <LinearLayout
-                            android:orientation="horizontal"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent" android:background="@drawable/square_gradiant_grey">
-                        <Button
-                                android:text="Save"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content" android:id="@+id/button2"
-                                android:layout_marginTop="25dp" android:layout_marginStart="150dp"/>
-                                android:layout_weight="1"/>
-                    </LinearLayout>
-                </LinearLayout>
-            </LinearLayout>
-        </com.google.android.material.textfield.TextInputLayout>
+        <!-- "Would you like to turn on notifications?" Text (Larger) -->
+        <TextView
+                android:id="@+id/notifications_text"
+                android:text="Would you like to turn on notifications for this  vehicle?"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="24sp"
+                android:paddingLeft="20dp"
+                android:layout_marginTop="10dp"
+                android:textStyle="bold"
+                android:maxLines="2"
+                android:ellipsize="end" />
+
+        <!-- Subtext "(oil changes, upcoming maintenance, etc.)" -->
+        <TextView
+                android:id="@+id/notifications_subtext"
+                android:text="(oil changes, upcoming maintenance, etc.)"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="16sp"
+                android:paddingLeft="20dp"
+                android:layout_marginBottom="5dp" />
+
+        <!-- Checkbox Button with Text, Bigger and Closer to Notification Text -->
+        <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="20dp"
+                android:layout_marginTop="5dp">
+
+            <CheckBox
+                    android:id="@+id/checkbox_notifications"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:scaleX="1.5"
+                    android:scaleY="1.5" />
+
+            <TextView
+                    android:text="I don’t want to miss anything!"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="16sp"
+                    android:layout_marginLeft="10dp" />
+        </LinearLayout>
 
     </LinearLayout>
+
+    <!-- Save button inside grey square at the bottom -->
+    <LinearLayout
+            android:id="@+id/save_button_layout"
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/square_gradiant_grey"
+            android:gravity="center"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+        <Button
+                android:id="@+id/button2"
+                android:text="Save"
+                android:layout_width="150dp"
+                android:layout_height="55dp"
+                android:background="@drawable/save_button_background"
+                android:textColor="#F0F0F0"
+                android:padding="10dp"
+                android:textSize="18sp"
+                android:layout_margin="25dp"/>
+    </LinearLayout>
+
 </androidx.constraintlayout.widget.ConstraintLayout>
