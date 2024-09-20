@@ -68,25 +68,39 @@ public class FirstFragment extends Fragment {
         super.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == ADD_VEHICLE_REQUEST_CODE && resultCode == RESULT_OK && data != null) {
+            // Extract vehicle details from the returned data
             String make = data.getStringExtra("vehicleMake");
             String model = data.getStringExtra("vehicleModel");
             String year = data.getStringExtra("vehicleYear");
             String licensePlate = data.getStringExtra("vehicleLicensePlate");
             String milesStr = data.getStringExtra("vehicleMiles");
 
-            int miles = milesStr != null && !milesStr.isEmpty() ? Integer.parseInt(milesStr) : 0;
-            vehicleList.add(make + " " + model + " " + year + " " + licensePlate);
-            vehicleMileage.add(miles);
+            //Parse the mileage string and add it to the vehicleMileage list
+            int miles = 0;
+            if (milesStr != null && !milesStr.isEmpty()) {
+                try {
+                    miles = Integer.parseInt(milesStr);
+                } catch (NumberFormatException e) {
+                    miles = 0; //Handle invalid mileage input
+                }
+            }
 
             VehicleDatabaseHelper dbHelper = new VehicleDatabaseHelper(getContext());
 
-            //If this is the first vehicle, set it as the default and active vehicle
+            //Add the new vehicle's information to the vehicleList
+            vehicleList.add(make + " " + model + " " + year + " " + licensePlate);
+            vehicleMileage.add(miles);
+
+            //Ensure the first vehicle remains as the default active vehicle
             if (vehicleList.size() == 1) {
-                dbHelper.setActiveVehicle(1);  //Set the first vehicle as active
-                showVehicle(0);  //Show the first vehicle
+                dbHelper.setActiveVehicle(1);  //Keep the first vehicle as active
+                showVehicle(0);  //Display the first vehicle
             }
 
-            updateVehicleButtons();
+            //Show the new vehicle but do not change the active vehicle (if it’s not the first one)
+            if (vehicleList.size() > 1) {
+                updateVehicleButtons();
+            }
         }
     }
 
@@ -108,21 +122,23 @@ public class FirstFragment extends Fragment {
         vehicleList.clear();  //Ensure list is cleared before populating
 
         if (cursor != null && cursor.getCount() == 0) {
-            //No vehicles found in the database, prompt user to add a vehicle
+            //No vehicles found in the database, prompt the user to add the first vehicle
             promptAddVehicle();
         } else {
-            //Vehicles found, show the first vehicle
-            Cursor activeVehicleCursor = dbHelper.getActiveVehicle();
-            if (activeVehicleCursor != null && activeVehicleCursor.moveToFirst()) {
-                // Ensure the active vehicle is populated in the list
+            //Populate vehicleList with the active vehicle and show it
+            if (cursor.moveToFirst()) {
                 vehicleList.clear();
-                vehicleList.add(activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex(COLUMN_MAKE)) + " " +
-                        activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex(COLUMN_MODEL)) + " " +
-                        activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex(COLUMN_YEAR)) + " " +
-                        activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex(COLUMN_LICENSE)));
-                showVehicle(0);  // Show the active vehicle
+                do {
+                    vehicleList.add(cursor.getString(cursor.getColumnIndex(COLUMN_MAKE)) + " " +
+                            cursor.getString(cursor.getColumnIndex(COLUMN_MODEL)) + " " +
+                            cursor.getString(cursor.getColumnIndex(COLUMN_YEAR)) + " " +
+                            cursor.getString(cursor.getColumnIndex(COLUMN_LICENSE)));
+                } while (cursor.moveToNext());
+
+                //Show the first vehicle immediately if available
+                showVehicle(0);
             }
-            updateVehicleButtons();  //Update the UI with the available vehicles
+            updateVehicleButtons();
         }
 
         if (cursor != null) {
@@ -163,7 +179,7 @@ public class FirstFragment extends Fragment {
     }
 
     //Method to set up vehicle buttons
-    private void setupVehicleButtons(View view){
+    private void setupVehicleButtons(View view) {
         Button vehicle1Button = view.findViewById(R.id.btn_vehicle_1);
         Button vehicle2Button = view.findViewById(R.id.btn_vehicle_2);
         Button vehicle3Button = view.findViewById(R.id.btn_vehicle_3);
@@ -176,7 +192,7 @@ public class FirstFragment extends Fragment {
 
     //Method to show a dialog for updating the mileage
     @SuppressLint("SetTextI18n")
-    private void showUpdateMileageDialog(){
+    private void showUpdateMileageDialog() {
         //Check if there is an active vehicle selected
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         if (vehicleList.isEmpty()) {
@@ -245,19 +261,35 @@ public class FirstFragment extends Fragment {
     @SuppressLint("SetTextI18n")
     private void showVehicle(int vehicleIndex) {
         if (vehicleIndex >= 0 && vehicleIndex < vehicleList.size()) {
+            //Show the selected vehicle
             String makeModelYear = vehicleList.get(vehicleIndex);
             String[] vehicleDetails = makeModelYear.split(" ");
             String licensePlate = vehicleDetails.length > 3 ? vehicleDetails[3] : "";
 
-            Drawable blueGradient = ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.title_border_gradient);
+            //Check if the license plate is available and non-empty
             if (!licensePlate.isEmpty()) {
+                //If license plate is provided, set it as the title
                 binding.selectedCarTitle.setText(licensePlate);
             } else {
-                binding.selectedCarTitle.setText(vehicleDetails[2] + " " + vehicleDetails[0] + " " + vehicleDetails[1]);
+                //If no license plate, use the year, make, and model
+                String yearMakeModel = vehicleDetails[0] + " " + vehicleDetails[1] + " " + vehicleDetails[2];
+                binding.selectedCarTitle.setText(yearMakeModel);
             }
 
-            titleText.setBackground(blueGradient);
-            mileageText.setText(vehicleMileage.get(vehicleIndex) + " miles");
+            //Display the correct mileage for the selected vehicle
+            if (vehicleIndex < vehicleMileage.size()) {
+                int mileage = vehicleMileage.get(vehicleIndex); //Retrieve the mileage from the list
+                if (mileage > 0) {
+                    mileageText.setText(mileage + " miles");  //Display mileage if available
+                } else {
+                    mileageText.setText("Mileage not available");  //Handle missing mileage
+                }
+            } else {
+                mileageText.setText("Mileage not available");
+            }
+        } else {
+            binding.selectedCarTitle.setText("No Vehicle Available");
+            mileageText.setText("Mileage not available");
         }
     }
 
@@ -265,7 +297,7 @@ public class FirstFragment extends Fragment {
     private void switchOrAddVehicle(int index) {
         if (index < vehicleList.size()) {
             switchVehicle(index);
-        }else {
+        } else {
             promptAddVehicle();
         }
     }
@@ -279,21 +311,42 @@ public class FirstFragment extends Fragment {
             //Swap the data between Vehicle 0 (id 1 in the database) and the selected vehicle (vehicleIndex + 1)
             dbHelper.swapVehicles(1, vehicleIndex + 1);  //Swapping Vehicle 0 and the selected vehicle
 
-            // Set the newly active vehicle
+            //Set the newly active vehicle
             dbHelper.setActiveVehicle(1);  //Vehicle 0 is now the active vehicle
 
-            //Refresh UI with the newly active vehicle
-            vehicleList.clear();
-            Cursor activeVehicleCursor = dbHelper.getActiveVehicle();
-            if (activeVehicleCursor != null && activeVehicleCursor.moveToFirst()) {
-                vehicleList.add(activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex(COLUMN_MAKE)) + " " +
-                        activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex(COLUMN_MODEL)) + " " +
-                        activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex(COLUMN_YEAR)) + " " +
-                        activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex(COLUMN_LICENSE)));
-                showVehicle(0);  // Show the newly active vehicle
-            }
+            //Update UI with the newly active vehicle
+            updateActiveVehicleUI();
             updateVehicleButtons();
         }
+    }
+
+    @SuppressLint("Range")
+    private void updateActiveVehicleUI() {
+        VehicleDatabaseHelper dbHelper = new VehicleDatabaseHelper(getContext());
+        vehicleList.clear();
+
+        //Fetch the newly active vehicle
+        Cursor activeVehicleCursor = dbHelper.getActiveVehicle();
+        if (activeVehicleCursor != null && activeVehicleCursor.moveToFirst()) {
+            vehicleList.add(activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex(COLUMN_MAKE)) + " " +
+                    activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex(COLUMN_MODEL)) + " " +
+                    activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex(COLUMN_YEAR)) + " " +
+                    activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex(COLUMN_LICENSE)));
+
+            //Update the mileage for the active vehicle
+            //Fetch the mileage correctly
+            int mileage = activeVehicleCursor.getInt(activeVehicleCursor.getColumnIndex(COLUMN_MILES));
+            vehicleMileage.clear();
+            vehicleMileage.add(mileage);
+
+            showVehicle(0);  //Show the updated active vehicle
+        }
+
+        if (activeVehicleCursor != null) {
+            activeVehicleCursor.close();
+        }
+
+        updateVehicleButtons();
     }
 
     //Prompt user to add new vehicle
