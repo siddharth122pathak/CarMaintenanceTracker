@@ -240,7 +240,8 @@ public class FirstFragment extends Fragment {
 
     //Method to handle adding new maintenance
     private void addNewMaintenance() {
-        // Logic to open the "Add New Maintenance" screen or fragment
+        Intent intent = new Intent(getContext(), addnewmaint.class);
+        startActivityForResult(intent, 1);
     }
 
     //Method to handle viewing upcoming maintenance

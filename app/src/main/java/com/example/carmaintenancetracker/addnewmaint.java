@@ -1,7 +1,6 @@
 package com.example.carmaintenancetracker;
 
 import android.os.Bundle;
-import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class addnewmaint extends AppCompatActivity {
@@ -11,9 +10,5 @@ public class addnewmaint extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.new_maint_add);
-
-
     }
-
-
 }
