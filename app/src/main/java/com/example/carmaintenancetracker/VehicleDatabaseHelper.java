@@ -19,6 +19,7 @@ public class VehicleDatabaseHelper extends SQLiteOpenHelper {
     public static final String COLUMN_YEAR = "year";
     public static final String COLUMN_LICENSE = "license";
     public static final String COLUMN_MILES = "miles";
+    public static final String COLUMN_LAST_UPDATE = "last_update";
 
     //Constructor for creating the SQLiteOpenHelper instance
     public VehicleDatabaseHelper(Context context) {
@@ -36,6 +37,7 @@ public class VehicleDatabaseHelper extends SQLiteOpenHelper {
                 + COLUMN_YEAR + " TEXT, "
                 + COLUMN_LICENSE + " TEXT, "
                 + COLUMN_MILES + " TEXT, "
+                + COLUMN_LAST_UPDATE + " INTEGER, " //Store as INTEGER (timestamp)
                 + "active INTEGER DEFAULT 0" + ")";
         db.execSQL(CREATE_VEHICLE_TABLE);
     }
@@ -57,6 +59,7 @@ public class VehicleDatabaseHelper extends SQLiteOpenHelper {
         values.put(COLUMN_YEAR, year);
         values.put(COLUMN_LICENSE, license);
         values.put(COLUMN_MILES, miles);
+        values.put(COLUMN_LAST_UPDATE, System.currentTimeMillis());
         db.insert(TABLE_NAME, null, values); //Insert the data into the table
 
         // After inserting the first vehicle, set it as active
@@ -110,6 +113,7 @@ public class VehicleDatabaseHelper extends SQLiteOpenHelper {
             vehicle1.put(COLUMN_YEAR, cursor1.getString(cursor1.getColumnIndex(COLUMN_YEAR)));
             vehicle1.put(COLUMN_LICENSE, cursor1.getString(cursor1.getColumnIndex(COLUMN_LICENSE)));
             vehicle1.put(COLUMN_MILES, cursor1.getString(cursor1.getColumnIndex(COLUMN_MILES)));
+            vehicle1.put(COLUMN_LAST_UPDATE, cursor1.getLong(cursor1.getColumnIndex(COLUMN_LAST_UPDATE)));
 
             //Extract data for vehicle 2 (Selected Vehicle)
             ContentValues vehicle2 = new ContentValues();
@@ -118,6 +122,7 @@ public class VehicleDatabaseHelper extends SQLiteOpenHelper {
             vehicle2.put(COLUMN_YEAR, cursor2.getString(cursor2.getColumnIndex(COLUMN_YEAR)));
             vehicle2.put(COLUMN_LICENSE, cursor2.getString(cursor2.getColumnIndex(COLUMN_LICENSE)));
             vehicle2.put(COLUMN_MILES, cursor2.getString(cursor2.getColumnIndex(COLUMN_MILES)));
+            vehicle2.put(COLUMN_LAST_UPDATE, cursor2.getLong(cursor2.getColumnIndex(COLUMN_LAST_UPDATE)));
 
             //Swap the data between Vehicle 0 and the selected vehicle
             db.update(TABLE_NAME, vehicle2, COLUMN_ID + "=?", new String[]{String.valueOf(vehicleId1)});  // Update vehicle 0 with vehicle 2 data
@@ -135,8 +140,25 @@ public class VehicleDatabaseHelper extends SQLiteOpenHelper {
         ContentValues values = new ContentValues();
         values.put(COLUMN_MILES, String.valueOf(newMileage)); //Update the mileage column
 
+        //Update the last updated timestamp
+        values.put(COLUMN_LAST_UPDATE, System.currentTimeMillis());
+
         //Update the vehicle with the new mileage where the id matches
         db.update(TABLE_NAME, values, COLUMN_ID + "=?", new String[]{String.valueOf(vehicleId)});
         db.close();
+    }
+
+    //Method to retrieve last updated for active vehicle
+    @SuppressLint("Range")
+    public long getLastUpdated(int vehicleId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        @SuppressLint("Recycle") Cursor cursor = db.rawQuery("SELECT " + COLUMN_LAST_UPDATE + " FROM " + TABLE_NAME + " WHERE " + COLUMN_ID + "=?", new String[]{String.valueOf(vehicleId)});
+        long lastUpdated = 0;
+        if (cursor.moveToFirst()) {
+            lastUpdated = cursor.getLong(cursor.getColumnIndex(COLUMN_LAST_UPDATE));
+        }
+        cursor.close();
+        db.close();
+        return lastUpdated;
     }
 }

@@ -12,6 +12,11 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.ImageView;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
@@ -36,7 +41,10 @@ public class FirstFragment extends Fragment {
     private View notificationBar;
     private TextView notificationText;
     private boolean notificationsOn = false; //Default state for notifications
-    private TextView titleText;
+    public TextView titleText;
+    private ImageView lastUpdatedFlareIcon;
+    private TextView lastUpdatedText;
+    private long lastUpdatedTimestamp;
 
     //List to store chicle mileage and names (IDs or names)
     private final List<Integer> vehicleMileage = new ArrayList<>();
@@ -115,11 +123,16 @@ public class FirstFragment extends Fragment {
         notificationBar = view.findViewById(R.id.textView_selected_car_notifications_setting);
         notificationText = notificationBar.findViewById(R.id.textView_selected_car_notifications_setting);
         titleText = view.findViewById(R.id.selected_car_title);
+        lastUpdatedFlareIcon = view.findViewById(R.id.imageView_mileage_last_updated_late);
+        lastUpdatedText = view.findViewById(R.id.textView_selected_car_mileage_last_updated);
 
         VehicleDatabaseHelper dbHelper = new VehicleDatabaseHelper(getContext());
         //Check if any vehicle exists in the database
         Cursor cursor = dbHelper.getAllVehicles();
         vehicleList.clear();  //Ensure list is cleared before populating
+
+        //Setting up default state for Last updated text and icon
+        lastUpdatedFlareIcon.setVisibility(View.INVISIBLE);
 
         if (cursor != null && cursor.getCount() == 0) {
             //No vehicles found in the database, prompt the user to add the first vehicle
@@ -133,6 +146,9 @@ public class FirstFragment extends Fragment {
                             cursor.getString(cursor.getColumnIndex(COLUMN_MODEL)) + " " +
                             cursor.getString(cursor.getColumnIndex(COLUMN_YEAR)) + " " +
                             cursor.getString(cursor.getColumnIndex(COLUMN_LICENSE)));
+                    int activeVehicleID = cursor.getInt(cursor.getColumnIndex("id"));
+                    lastUpdatedTimestamp = dbHelper.getLastUpdated(activeVehicleID);
+                    updateLastUpdatedText(lastUpdatedTimestamp);
                 } while (cursor.moveToNext());
 
                 //Show the first vehicle immediately if available
@@ -190,6 +206,33 @@ public class FirstFragment extends Fragment {
         vehicle3Button.setOnClickListener(v -> switchOrAddVehicle(3));
     }
 
+    //Method to update the last updated text
+    @SuppressLint("SetTextI18n")
+    private void updateLastUpdatedText(long lastUpdatedTimestamp){
+        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy @ HH:mm a", Locale.getDefault());
+
+        //If no update has been made, use placeholder text
+        if (lastUpdatedTimestamp == 0){
+            lastUpdatedText.setText("Last updated: never");
+            lastUpdatedFlareIcon.setVisibility(View.VISIBLE);
+            return;
+        }
+
+        Date lastUpdated = new Date(lastUpdatedTimestamp);
+        lastUpdatedText.setText("Last updated: " + sdf.format(lastUpdated));
+
+        //Check if 3 months have passed
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(lastUpdatedTimestamp);
+        calendar.add(Calendar.MONTH, 3); //Add 3 months to the last updated date
+
+        if (calendar.getTimeInMillis() <= System.currentTimeMillis()){
+            lastUpdatedFlareIcon.setVisibility(View.VISIBLE); //Show the flare icon
+        } else {
+            lastUpdatedFlareIcon.setVisibility(View.INVISIBLE); //Hide the flare icon
+        }
+    }
+
     //Method to show a dialog for updating the mileage
     @SuppressLint("SetTextI18n")
     private void showUpdateMileageDialog() {
@@ -229,6 +272,10 @@ public class FirstFragment extends Fragment {
                     if (cursor.moveToFirst()) {
                         @SuppressLint("Range") int activeVehicleId = cursor.getInt(cursor.getColumnIndex(COLUMN_ID));  //Get the ID of the active vehicle
                         dbHelper.updateMileage(activeVehicleId, newMileage);  //Update the mileage in the database
+
+                        //Update the last updated timestamp
+                        long updatedTimestamp = dbHelper.getLastUpdated(activeVehicleId);
+                        updateLastUpdatedText(updatedTimestamp); //Refresh the "Last updated" text and flare icon
                     }
                     cursor.close();
                 }
@@ -273,7 +320,7 @@ public class FirstFragment extends Fragment {
     }
 
     //Method to display mileage for the selected vehicle
-    @SuppressLint("SetTextI18n")
+    @SuppressLint({"SetTextI18n", "Range"})
     private void showVehicle(int vehicleIndex) {
         if (vehicleIndex >= 0 && vehicleIndex < vehicleList.size()) {
             //Show the selected vehicle
@@ -309,6 +356,9 @@ public class FirstFragment extends Fragment {
                 } else {
                     mileageText.setText("Mileage not available");
                 }
+                //Fetch and display the correct last updated timestamp for the active vehicle
+                long lastUpdatedTimestamp = cursor.getLong(cursor.getColumnIndex(COLUMN_LAST_UPDATE));
+                updateLastUpdatedText(lastUpdatedTimestamp);  //Pass the timestamp to the update method
             }
             cursor.close();
         }
