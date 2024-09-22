@@ -9,10 +9,8 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.TextView;
-import android.widget.ImageView;
+import android.widget.*;
+
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -44,7 +42,7 @@ public class FirstFragment extends Fragment {
     public TextView titleText;
     private ImageView lastUpdatedFlareIcon;
     private TextView lastUpdatedText;
-    private long lastUpdatedTimestamp;
+    long lastUpdatedTimestamp;
 
     //List to store chicle mileage and names (IDs or names)
     private final List<Integer> vehicleMileage = new ArrayList<>();
@@ -89,7 +87,7 @@ public class FirstFragment extends Fragment {
                 try {
                     miles = Integer.parseInt(milesStr);
                 } catch (NumberFormatException e) {
-                    miles = 0; //Handle invalid mileage input
+                    //Handle invalid mileage input
                 }
             }
 
@@ -139,6 +137,7 @@ public class FirstFragment extends Fragment {
             promptAddVehicle();
         } else {
             //Populate vehicleList with the active vehicle and show it
+            assert cursor != null;
             if (cursor.moveToFirst()) {
                 vehicleList.clear();
                 do {
@@ -157,9 +156,7 @@ public class FirstFragment extends Fragment {
             updateVehicleButtons();
         }
 
-        if (cursor != null) {
-            cursor.close();
-        }
+        cursor.close();
 
         //If a saved state exists, restore the state (optional)
         if (savedInstanceState != null) {
@@ -196,9 +193,9 @@ public class FirstFragment extends Fragment {
 
     //Method to set up vehicle buttons
     private void setupVehicleButtons(View view) {
-        Button vehicle1Button = view.findViewById(R.id.btn_vehicle_1);
-        Button vehicle2Button = view.findViewById(R.id.btn_vehicle_2);
-        Button vehicle3Button = view.findViewById(R.id.btn_vehicle_3);
+        ImageButton vehicle1Button = view.findViewById(R.id.btn_vehicle_1);
+        ImageButton vehicle2Button = view.findViewById(R.id.btn_vehicle_2);
+        ImageButton vehicle3Button = view.findViewById(R.id.btn_vehicle_3);
 
         // Set up button click listeners to swap vehicles
         vehicle1Button.setOnClickListener(v -> switchOrAddVehicle(1));
@@ -348,7 +345,7 @@ public class FirstFragment extends Fragment {
                     try {
                         mileage = Integer.parseInt(milesStr);
                     } catch (NumberFormatException e) {
-                        mileage = 0; // Handle invalid mileage
+                        // Handle invalid mileage
                     }
                 }
                 if (mileage > 0) {
@@ -414,7 +411,7 @@ public class FirstFragment extends Fragment {
                 try {
                     mileage = Integer.parseInt(milesStr);
                 } catch (NumberFormatException e) {
-                    mileage = 0; // Handle invalid mileage
+                    // Handle invalid mileage
                 }
             }
             vehicleMileage.add(mileage);
@@ -438,9 +435,12 @@ public class FirstFragment extends Fragment {
     //Update the button text dynamically based on the number of vehicles
     @SuppressLint({"Range", "SetTextI18n"})
     private void updateVehicleButtons() {
-        Button vehicle1Button = Objects.requireNonNull(getView()).findViewById(R.id.btn_vehicle_1);
-        Button vehicle2Button = Objects.requireNonNull(getView()).findViewById(R.id.btn_vehicle_2);
-        Button vehicle3Button = Objects.requireNonNull(getView()).findViewById(R.id.btn_vehicle_3);
+        ImageButton vehicle1ImageButton = Objects.requireNonNull(getView()).findViewById(R.id.btn_vehicle_1);
+        ImageButton vehicle2ImageButton = Objects.requireNonNull(getView()).findViewById(R.id.btn_vehicle_2);
+        ImageButton vehicle3ImageButton = Objects.requireNonNull(getView()).findViewById(R.id.btn_vehicle_3);
+        Button vehicle1Button = Objects.requireNonNull(getView()).findViewById(R.id.btn_vehicle_1_text);
+        Button vehicle2Button = Objects.requireNonNull(getView()).findViewById(R.id.btn_vehicle_2_text);
+        Button vehicle3Button = Objects.requireNonNull(getView()).findViewById(R.id.btn_vehicle_3_text);
 
         VehicleDatabaseHelper dbHelper = new VehicleDatabaseHelper(getContext());
         Cursor cursor = dbHelper.getAllVehicles();
@@ -459,27 +459,49 @@ public class FirstFragment extends Fragment {
             } while (cursor.moveToNext());
         }
 
+        assert cursor != null;
         cursor.close();
 
-        // Button 1: Assign Vehicle 1 or "Add New Vehicle" if there's only 1 vehicle
+        //Button 1: Assign Vehicle 2 or "Add New Vehicle"
         if (vehicleList.size() > 1) {
-            vehicle1Button.setText(vehicleList.get(1));  // Second vehicle in the list
+            //Set the vehicle name and make the Button visible
+            vehicle1Button.setText(vehicleList.get(1));
+            vehicle1Button.setVisibility(View.VISIBLE);
+            vehicle1ImageButton.setVisibility(View.GONE);//Hide ImageButton
+            vehicle1Button.setOnClickListener(v -> switchVehicle(1));  //Switch to vehicle 2
         } else {
-            vehicle1Button.setText("Add New Vehicle");
+            //Show the ImageButton for adding a new vehicle
+            vehicle1ImageButton.setVisibility(View.VISIBLE);
+            vehicle1Button.setVisibility(View.GONE);  //Hide Button
+            vehicle1ImageButton.setOnClickListener(v -> promptAddVehicle());  //Add new vehicle
         }
 
-        // Button 2: Assign Vehicle 2 or "Add New Vehicle"
+        //Button 2: Assign Vehicle 3 or "Add New Vehicle"
         if (vehicleList.size() > 2) {
-            vehicle2Button.setText(vehicleList.get(2));  // Third vehicle in the list
+            //Set the vehicle name and make the Button visible
+            vehicle2Button.setText(vehicleList.get(2));
+            vehicle2Button.setVisibility(View.VISIBLE);
+            vehicle2ImageButton.setVisibility(View.GONE);  //Hide ImageButton
+            vehicle2Button.setOnClickListener(v -> switchVehicle(2));  //Switch to vehicle 3
         } else {
-            vehicle2Button.setText("Add New Vehicle");
+            //Show the ImageButton for adding a new vehicle
+            vehicle2ImageButton.setVisibility(View.VISIBLE);
+            vehicle2Button.setVisibility(View.GONE);  //Hide Button
+            vehicle2ImageButton.setOnClickListener(v -> promptAddVehicle());  //Add new vehicle
         }
 
-        //Button 3: Assign Vehicle 4 or "Add New Vehicle" if there's no fourth vehicle
+        //Button 3: Assign Vehicle 4 or "Add New Vehicle"
         if (vehicleList.size() > 3) {
-            vehicle3Button.setText(vehicleList.get(3));  //Fourth vehicle in the list
+            //Set the vehicle name and make the Button visible
+            vehicle3Button.setText(vehicleList.get(3));
+            vehicle3Button.setVisibility(View.VISIBLE);
+            vehicle3ImageButton.setVisibility(View.GONE);  //Hide ImageButton
+            vehicle3Button.setOnClickListener(v -> switchVehicle(3));  //Switch to vehicle 4
         } else {
-            vehicle3Button.setText("Add New Vehicle");
+            //Show the ImageButton for adding a new vehicle
+            vehicle3ImageButton.setVisibility(View.VISIBLE);
+            vehicle3Button.setVisibility(View.GONE);  //Hide Button
+            vehicle3ImageButton.setOnClickListener(v -> promptAddVehicle());  //Add new vehicle
         }
     }
 

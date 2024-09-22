@@ -11,6 +11,8 @@ import com.example.carmaintenancetracker.databinding.ActivityMainBinding;
 
 import java.util.Objects;
 
+import static com.example.carmaintenancetracker.R.*;
+
 public class MainActivity extends AppCompatActivity {
 
     // AppBarConfiguration to handle navigation with a toolbar
