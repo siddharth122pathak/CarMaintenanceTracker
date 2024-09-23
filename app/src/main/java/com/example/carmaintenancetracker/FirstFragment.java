@@ -12,6 +12,11 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.ImageView;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
@@ -36,7 +41,10 @@ public class FirstFragment extends Fragment {
     private View notificationBar;
     private TextView notificationText;
     private boolean notificationsOn = false; //Default state for notifications
-    private TextView titleText;
+    public TextView titleText;
+    private ImageView lastUpdatedFlareIcon;
+    private TextView lastUpdatedText;
+    private long lastUpdatedTimestamp;
 
     //List to store chicle mileage and names (IDs or names)
     private final List<Integer> vehicleMileage = new ArrayList<>();
@@ -68,29 +76,43 @@ public class FirstFragment extends Fragment {
         super.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == ADD_VEHICLE_REQUEST_CODE && resultCode == RESULT_OK && data != null) {
+            // Extract vehicle details from the returned data
             String make = data.getStringExtra("vehicleMake");
             String model = data.getStringExtra("vehicleModel");
             String year = data.getStringExtra("vehicleYear");
             String licensePlate = data.getStringExtra("vehicleLicensePlate");
             String milesStr = data.getStringExtra("vehicleMiles");
 
-            int miles = milesStr != null && !milesStr.isEmpty() ? Integer.parseInt(milesStr) : 0;
-            vehicleList.add(make + " " + model + " " + year + " " + licensePlate);
-            vehicleMileage.add(miles);
+            //Parse the mileage string and add it to the vehicleMileage list
+            int miles = 0;
+            if (milesStr != null && !milesStr.isEmpty()) {
+                try {
+                    miles = Integer.parseInt(milesStr);
+                } catch (NumberFormatException e) {
+                    miles = 0; //Handle invalid mileage input
+                }
+            }
 
             VehicleDatabaseHelper dbHelper = new VehicleDatabaseHelper(getContext());
 
-            //If this is the first vehicle, set it as the default and active vehicle
+            //Add the new vehicle's information to the vehicleList
+            vehicleList.add(make + " " + model + " " + year + " " + licensePlate);
+            vehicleMileage.add(miles);
+
+            //Ensure the first vehicle remains as the default active vehicle
             if (vehicleList.size() == 1) {
-                dbHelper.setActiveVehicle(1);  //Set the first vehicle as active
-                showVehicle(0);  //Show the first vehicle
+                dbHelper.setActiveVehicle(1);  //Keep the first vehicle as active
+                showVehicle(0);  //Display the first vehicle
             }
 
-            updateVehicleButtons();
+            //Show the new vehicle but do not change the active vehicle (if it’s not the first one)
+            if (vehicleList.size() > 1) {
+                updateVehicleButtons();
+            }
         }
     }
 
-    @SuppressLint("SetTextI18n")
+    @SuppressLint({"SetTextI18n", "Range"})
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -101,57 +123,58 @@ public class FirstFragment extends Fragment {
         notificationBar = view.findViewById(R.id.textView_selected_car_notifications_setting);
         notificationText = notificationBar.findViewById(R.id.textView_selected_car_notifications_setting);
         titleText = view.findViewById(R.id.selected_car_title);
+        lastUpdatedFlareIcon = view.findViewById(R.id.imageView_mileage_last_updated_late);
+        lastUpdatedText = view.findViewById(R.id.textView_selected_car_mileage_last_updated);
 
         VehicleDatabaseHelper dbHelper = new VehicleDatabaseHelper(getContext());
+        //Check if any vehicle exists in the database
+        Cursor cursor = dbHelper.getAllVehicles();
+        vehicleList.clear();  //Ensure list is cleared before populating
 
-        //Load the active/default vehicle from the database
-        Cursor activeVehicleCursor = dbHelper.getActiveVehicle();
-        //If an active vehicle exists, show its details in the UI
-        if (activeVehicleCursor != null && activeVehicleCursor.moveToFirst()) {
-            @SuppressLint("Range") String make = activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex("make"));
-            @SuppressLint("Range") String model = activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex("model"));
-            @SuppressLint("Range") String year = activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex("year"));
-            @SuppressLint("Range") String licensePlate = activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex("license"));
-            @SuppressLint("Range") String miles = activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex("miles"));
+        //Setting up default state for Last updated text and icon
+        lastUpdatedFlareIcon.setVisibility(View.INVISIBLE);
 
-            //Update the UI with the active vehicle's information
-            titleText.setText(year + " " + make + " " + model);
-            mileageText.setText(miles + " miles");
-
-            //Add the vehicle to the list
-            vehicleList.add(make + " " + model + " " + year + " " + licensePlate);
-            vehicleMileage.add(Integer.parseInt(miles));
-            currentVehicleIndex = 0;  //This is the first vehicle
-
-            activeVehicleCursor.close();
-        } else {
-            //If no active vehicle, prompt the user to add one
+        if (cursor != null && cursor.getCount() == 0) {
+            //No vehicles found in the database, prompt the user to add the first vehicle
             promptAddVehicle();
+        } else {
+            //Populate vehicleList with the active vehicle and show it
+            if (cursor.moveToFirst()) {
+                vehicleList.clear();
+                do {
+                    vehicleList.add(cursor.getString(cursor.getColumnIndex(COLUMN_MAKE)) + " " +
+                            cursor.getString(cursor.getColumnIndex(COLUMN_MODEL)) + " " +
+                            cursor.getString(cursor.getColumnIndex(COLUMN_YEAR)) + " " +
+                            cursor.getString(cursor.getColumnIndex(COLUMN_LICENSE)));
+                    int activeVehicleID = cursor.getInt(cursor.getColumnIndex("id"));
+                    lastUpdatedTimestamp = dbHelper.getLastUpdated(activeVehicleID);
+                    updateLastUpdatedText(lastUpdatedTimestamp);
+                } while (cursor.moveToNext());
+
+                //Show the first vehicle immediately if available
+                showVehicle(0);
+            }
+            updateVehicleButtons();
         }
 
-        //Update the vehicle buttons
-        updateVehicleButtons();
+        if (cursor != null) {
+            cursor.close();
+        }
 
-        //Restore state of application
+        //If a saved state exists, restore the state (optional)
         if (savedInstanceState != null) {
-            // Restore the saved state
             vehicleList.addAll(savedInstanceState.getStringArrayList("vehicleList"));
             vehicleMileage.addAll(savedInstanceState.getIntegerArrayList("vehicleMileage"));
             currentVehicleIndex = savedInstanceState.getInt("currentVehicleIndex");
 
-            // Update the UI
-            updateVehicleButtons();
-            showVehicle(currentVehicleIndex);
-        } else {
-            //Initialize the vehicle list if empty
-            if (vehicleList.isEmpty()) {
-                promptAddVehicle();
-            } else {
+            //Only update the buttons and show the vehicle if there are vehicles in the list
+            if (vehicleList.size() > 0) {
                 updateVehicleButtons();
                 showVehicle(currentVehicleIndex);
             }
         }
-        setupVehicleButtons(view);
+
+        setupVehicleButtons(view);  //Set up the click listeners for vehicle buttons
 
         //Set up listeners for buttons in this fragment
 
@@ -172,7 +195,7 @@ public class FirstFragment extends Fragment {
     }
 
     //Method to set up vehicle buttons
-    private void setupVehicleButtons(View view){
+    private void setupVehicleButtons(View view) {
         Button vehicle1Button = view.findViewById(R.id.btn_vehicle_1);
         Button vehicle2Button = view.findViewById(R.id.btn_vehicle_2);
         Button vehicle3Button = view.findViewById(R.id.btn_vehicle_3);
@@ -183,9 +206,36 @@ public class FirstFragment extends Fragment {
         vehicle3Button.setOnClickListener(v -> switchOrAddVehicle(3));
     }
 
+    //Method to update the last updated text
+    @SuppressLint("SetTextI18n")
+    private void updateLastUpdatedText(long lastUpdatedTimestamp){
+        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy @ HH:mm a", Locale.getDefault());
+
+        //If no update has been made, use placeholder text
+        if (lastUpdatedTimestamp == 0){
+            lastUpdatedText.setText("Last updated: never");
+            lastUpdatedFlareIcon.setVisibility(View.VISIBLE);
+            return;
+        }
+
+        Date lastUpdated = new Date(lastUpdatedTimestamp);
+        lastUpdatedText.setText("Last updated: " + sdf.format(lastUpdated));
+
+        //Check if 3 months have passed
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(lastUpdatedTimestamp);
+        calendar.add(Calendar.MONTH, 3); //Add 3 months to the last updated date
+
+        if (calendar.getTimeInMillis() <= System.currentTimeMillis()){
+            lastUpdatedFlareIcon.setVisibility(View.VISIBLE); //Show the flare icon
+        } else {
+            lastUpdatedFlareIcon.setVisibility(View.INVISIBLE); //Hide the flare icon
+        }
+    }
+
     //Method to show a dialog for updating the mileage
     @SuppressLint("SetTextI18n")
-    private void showUpdateMileageDialog(){
+    private void showUpdateMileageDialog() {
         //Check if there is an active vehicle selected
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         if (vehicleList.isEmpty()) {
@@ -207,8 +257,27 @@ public class FirstFragment extends Fragment {
                 String newMileageStr = input.getText().toString();
                 if (!newMileageStr.isEmpty()) {
                     int newMileage = Integer.parseInt(newMileageStr);
-                    vehicleMileage.set(currentVehicleIndex, newMileage); // Update the mileage for the current vehicle
-                    mileageText.setText(newMileage + " miles"); // Update the displayed mileage
+                    //Ensure the list is large enough
+                    if (vehicleMileage.size() > currentVehicleIndex) {
+                        vehicleMileage.set(currentVehicleIndex, newMileage); //Update the mileage for the current vehicle
+                    } else {
+                        vehicleMileage.add(newMileage); //Add the new mileage if the list is not large enough
+                    }
+
+                    mileageText.setText(newMileage + " miles"); //Update the displayed mileage
+
+                    //Update mileage in the database
+                    VehicleDatabaseHelper dbHelper = new VehicleDatabaseHelper(getContext());
+                    Cursor cursor = dbHelper.getActiveVehicle();  //Get the active vehicle
+                    if (cursor.moveToFirst()) {
+                        @SuppressLint("Range") int activeVehicleId = cursor.getInt(cursor.getColumnIndex(COLUMN_ID));  //Get the ID of the active vehicle
+                        dbHelper.updateMileage(activeVehicleId, newMileage);  //Update the mileage in the database
+
+                        //Update the last updated timestamp
+                        long updatedTimestamp = dbHelper.getLastUpdated(activeVehicleId);
+                        updateLastUpdatedText(updatedTimestamp); //Refresh the "Last updated" text and flare icon
+                    }
+                    cursor.close();
                 }
             });
 
@@ -240,7 +309,8 @@ public class FirstFragment extends Fragment {
 
     //Method to handle adding new maintenance
     private void addNewMaintenance() {
-        // Logic to open the "Add New Maintenance" screen or fragment
+        Intent intent = new Intent(getContext(), addnewmaint.class);
+        startActivityForResult(intent, 1);
     }
 
     //Method to handle viewing upcoming maintenance
@@ -250,22 +320,47 @@ public class FirstFragment extends Fragment {
     }
 
     //Method to display mileage for the selected vehicle
-    @SuppressLint("SetTextI18n")
+    @SuppressLint({"SetTextI18n", "Range"})
     private void showVehicle(int vehicleIndex) {
         if (vehicleIndex >= 0 && vehicleIndex < vehicleList.size()) {
+            //Show the selected vehicle
             String makeModelYear = vehicleList.get(vehicleIndex);
             String[] vehicleDetails = makeModelYear.split(" ");
             String licensePlate = vehicleDetails.length > 3 ? vehicleDetails[3] : "";
 
-            Drawable blueGradient = ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.title_border_gradient);
+            //Check if the license plate is available and non-empty
             if (!licensePlate.isEmpty()) {
+                //If license plate is provided, set it as the title
                 binding.selectedCarTitle.setText(licensePlate);
             } else {
-                binding.selectedCarTitle.setText(vehicleDetails[2] + " " + vehicleDetails[0] + " " + vehicleDetails[1]);
+                //If no license plate, use the year, make, and model
+                String yearMakeModel = vehicleDetails[0] + " " + vehicleDetails[1] + " " + vehicleDetails[2];
+                binding.selectedCarTitle.setText(yearMakeModel);
             }
 
-            titleText.setBackground(blueGradient);
-            mileageText.setText(vehicleMileage.get(vehicleIndex) + " miles");
+            //Retrieve mileage from the database
+            VehicleDatabaseHelper dbHelper = new VehicleDatabaseHelper(getContext());
+            Cursor cursor = dbHelper.getActiveVehicle();
+            if (cursor.moveToFirst()) {
+                @SuppressLint("Range") String milesStr = cursor.getString(cursor.getColumnIndex(COLUMN_MILES));
+                int mileage = 0;
+                if (milesStr != null && !milesStr.isEmpty()) {
+                    try {
+                        mileage = Integer.parseInt(milesStr);
+                    } catch (NumberFormatException e) {
+                        mileage = 0; // Handle invalid mileage
+                    }
+                }
+                if (mileage > 0) {
+                    mileageText.setText(mileage + " miles");
+                } else {
+                    mileageText.setText("Mileage not available");
+                }
+                //Fetch and display the correct last updated timestamp for the active vehicle
+                long lastUpdatedTimestamp = cursor.getLong(cursor.getColumnIndex(COLUMN_LAST_UPDATE));
+                updateLastUpdatedText(lastUpdatedTimestamp);  //Pass the timestamp to the update method
+            }
+            cursor.close();
         }
     }
 
@@ -273,12 +368,13 @@ public class FirstFragment extends Fragment {
     private void switchOrAddVehicle(int index) {
         if (index < vehicleList.size()) {
             switchVehicle(index);
-        }else {
+        } else {
             promptAddVehicle();
         }
     }
 
     //Switch between vehicles based on index
+    @SuppressLint("Range")
     private void switchVehicle(int vehicleIndex) {
         if (vehicleIndex >= 1 && vehicleIndex < vehicleList.size()) {
             VehicleDatabaseHelper dbHelper = new VehicleDatabaseHelper(getContext());
@@ -286,15 +382,51 @@ public class FirstFragment extends Fragment {
             //Swap the data between Vehicle 0 (id 1 in the database) and the selected vehicle (vehicleIndex + 1)
             dbHelper.swapVehicles(1, vehicleIndex + 1);  //Swapping Vehicle 0 and the selected vehicle
 
-            // Set the newly active vehicle
+            //Set the newly active vehicle
             dbHelper.setActiveVehicle(1);  //Vehicle 0 is now the active vehicle
 
-            //Update the UI after swapping vehicles
+            //Update UI with the newly active vehicle
+            updateActiveVehicleUI();
             updateVehicleButtons();
-
-            //Show the newly active vehicle (Vehicle 0 in the database)
-            showVehicle(0);
         }
+    }
+
+    @SuppressLint("Range")
+    private void updateActiveVehicleUI() {
+        VehicleDatabaseHelper dbHelper = new VehicleDatabaseHelper(getContext());
+        vehicleList.clear();
+
+        //Fetch the newly active vehicle
+        Cursor activeVehicleCursor = dbHelper.getActiveVehicle();
+        if (activeVehicleCursor != null && activeVehicleCursor.moveToFirst()) {
+            String make = activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex(COLUMN_MAKE));
+            String model = activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex(COLUMN_MODEL));
+            String year = activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex(COLUMN_YEAR));
+            String license = activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex(COLUMN_LICENSE));
+            String milesStr = activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex(COLUMN_MILES));
+
+            vehicleList.add(make + " " + model + " " + year + " " + license);
+
+            //Update the mileage for the active vehicle
+            vehicleMileage.clear();
+            int mileage = 0;
+            if (milesStr != null && !milesStr.isEmpty()) {
+                try {
+                    mileage = Integer.parseInt(milesStr);
+                } catch (NumberFormatException e) {
+                    mileage = 0; // Handle invalid mileage
+                }
+            }
+            vehicleMileage.add(mileage);
+
+            showVehicle(0);  // Show the updated active vehicle
+        }
+
+        if (activeVehicleCursor != null) {
+            activeVehicleCursor.close();
+        }
+
+        updateVehicleButtons();
     }
 
     //Prompt user to add new vehicle
@@ -343,8 +475,12 @@ public class FirstFragment extends Fragment {
             vehicle2Button.setText("Add New Vehicle");
         }
 
-        // Button 3: Always show "Add New Vehicle"
-        vehicle3Button.setText("Add New Vehicle");
+        //Button 3: Assign Vehicle 4 or "Add New Vehicle" if there's no fourth vehicle
+        if (vehicleList.size() > 3) {
+            vehicle3Button.setText(vehicleList.get(3));  //Fourth vehicle in the list
+        } else {
+            vehicle3Button.setText("Add New Vehicle");
+        }
     }
 
     @Override
