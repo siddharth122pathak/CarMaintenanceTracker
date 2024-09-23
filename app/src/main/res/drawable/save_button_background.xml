@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+       android:shape="rectangle">
+
+    <!-- Teal fill color -->
+    <solid android:color="#0D98BA" />
+
+    <!-- Black outline -->
+    <stroke
+            android:width="2dp"
+            android:color="#000000" />
+
+    <!-- Square corners (no rounding) -->
+    <corners android:radius="0dp" />
+</shape>

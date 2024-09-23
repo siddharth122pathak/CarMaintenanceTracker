@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Black border -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/black" />
+        </shape>
+    </item>
+
+    <!-- Gradient fill -->
+    <item
+            android:left="2dp"
+            android:right="2dp"
+            android:top="2dp"
+            android:bottom="2dp">
+        <shape android:shape="rectangle">
+            <!-- Square corners -->
+            <corners android:radius="0dp" />
+
+            <!-- Linear gradient from center to sides -->
+            <gradient
+                    android:type="linear"
+                    android:startColor="#D3D3D3"
+                    android:centerColor="#FFFFFF"
+                    android:endColor="#D3D3D3"
+                    android:angle="0"
+                    android:centerX="0.5" />
+        </shape>
+    </item>
+</layer-list>
