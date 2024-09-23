@@ -7,7 +7,6 @@ import androidx.fragment.app.Fragment;
 import android.view.View;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
-import com.example.carmaintenancetracker.databinding.FragmentFirstBinding;
 import com.example.carmaintenancetracker.databinding.NewMaintAddBinding;
 
 public class addnewmaint extends Fragment {

@@ -193,8 +193,10 @@ public class FirstFragment extends Fragment {
         );
 
         //View Upcoming Maintenance Button: Opens the screen showing upcoming maintenance
-        Button viewMaintenanceButton = view.findViewById(R.id.btn_view_upcoming_maintenance);
-        viewMaintenanceButton.setOnClickListener(v -> viewUpcomingMaintenance());
+        binding.btnViewUpcomingMaintenance.setOnClickListener(v ->
+                NavHostFragment.findNavController(FirstFragment.this)
+                        .navigate(R.id.action_FirstFragment_to_upcomingMaintenanceActivity)
+        );
     }
 
     //Method to set up vehicle buttons
@@ -316,8 +318,6 @@ public class FirstFragment extends Fragment {
 
     //Method to handle viewing upcoming maintenance
     private void viewUpcomingMaintenance() {
-        Intent intent = new Intent(getContext(), UpcomingMaintenanceActivity.class);
-        startActivityForResult(intent, 1);
     }
 
     //Method to display mileage for the selected vehicle
