@@ -14,7 +14,7 @@ import java.util.Objects;
 public class MainActivity extends AppCompatActivity {
 
     // AppBarConfiguration to handle navigation with a toolbar
-    private AppBarConfiguration appBarConfiguration;
+    private final ThreadLocal<AppBarConfiguration> appBarConfiguration = new ThreadLocal<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,7 +74,7 @@ public class MainActivity extends AppCompatActivity {
         //Get the navigation controller
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
         //Handle the "Up" button in the action bar
-        return NavigationUI.navigateUp(navController, appBarConfiguration) || super.onSupportNavigateUp();
+        return NavigationUI.navigateUp(navController, Objects.requireNonNull(appBarConfiguration.get())) || super.onSupportNavigateUp();
     }
 
     @Override
