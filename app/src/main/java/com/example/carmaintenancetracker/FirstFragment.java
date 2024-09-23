@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.fragment.NavHostFragment;
 import com.example.carmaintenancetracker.databinding.FragmentFirstBinding;
 
 import java.util.ArrayList;
@@ -183,12 +184,16 @@ public class FirstFragment extends Fragment {
         notificationToggleButton.setOnClickListener(v -> toggleNotifications());
 
         //Add New Maintenance Button: Opens the add maintenance screen
-        Button addMaintenanceButton = view.findViewById(R.id.btn_add_new_maintenance);
-        addMaintenanceButton.setOnClickListener(v -> addNewMaintenance());
+        binding.btnAddNewMaintenance.setOnClickListener(v ->
+                NavHostFragment.findNavController(FirstFragment.this)
+                        .navigate(R.id.action_FirstFragment_to_addnewmaint)
+        );
 
         //View Upcoming Maintenance Button: Opens the screen showing upcoming maintenance
-        Button viewMaintenanceButton = view.findViewById(R.id.btn_view_upcoming_maintenance);
-        viewMaintenanceButton.setOnClickListener(v -> viewUpcomingMaintenance());
+        binding.btnViewUpcomingMaintenance.setOnClickListener(v ->
+                NavHostFragment.findNavController(FirstFragment.this)
+                        .navigate(R.id.action_FirstFragment_to_upcomingMaintenanceActivity)
+        );
     }
 
     //Method to set up vehicle buttons
@@ -306,14 +311,10 @@ public class FirstFragment extends Fragment {
 
     //Method to handle adding new maintenance
     private void addNewMaintenance() {
-        Intent intent = new Intent(getContext(), addnewmaint.class);
-        startActivityForResult(intent, 1);
     }
 
     //Method to handle viewing upcoming maintenance
     private void viewUpcomingMaintenance() {
-        Intent intent = new Intent(getContext(), UpcomingMaintenanceActivity.class);
-        startActivityForResult(intent, 1);
     }
 
     //Method to display mileage for the selected vehicle
