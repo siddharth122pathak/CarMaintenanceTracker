@@ -2,19 +2,18 @@ package com.example.carmaintenancetracker;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.os.Handler;
+import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
-
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Locale;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
@@ -22,9 +21,8 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 import com.example.carmaintenancetracker.databinding.FragmentFirstBinding;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 import static android.app.Activity.RESULT_OK;
 import static com.example.carmaintenancetracker.VehicleDatabaseHelper.*;
@@ -184,16 +182,24 @@ public class FirstFragment extends Fragment {
         notificationToggleButton.setOnClickListener(v -> toggleNotifications());
 
         //Add New Maintenance Button: Opens the add maintenance screen
-        binding.btnAddNewMaintenance.setOnClickListener(v ->
+        binding.btnAddNewMaintenance.setOnClickListener(v -> {
+            if (vehicleList.isEmpty()) {
+                showNoVehicleSelectedDialog();
+            } else {
                 NavHostFragment.findNavController(FirstFragment.this)
-                        .navigate(R.id.action_FirstFragment_to_addnewmaint)
-        );
+                .navigate(R.id.action_FirstFragment_to_addnewmaint);
+                }
+        });
 
         //View Upcoming Maintenance Button: Opens the screen showing upcoming maintenance
-        binding.btnViewUpcomingMaintenance.setOnClickListener(v ->
+        binding.btnViewUpcomingMaintenance.setOnClickListener(v -> {
+            if (vehicleList.isEmpty()) {
+                showNoVehicleSelectedDialog();
+            } else {
                 NavHostFragment.findNavController(FirstFragment.this)
-                        .navigate(R.id.action_FirstFragment_to_upcomingMaintenanceActivity)
-        );
+                .navigate(R.id.action_FirstFragment_to_upcomingMaintenanceActivity);
+            }
+        });
     }
 
     //Method to set up vehicle buttons
@@ -238,19 +244,21 @@ public class FirstFragment extends Fragment {
     //Method to show a dialog for updating the mileage
     @SuppressLint("SetTextI18n")
     private void showUpdateMileageDialog() {
-        //Check if there is an active vehicle selected
-        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         if (vehicleList.isEmpty()) {
-            builder.setTitle("No Vehicle Selected");
-            builder.setMessage("You need to add a vehicle first before updating mileage.");
-            builder.setPositiveButton("OK", (dialog, which) -> dialog.dismiss());
+            showNoVehicleSelectedDialog();
         } else {
+            //Check if there is an active vehicle selected
+            AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
             //If a vehicle is selected, show the mileage update dialog
             builder.setTitle("Update Mileage");
 
             //Add input field to dialog
             final EditText input = new EditText(getContext());
             input.setHint("Enter new mileage");
+            //Set input type to number only
+            input.setInputType(InputType.TYPE_CLASS_NUMBER);
+            //Ready to type on fillable
+            input.requestFocus();
             builder.setView(input);
 
             //Set up the buttons for the dialog
@@ -282,39 +290,54 @@ public class FirstFragment extends Fragment {
                     cursor.close();
                 }
             });
-
             builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+            builder.show();
 
-            //Show the mileage update dialog
+            //Pop up keyboard to type
+            new Handler().postDelayed(() -> {
+                InputMethodManager imm = (InputMethodManager) Objects.requireNonNull(getContext()).getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.showSoftInput(input, InputMethodManager.SHOW_IMPLICIT);
+            }, 200);
         }
-        builder.show();
     }
 
     //Method to toggle notifications on/off
     @SuppressLint("SetTextI18n")
     private void toggleNotifications() {
+        //Check if there are any vehicles added
+        if (vehicleList.isEmpty()) {
+            showNoVehicleSelectedDialog();
+            return;
+        }
+
         notificationsOn = !notificationsOn;// Toggle the boolean value
+
         if (notificationsOn) {
-            // Set the button text and bar color when notifications are ON
+            //Set the button text and bar color when notifications are ON
             notificationToggleButton.setText("Turn Off");
             Drawable greenGradient = ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.green_border_gradient);
             notificationBar.setBackground(greenGradient);
             notificationText.setText("Notifications for this vehicle are ON");
         } else {
-            // Set the button text and bar color when notifications are OFF
+            //Set the button text and bar color when notifications are OFF
             notificationToggleButton.setText("Turn On");
             Drawable redGradient = ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.gray_border_gradient);
             notificationBar.setBackground(redGradient);
             notificationText.setText("Notifications for this vehicle are OFF");
         }
-    }
 
-    //Method to handle adding new maintenance
-    private void addNewMaintenance() {
-    }
+        //Update the notification setting in the database
+        VehicleDatabaseHelper dbHelper = new VehicleDatabaseHelper(getContext());
+        Cursor cursor = dbHelper.getActiveVehicle();
 
-    //Method to handle viewing upcoming maintenance
-    private void viewUpcomingMaintenance() {
+        if (cursor != null && cursor.moveToFirst()) {
+            @SuppressLint("Range") int activeVehicleId = cursor.getInt(cursor.getColumnIndex(COLUMN_ID));
+            dbHelper.updateNotificationSetting(activeVehicleId, notificationsOn);
+        }
+
+        if (cursor != null) {
+            cursor.close();
+        }
     }
 
     //Method to display mileage for the selected vehicle
@@ -322,8 +345,8 @@ public class FirstFragment extends Fragment {
     private void showVehicle(int vehicleIndex) {
         if (vehicleIndex >= 0 && vehicleIndex < vehicleList.size()) {
             //Show the selected vehicle
-            String makeModelYear = vehicleList.get(vehicleIndex);
-            String[] vehicleDetails = makeModelYear.split(" ");
+            String yearMakeModel = vehicleList.get(vehicleIndex);
+            String[] vehicleDetails = yearMakeModel.split(" ");
             String licensePlate = vehicleDetails.length > 3 ? vehicleDetails[3] : "";
 
             //Check if the license plate is available and non-empty
@@ -332,16 +355,20 @@ public class FirstFragment extends Fragment {
                 binding.selectedCarTitle.setText(licensePlate);
             } else {
                 //If no license plate, use the year, make, and model
-                String yearMakeModel = vehicleDetails[0] + " " + vehicleDetails[1] + " " + vehicleDetails[2];
+                yearMakeModel = vehicleDetails[2] + " " + vehicleDetails[0] + " " + vehicleDetails[1];
                 binding.selectedCarTitle.setText(yearMakeModel);
             }
 
-            //Retrieve mileage from the database
+            //Retrieve the mileage and notification status for the active vehicle
             VehicleDatabaseHelper dbHelper = new VehicleDatabaseHelper(getContext());
             Cursor cursor = dbHelper.getActiveVehicle();
+
             if (cursor.moveToFirst()) {
                 @SuppressLint("Range") String milesStr = cursor.getString(cursor.getColumnIndex(COLUMN_MILES));
+                @SuppressLint("Range") int notificationEnabled = cursor.getInt(cursor.getColumnIndex(COLUMN_NOTIFICATION_STATUS));
                 int mileage = 0;
+                notificationsOn = (notificationEnabled == 1);
+
                 if (milesStr != null && !milesStr.isEmpty()) {
                     try {
                         mileage = Integer.parseInt(milesStr);
@@ -354,6 +381,18 @@ public class FirstFragment extends Fragment {
                 } else {
                     mileageText.setText("Mileage not available");
                 }
+
+                //Update the UI based on the notification setting
+                if (notificationsOn) {
+                    notificationToggleButton.setText("Turn Off");
+                    notificationText.setText("Notifications for this vehicle are ON");
+                    notificationBar.setBackground(ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.green_border_gradient));
+                } else {
+                    notificationToggleButton.setText("Turn On");
+                    notificationText.setText("Notifications for this vehicle are OFF");
+                    notificationBar.setBackground(ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.gray_border_gradient));
+                }
+
                 //Fetch and display the correct last updated timestamp for the active vehicle
                 long lastUpdatedTimestamp = cursor.getLong(cursor.getColumnIndex(COLUMN_LAST_UPDATE));
                 updateLastUpdatedText(lastUpdatedTimestamp);  //Pass the timestamp to the update method
@@ -456,7 +495,7 @@ public class FirstFragment extends Fragment {
                 String year = cursor.getString(cursor.getColumnIndex(COLUMN_YEAR));
                 String license = cursor.getString(cursor.getColumnIndex(COLUMN_LICENSE));
 
-                vehicleList.add(make + " " + model + " " + year + " " + license);
+                vehicleList.add(year + " " + make + " " + model + " " + license);
             } while (cursor.moveToNext());
         }
 
@@ -504,6 +543,21 @@ public class FirstFragment extends Fragment {
             vehicle3Button.setVisibility(View.GONE);  //Hide Button
             vehicle3ImageButton.setOnClickListener(v -> promptAddVehicle());  //Add new vehicle
         }
+    }
+
+    //Method to display the alert dialog when no vehicle is selected
+    private void showNoVehicleSelectedDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("No Vehicle Selected");
+        builder.setMessage("You need to add a vehicle first before using this feature.");
+        builder.setCancelable(false);
+        builder.setPositiveButton("OK", (dialog, which) -> {
+            dialog.dismiss();
+            // Navigate to the Add Vehicle Activity
+            Intent intent = new Intent(getContext(), AddVehicleActivity.class);
+            startActivityForResult(intent, ADD_VEHICLE_REQUEST_CODE);
+        });
+        builder.show();
     }
 
     @Override
