@@ -60,7 +60,7 @@
                         android:layout_height="wrap_content"
                         android:id="@+id/textView_selected_car_mileage_last_updated" android:layout_weight="70"
                         android:layout_width="0dp"
-                        android:textAlignment="textEnd" android:textSize="12sp"/>
+                        android:textAlignment="textEnd" android:textSize="16sp"/>
                 <ImageView
                         android:src="@drawable/sharp_brightness_alert_24"
                         android:layout_width="0dp"
