@@ -2,14 +2,13 @@
 <androidx.constraintlayout.widget.ConstraintLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
-        xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
     <!-- Title occupying the top part -->
     <TextView
             android:id="@+id/title_text"
-            android:text="Add New Maintenance"
+            android:text="@string/title_add_new_maintenance"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textAlignment="center"
@@ -39,7 +38,7 @@
                 android:layout_marginTop="0dp"
                 android:layout_marginBottom="0dp">
             <TextView
-                    android:text="Year"
+                    android:text="@string/year_label"
                     android:padding="18dp"
                     android:textSize="18sp"
                     android:textStyle="bold"
@@ -50,7 +49,7 @@
                     android:id="@+id/textView10"
                     android:layout_weight="1" />
             <TextView
-                    android:text="Make"
+                    android:text="@string/make_label"
                     android:padding="18dp"
                     android:textSize="18sp"
                     android:textStyle="bold"
@@ -61,7 +60,7 @@
                     android:id="@+id/textView11"
                     android:layout_weight="1" />
             <TextView
-                    android:text="Model"
+                    android:text="@string/model_label"
                     android:padding="18dp"
                     android:textSize="18sp"
                     android:textStyle="bold"
@@ -75,14 +74,14 @@
 
         <!-- Current Mileage Input -->
         <TextView
-                android:text="Current mileage"
+                android:text="@string/current_mileage_label"
                 android:padding="10dp"
                 android:textSize="20sp"
                 android:textStyle="bold"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:id="@+id/textView13"
-                android:layout_marginLeft="15dp" />
+                android:layout_marginStart="15dp" />
 
         <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
@@ -90,52 +89,52 @@
             <com.google.android.material.textfield.TextInputEditText
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Enter Current mileage here"
-                    android:layout_marginLeft="20dp" />
+                    android:hint="@string/hint_enter_mileage"
+                    android:layout_marginStart="20dp" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <!-- When was this maintenance performed? -->
         <TextView
-                android:text="When was this maintenance performed?"
+                android:text="@string/maintenance_performed"
                 android:padding="10dp"
                 android:textSize="20sp"
                 android:textStyle="bold"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="15dp" />
+                android:layout_marginStart="15dp" />
 
         <!-- Date Input and Calendar Button -->
         <LinearLayout
                 android:orientation="horizontal"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="20dp">
+                android:layout_marginStart="20dp">
             <EditText
                     android:layout_width="230dp"
-                    android:layout_height="wrap_content"
-                    android:hint="MM/DD/YYYY"
+                    android:layout_height="48dp"
+                    android:hint="@string/hint_date"
                     android:textAlignment="center"
                     android:inputType="date"
-                    android:id="@+id/editTextDate2" />
+                    android:autofillHints="date"
+                    android:id="@+id/editTextDate2"/>
             <ImageButton
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
                     app:srcCompat="@android:drawable/ic_menu_my_calendar"
                     android:id="@+id/imageButton3"
-                    android:layout_marginLeft="20dp" />
+                    android:layout_marginStart="20dp"
+                    android:contentDescription="@string/calendar_button_description"/>
         </LinearLayout>
 
         <!-- Maintenance Action Performed -->
         <TextView
-                android:text="What maintenance action was performed?"
+                android:text="@string/maintenance_action"
                 android:padding="10dp"
                 android:textSize="18sp"
                 android:textStyle="bold"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="10dp" />
-
-        <!-- Spinner Section -->
+                android:layout_marginStart="10dp" />
 
         <!-- Add More Button and Text Aligned with Spinner -->
         <LinearLayout
@@ -143,23 +142,23 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
-                android:layout_marginLeft="20dp"
+                android:layout_marginStart="20dp"
                 android:gravity="center_vertical">
 
             <ImageButton
                     android:id="@+id/add_more_button"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
                     android:background="@drawable/circle_button_white"
                     app:srcCompat="@drawable/ic_grey_cross"
-                    android:contentDescription="Add More"
-                    android:layout_marginRight="10dp"/>
+                    android:contentDescription="@string/add_more_label_button"
+            android:layout_marginEnd="10dp"/>
 
             <TextView
                     android:id="@+id/add_more_text"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Add More"
+                    android:text="@string/add_more_label"
                     android:textSize="18sp"
                     android:textStyle="bold" />
         </LinearLayout>
@@ -172,11 +171,12 @@
         <!-- "Would you like to turn on notifications?" Text (Larger) -->
         <TextView
                 android:id="@+id/notifications_text"
-                android:text="Would you like to turn on notifications for this  vehicle?"
+                android:text="@string/notification_question"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textSize="24sp"
-                android:paddingLeft="20dp"
+                android:paddingStart="20dp"
+                android:paddingEnd="10dp"
                 android:layout_marginTop="10dp"
                 android:textStyle="bold"
                 android:maxLines="2"
@@ -185,11 +185,12 @@
         <!-- Subtext "(oil changes, upcoming maintenance, etc.)" -->
         <TextView
                 android:id="@+id/notifications_subtext"
-                android:text="(oil changes, upcoming maintenance, etc.)"
+                android:text="@string/notification_subtext"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textSize="16sp"
                 android:paddingLeft="20dp"
+                android:paddingRight="20dp"
                 android:layout_marginBottom="5dp" />
 
         <!-- Checkbox Button with Text, Bigger and Closer to Notification Text -->
@@ -197,7 +198,7 @@
                 android:orientation="horizontal"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="20dp"
+                android:layout_marginStart="20dp"
                 android:layout_marginTop="5dp">
 
             <CheckBox
@@ -208,11 +209,11 @@
                     android:scaleY="1.5" />
 
             <TextView
-                    android:text="I don’t want to miss anything!"
+                    android:text="@string/checkbox_text"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textSize="16sp"
-                    android:layout_marginLeft="10dp" />
+                    android:layout_marginStart="10dp" />
         </LinearLayout>
 
     </LinearLayout>
@@ -231,13 +232,14 @@
 
         <Button
                 android:id="@+id/button2"
-                android:text="Save"
+                android:text="@string/save_button"
                 android:layout_width="150dp"
                 android:layout_height="55dp"
-                android:textColor="#F0F0F0"
+                android:textColor="@color/button_text"
                 android:padding="10dp"
                 android:textSize="18sp"
-                android:layout_margin="25dp" android:backgroundTint="@color/button_color"/>
+                android:layout_margin="25dp"
+                android:backgroundTint="@color/button_color"/>
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
