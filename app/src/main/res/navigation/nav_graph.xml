@@ -9,5 +9,11 @@
             android:id="@+id/FirstFragment"
             android:name="com.example.carmaintenancetracker.FirstFragment"
             android:label="@string/first_fragment_label"
-            tools:layout="@layout/fragment_first"/>
+            tools:layout="@layout/fragment_first">
+        <action android:id="@+id/action_FirstFragment_to_addnewmaint" app:destination="@id/addnewmaint"/>
+    </fragment>
+    <fragment android:id="@+id/addnewmaint" android:name="com.example.carmaintenancetracker.addnewmaint"
+              android:label="addnewmaint">
+        <action android:id="@+id/action_addnewmaint_to_FirstFragment" app:destination="@id/FirstFragment"/>
+    </fragment>
 </navigation>
