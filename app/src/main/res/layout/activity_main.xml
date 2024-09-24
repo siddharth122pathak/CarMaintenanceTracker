@@ -28,7 +28,7 @@
                 <ImageButton
                         android:layout_width="match_parent"
                         android:layout_height="0dp" app:srcCompat="@drawable/baseline_menu_book_24"
-                        android:id="@+id/btn_tutorial" android:layout_weight="70"
+                        android:id="@+id/btn_tutorial" android:background="@android:color/transparent"  android:layout_weight="70"
                         android:contentDescription="@string/btn_tutorial"/>
                 <TextView
                         android:text="@string/tutorial"
@@ -50,7 +50,7 @@
                 <ImageButton
                         android:layout_width="match_parent"
                         android:layout_height="0dp" app:srcCompat="@drawable/baseline_assignment_24"
-                        android:id="@+id/btn_notes" android:layout_weight="70"
+                        android:id="@+id/btn_notes" android:background="@android:color/transparent"  android:layout_weight="70"
                         android:contentDescription="@string/btn_notes"/>
                 <TextView
                         android:text="@string/notes"

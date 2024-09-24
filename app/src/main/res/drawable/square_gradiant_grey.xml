@@ -20,9 +20,9 @@
             <!-- Linear gradient from center to sides -->
             <gradient
                     android:type="linear"
-                    android:startColor="#D3D3D3"
+                    android:startColor="#A9A9A9"
                     android:centerColor="#FFFFFF"
-                    android:endColor="#D3D3D3"
+                    android:endColor="#A9A9A9"
                     android:angle="0"
                     android:centerX="0.5" />
         </shape>

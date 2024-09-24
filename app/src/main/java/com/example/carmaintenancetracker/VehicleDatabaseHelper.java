@@ -20,6 +20,7 @@ public class VehicleDatabaseHelper extends SQLiteOpenHelper {
     public static final String COLUMN_LICENSE = "license";
     public static final String COLUMN_MILES = "miles";
     public static final String COLUMN_LAST_UPDATE = "last_update";
+    public static final String COLUMN_NOTIFICATION_STATUS = "notification_status";
 
     //Constructor for creating the SQLiteOpenHelper instance
     public VehicleDatabaseHelper(Context context) {
@@ -38,7 +39,8 @@ public class VehicleDatabaseHelper extends SQLiteOpenHelper {
                 + COLUMN_LICENSE + " TEXT, "
                 + COLUMN_MILES + " TEXT, "
                 + COLUMN_LAST_UPDATE + " INTEGER, " //Store as INTEGER (timestamp)
-                + "active INTEGER DEFAULT 0" + ")";
+                + "active INTEGER DEFAULT 0, "
+                + COLUMN_NOTIFICATION_STATUS + " INTEGER DEFAULT 0" + ")";
         db.execSQL(CREATE_VEHICLE_TABLE);
     }
 
@@ -60,6 +62,7 @@ public class VehicleDatabaseHelper extends SQLiteOpenHelper {
         values.put(COLUMN_LICENSE, license);
         values.put(COLUMN_MILES, miles);
         values.put(COLUMN_LAST_UPDATE, System.currentTimeMillis());
+        values.put(COLUMN_NOTIFICATION_STATUS, 0);
         db.insert(TABLE_NAME, null, values); //Insert the data into the table
 
         // After inserting the first vehicle, set it as active
@@ -114,6 +117,7 @@ public class VehicleDatabaseHelper extends SQLiteOpenHelper {
             vehicle1.put(COLUMN_LICENSE, cursor1.getString(cursor1.getColumnIndex(COLUMN_LICENSE)));
             vehicle1.put(COLUMN_MILES, cursor1.getString(cursor1.getColumnIndex(COLUMN_MILES)));
             vehicle1.put(COLUMN_LAST_UPDATE, cursor1.getLong(cursor1.getColumnIndex(COLUMN_LAST_UPDATE)));
+            vehicle1.put(COLUMN_NOTIFICATION_STATUS, cursor1.getLong(cursor1.getColumnIndex(COLUMN_NOTIFICATION_STATUS)));
 
             //Extract data for vehicle 2 (Selected Vehicle)
             ContentValues vehicle2 = new ContentValues();
@@ -123,6 +127,7 @@ public class VehicleDatabaseHelper extends SQLiteOpenHelper {
             vehicle2.put(COLUMN_LICENSE, cursor2.getString(cursor2.getColumnIndex(COLUMN_LICENSE)));
             vehicle2.put(COLUMN_MILES, cursor2.getString(cursor2.getColumnIndex(COLUMN_MILES)));
             vehicle2.put(COLUMN_LAST_UPDATE, cursor2.getLong(cursor2.getColumnIndex(COLUMN_LAST_UPDATE)));
+            vehicle2.put(COLUMN_NOTIFICATION_STATUS, cursor2.getLong(cursor2.getColumnIndex(COLUMN_NOTIFICATION_STATUS)));
 
             //Swap the data between Vehicle 0 and the selected vehicle
             db.update(TABLE_NAME, vehicle2, COLUMN_ID + "=?", new String[]{String.valueOf(vehicleId1)});  // Update vehicle 0 with vehicle 2 data
@@ -160,5 +165,13 @@ public class VehicleDatabaseHelper extends SQLiteOpenHelper {
         cursor.close();
         db.close();
         return lastUpdated;
+    }
+
+    public void updateNotificationSetting(int activeVehicleId, boolean notificationsOn) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_NOTIFICATION_STATUS, notificationsOn ? 1 : 0);
+        db.update(TABLE_NAME, values, COLUMN_ID + "=?", new String[]{String.valueOf(activeVehicleId)});
+        db.close();
     }
 }

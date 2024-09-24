@@ -20,6 +20,22 @@
     <string name="maintenance_by_miles_title">Maintenance by Miles</string>
     <string name="maintenance_by_time_title">Maintenance by Time</string>
     <string name="upcoming_maintenance_main_text">This is the Maintenance by MILES text</string>
+    <string name="title_add_new_maintenance">Add New Maintenance</string>
+    <string name="year_label">Year</string>
+    <string name="make_label">Make</string>
+    <string name="model_label">Model</string>
+    <string name="current_mileage_label">Current mileage</string>
+    <string name="hint_enter_mileage">Enter Current mileage here</string>
+    <string name="maintenance_performed">When was this maintenance performed?</string>
+    <string name="hint_date">MM/DD/YYYY</string>
+    <string name="maintenance_action">What maintenance action was performed?</string>
+    <string name="add_more_label">Add More</string>
+    <string name="add_more_label_button">Add More button</string>
+    <string name="notification_question">Would you like to turn on notifications for this vehicle?</string>
+    <string name="notification_subtext">(oil changes, upcoming maintenance, etc.)</string>
+    <string name="checkbox_text">I don’t want to miss anything!</string>
+    <string name="calendar_button_description">Calendar button</string>
+    <string name="save_button">Save</string>
 
     <!-- Strings used for fragments for navigation -->
     <string name="first_fragment_label">Homepage</string>
