@@ -15,12 +15,13 @@
                 app:destination="@id/upcomingMaintenanceActivity"/>
     </fragment>
     <fragment android:id="@+id/addnewmaint" android:name="com.example.carmaintenancetracker.addnewmaint"
-              android:label="addnewmaint">
+              android:label="addnewmaint" tools:layout="@layout/new_maint_add">
+
         <action android:id="@+id/action_addnewmaint_to_FirstFragment" app:destination="@id/FirstFragment"/>
     </fragment>
     <fragment android:id="@+id/upcomingMaintenanceActivity"
               android:name="com.example.carmaintenancetracker.UpcomingMaintenanceActivity"
-              android:label="UpcomingMaintenanceActivity">
+              android:label="UpcomingMaintenanceActivity" tools:layout="@layout/activity_upcoming_maintenance">
         <action android:id="@+id/action_upcomingMaintenanceActivity_to_FirstFragment"
                 app:destination="@id/FirstFragment"/>
     </fragment>
