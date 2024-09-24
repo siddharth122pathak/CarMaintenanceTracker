@@ -19,6 +19,7 @@ import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
+import com.airbnb.lottie.LottieAnimationView;
 import com.example.carmaintenancetracker.databinding.FragmentFirstBinding;
 
 import java.text.SimpleDateFormat;
@@ -42,6 +43,8 @@ public class FirstFragment extends Fragment {
     private ImageView lastUpdatedFlareIcon;
     private TextView lastUpdatedText;
     long lastUpdatedTimestamp;
+    private ImageView carImageView;
+    private LottieAnimationView carAnimationView;
 
     //List to store chicle mileage and names (IDs or names)
     private final List<Integer> vehicleMileage = new ArrayList<>();
@@ -122,6 +125,8 @@ public class FirstFragment extends Fragment {
         titleText = view.findViewById(R.id.selected_car_title);
         lastUpdatedFlareIcon = view.findViewById(R.id.imageView_mileage_last_updated_late);
         lastUpdatedText = view.findViewById(R.id.textView_selected_car_mileage_last_updated);
+        carImageView = view.findViewById(R.id.imageView_selected_car);
+        carAnimationView = view.findViewById(R.id.carAnimation);
 
         VehicleDatabaseHelper dbHelper = new VehicleDatabaseHelper(getContext());
         //Check if any vehicle exists in the database
@@ -187,8 +192,8 @@ public class FirstFragment extends Fragment {
                 showNoVehicleSelectedDialog();
             } else {
                 NavHostFragment.findNavController(FirstFragment.this)
-                .navigate(R.id.action_FirstFragment_to_addnewmaint);
-                }
+                        .navigate(R.id.action_FirstFragment_to_addnewmaint);
+            }
         });
 
         //View Upcoming Maintenance Button: Opens the screen showing upcoming maintenance
@@ -197,7 +202,7 @@ public class FirstFragment extends Fragment {
                 showNoVehicleSelectedDialog();
             } else {
                 NavHostFragment.findNavController(FirstFragment.this)
-                .navigate(R.id.action_FirstFragment_to_upcomingMaintenanceActivity);
+                        .navigate(R.id.action_FirstFragment_to_upcomingMaintenanceActivity);
             }
         });
     }
@@ -366,6 +371,7 @@ public class FirstFragment extends Fragment {
             if (cursor.moveToFirst()) {
                 @SuppressLint("Range") String milesStr = cursor.getString(cursor.getColumnIndex(COLUMN_MILES));
                 @SuppressLint("Range") int notificationEnabled = cursor.getInt(cursor.getColumnIndex(COLUMN_NOTIFICATION_STATUS));
+                String carMake = cursor.getString(cursor.getColumnIndex(VehicleDatabaseHelper.COLUMN_MAKE));
                 int mileage = 0;
                 notificationsOn = (notificationEnabled == 1);
 
@@ -396,6 +402,22 @@ public class FirstFragment extends Fragment {
                 //Fetch and display the correct last updated timestamp for the active vehicle
                 long lastUpdatedTimestamp = cursor.getLong(cursor.getColumnIndex(COLUMN_LAST_UPDATE));
                 updateLastUpdatedText(lastUpdatedTimestamp);  //Pass the timestamp to the update method
+
+                //Get the appropriate animation based on the car make
+                int animationResource = getAnimationForMake(carMake);
+
+                //Set and play the animation
+                if (animationResource == 0) {
+                    //Handle missing animation by showing default image
+                    carImageView.setVisibility(View.VISIBLE);
+                    carAnimationView.setVisibility(View.GONE);
+                } else {
+                    //Animation found, display it
+                    carImageView.setVisibility(View.GONE);
+                    carAnimationView.setVisibility(View.VISIBLE);
+                    carAnimationView.setAnimation(animationResource);
+                    carAnimationView.playAnimation();
+                }
             }
             cursor.close();
         }
@@ -553,17 +575,34 @@ public class FirstFragment extends Fragment {
         builder.setCancelable(false);
         builder.setPositiveButton("OK", (dialog, which) -> {
             dialog.dismiss();
-            // Navigate to the Add Vehicle Activity
+            //Navigate to the Add Vehicle Activity
             Intent intent = new Intent(getContext(), AddVehicleActivity.class);
             startActivityForResult(intent, ADD_VEHICLE_REQUEST_CODE);
         });
         builder.show();
     }
 
+    private int getAnimationForMake(String carMake) {
+        switch (carMake.toLowerCase()) {
+            case "toyota":
+                return R.raw.car_animation_toyota;
+            case "honda":
+                return R.raw.car_animation_honda;
+            case "ford":
+                return R.raw.car_animation_ford;
+            case "bmw":
+                return R.raw.car_animation_bmw;
+            case "chevrolet":
+                return R.raw.car_animation_chevrolet;
+            default:
+                return R.raw.car_animation;  //Fallback animation if make doesn't match
+        }
+    }
+
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        // Nullify the binding to avoid memory leaks
+        //Nullify the binding to avoid memory leaks
         binding = null;
     }
 }
