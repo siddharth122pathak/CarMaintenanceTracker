@@ -7,6 +7,7 @@
     <!-- Strings used for titles and text -->
     <string name="app_name">AutoIQ</string>
     <string name="homepage_selected_car">Add a vehicle to begin!</string>
+    <string name="add_new_vehicle_title">Add New Vehicle</string>
     <string name="mileage">0 miles</string>
     <string name="mileage_last_updated">Last updated: never</string>
     <string name="notification_setting">Notifications for this vehicle are OFF</string>

@@ -490,8 +490,7 @@ public class FirstFragment extends Fragment {
 
     //Prompt user to add new vehicle
     private void promptAddVehicle() {
-        Intent intent = new Intent(getContext(), AddVehicleActivity.class);
-        startActivityForResult(intent, 1);
+        NavHostFragment.findNavController(this).navigate(R.id.action_FirstFragment_to_AddVehicleActivity);
     }
 
     //Update the button text dynamically based on the number of vehicles

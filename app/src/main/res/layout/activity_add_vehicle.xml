@@ -1,63 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
                                                    xmlns:app="http://schemas.android.com/apk/res-auto"
-                                                   android:layout_width="match_parent"
+                                                   xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
                                                    android:layout_height="match_parent"
                                                    android:background="#F8F8F8">
+    <TextView
+            android:text="@string/add_new_vehicle_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:id="@+id/selected_car_title"
+            android:textAlignment="center" android:background="@drawable/title_border_gradient"
+            android:textSize="24sp"
+            android:textStyle="bold" android:padding="1dp" tools:ignore="MissingConstraints"/>
 
     <!-- Car Animation at the Top -->
-    <com.airbnb.lottie.LottieAnimationView
-            android:id="@+id/carAnimation"
-            android:layout_width="wrap_content"
-            android:layout_height="200dp"
-            android:layout_marginTop="32dp"
-            app:lottie_rawRes="@raw/car_animation"
-            app:lottie_autoPlay="true"
-            app:lottie_loop="true"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
 
     <!-- Car Make Dropdown Menu -->
-    <Spinner
-            android:id="@+id/spinnerCarMake"
-            android:layout_width="349dp"
-            android:layout_height="58dp"
-            android:background="@drawable/spinner_background"
-            app:layout_constraintTop_toBottomOf="@id/carAnimation"
+    <Button
+            android:id="@+id/btnSave"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="Add New Maintenance"
+            android:textColor="#FFFFFF"
+            android:textSize="18sp"
+            android:layout_marginTop="24dp"
+            app:layout_constraintTop_toBottomOf="@id/inputNickName"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginTop="16dp"
             android:layout_marginStart="32dp"
-            android:layout_marginEnd="32dp"/>
-
-    <!-- Car Model Dropdown Menu -->
-    <Spinner
-            android:id="@+id/spinnerCarModel"
-            android:layout_width="346dp"
-            android:layout_height="55dp"
-            android:background="@drawable/spinner_background"
-            app:layout_constraintTop_toBottomOf="@id/spinnerCarMake"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginTop="16dp"
-            android:layout_marginStart="32dp"
-            android:layout_marginEnd="32dp"/>
-
-    <!-- Year Dropdown Menu -->
-    <Spinner
-            android:id="@+id/spinnerCarYear"
-            android:layout_width="345dp"
-            android:layout_height="55dp"
-            android:background="@drawable/spinner_background"
-            app:layout_constraintTop_toBottomOf="@id/spinnerCarModel"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginTop="16dp"
-            android:layout_marginStart="32dp"
-            android:layout_marginEnd="32dp"/>
-
-    <!-- Licence Input Field -->
+            android:layout_marginEnd="32dp" android:backgroundTint="@color/button_color"
+            app:layout_constraintHorizontal_bias="1.0" tools:ignore="HardcodedText"/>
     <EditText
             android:id="@+id/inputNickName"
             android:layout_width="0dp"
@@ -70,23 +41,60 @@
             app:layout_constraintTop_toBottomOf="@id/spinnerCarYear"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="36dp"
             android:layout_marginStart="32dp"
-            android:layout_marginEnd="32dp" />
-
-    <!-- Save Button -->
-    <Button
-            android:id="@+id/btnSave"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:text="Save"
-            android:textColor="#FFFFFF"
-            android:textSize="18sp"
-            android:layout_marginTop="24dp"
-            app:layout_constraintTop_toBottomOf="@id/inputNickName"
+            android:layout_marginEnd="32dp" app:layout_constraintHorizontal_bias="0.0" tools:ignore="HardcodedText"/>
+    <Spinner
+            android:id="@+id/spinnerCarYear"
+            android:layout_width="345dp"
+            android:layout_height="55dp"
+            android:background="@drawable/spinner_background"
+            app:layout_constraintTop_toBottomOf="@id/spinnerCarModel"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="28dp"
             android:layout_marginStart="32dp"
-            android:layout_marginEnd="32dp" android:backgroundTint="@color/button_color"/>
+            android:layout_marginEnd="32dp" app:layout_constraintHorizontal_bias="1.0"/>
+    <Spinner
+            android:id="@+id/spinnerCarModel"
+            android:layout_width="346dp"
+            android:layout_height="55dp"
+            android:background="@drawable/spinner_background"
+            app:layout_constraintTop_toBottomOf="@id/spinnerCarMake"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="32dp"
+            android:layout_marginStart="32dp"
+            android:layout_marginEnd="32dp" app:layout_constraintHorizontal_bias="1.0"/>
+    <com.airbnb.lottie.LottieAnimationView
+            android:id="@+id/carAnimation"
+            android:layout_width="wrap_content"
+            android:layout_height="200dp"
+            android:layout_marginTop="52dp"
+            app:lottie_rawRes="@raw/car_animation"
+            app:lottie_autoPlay="true"
+            app:lottie_loop="true"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" app:layout_constraintHorizontal_bias="0.0"/>
+    <Spinner
+            android:id="@+id/spinnerCarMake"
+            android:layout_width="349dp"
+            android:layout_height="58dp"
+            android:background="@drawable/spinner_background"
+            app:layout_constraintTop_toBottomOf="@id/carAnimation"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="28dp"
+            android:layout_marginStart="32dp"
+            android:layout_marginEnd="32dp" app:layout_constraintHorizontal_bias="0.0"/>
+
+    <!-- Car Model Dropdown Menu -->
+
+    <!-- Year Dropdown Menu -->
+
+    <!-- Licence Input Field -->
+
+    <!-- Save Button -->
 
 </androidx.constraintlayout.widget.ConstraintLayout>
