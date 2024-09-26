@@ -42,4 +42,5 @@ dependencies {
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
     implementation("com.airbnb.android:lottie:5.2.0")
+    implementation("mysql:mysql-connector-java:8.0.33")
 }
