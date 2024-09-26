@@ -45,4 +45,5 @@ dependencies {
     androidTestImplementation(libs.espresso.core)
     //noinspection UseTomlInstead
     implementation("com.airbnb.android:lottie:5.2.0")
+    implementation("mysql:mysql-connector-java:8.0.33")
 }

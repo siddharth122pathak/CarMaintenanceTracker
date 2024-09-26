@@ -60,6 +60,7 @@
     <!-- Strings used for content descriptions -->
     <string name="mileage_last_updated_late_icon">It\'s been a while since the last update!</string>
     <string name="currently_selected_vehicle_image">There is no vehicle displayed.</string>
+    <string name="app_logo"/>
 
     <string-array name="car_makes">
         <item>Toyota</item>
