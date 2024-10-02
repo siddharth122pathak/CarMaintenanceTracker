@@ -46,7 +46,7 @@ public class UpcomingMaintenanceActivity extends Fragment {
         timeTab.setBackground(ContextCompat.getDrawable(requireContext(), R.drawable.tab_background_unselected));
 
         //change main text
-        mainText.setText("This is the Maintenance by MILES text");
+        mainText.setText(R.string.upcoming_maintenance_miles_text);
     }
 
     //Maintenance by Time method
@@ -56,6 +56,6 @@ public class UpcomingMaintenanceActivity extends Fragment {
         timeTab.setBackground(ContextCompat.getDrawable(requireContext(), R.drawable.tab_background_selected));
 
         //change main text
-        mainText.setText("This is the Maintenance by TIME text");
+        mainText.setText(R.string.upcoming_maintenance_time_text);
     }
 }
