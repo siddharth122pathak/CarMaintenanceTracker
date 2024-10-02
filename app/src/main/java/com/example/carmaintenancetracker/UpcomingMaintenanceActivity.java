@@ -45,6 +45,9 @@ public class UpcomingMaintenanceActivity extends Fragment {
         milesTab.setBackground(ContextCompat.getDrawable(requireContext(), R.drawable.tab_background_selected));
         timeTab.setBackground(ContextCompat.getDrawable(requireContext(), R.drawable.tab_background_unselected));
 
+        //update miles text based on vehicle status
+
+
         //change main text
         mainText.setText(R.string.upcoming_maintenance_miles_text);
     }
@@ -54,6 +57,9 @@ public class UpcomingMaintenanceActivity extends Fragment {
         //change backgrounds
         milesTab.setBackground(ContextCompat.getDrawable(requireContext(), R.drawable.tab_background_unselected));
         timeTab.setBackground(ContextCompat.getDrawable(requireContext(), R.drawable.tab_background_selected));
+
+        //update time text based on vehicle status
+
 
         //change main text
         mainText.setText(R.string.upcoming_maintenance_time_text);
