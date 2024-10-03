@@ -223,7 +223,7 @@ public class FirstFragment extends Fragment {
     //Method to update the last updated text
     @SuppressLint("SetTextI18n")
     private void updateLastUpdatedText(long lastUpdatedTimestamp){
-        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy @ HH:mm a", Locale.getDefault());
+        SimpleDateFormat sdf = new SimpleDateFormat("MM-dd-yyyy @ HH:mm", Locale.getDefault());
 
         //If no update has been made, use placeholder text
         if (lastUpdatedTimestamp == 0){
