@@ -43,4 +43,6 @@ dependencies {
     androidTestImplementation(libs.espresso.core)
     implementation("com.airbnb.android:lottie:5.2.0")
     implementation("mysql:mysql-connector-java:8.0.33")
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
 }
