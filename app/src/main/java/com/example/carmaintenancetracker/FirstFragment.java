@@ -103,6 +103,7 @@ public class FirstFragment extends Fragment {
             if (vehicleList.size() == 1) {
                 dbHelper.setActiveVehicle(1);  //Keep the first vehicle as active
                 showVehicle(0);  //Display the first vehicle
+                updateVehicleButtons();
             }
 
             //Show the new vehicle but do not change the active vehicle (if it’s not the first one)
@@ -222,7 +223,7 @@ public class FirstFragment extends Fragment {
     //Method to update the last updated text
     @SuppressLint("SetTextI18n")
     private void updateLastUpdatedText(long lastUpdatedTimestamp){
-        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy @ HH:mm a", Locale.getDefault());
+        SimpleDateFormat sdf = new SimpleDateFormat("MM-dd-yyyy @ HH:mm", Locale.getDefault());
 
         //If no update has been made, use placeholder text
         if (lastUpdatedTimestamp == 0){
@@ -237,7 +238,7 @@ public class FirstFragment extends Fragment {
         //Check if 3 months have passed
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(lastUpdatedTimestamp);
-        calendar.add(Calendar.MONTH, 3); //Add 3 months to the last updated date
+        calendar.add(Calendar.MINUTE, 3); //Add 3 months to the last updated date
 
         if (calendar.getTimeInMillis() <= System.currentTimeMillis()){
             lastUpdatedFlareIcon.setVisibility(View.VISIBLE); //Show the flare icon
