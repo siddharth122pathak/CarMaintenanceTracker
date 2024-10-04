@@ -1,43 +1,21 @@
-/*package com.example.carmaintenancetracker;
+/*
+public interface ApiInterface {
+    @GET("users")
+    Call<List<User>> getUsers();
 
-import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
+    @POST("users")
+    Call<User> createUser(@Body User user);
+}
 
-import androidx.annotation.NonNull;
-import androidx.fragment.app.Fragment;
-import androidx.navigation.fragment.NavHostFragment;
-import com.example.carmaintenancetracker.databinding.FragmentFirstBinding;
+public class ApiClient {
+    private static final String BASE_URL = "https://your-api-url.com/api/";
+    private OkHttpClient client = new OkHttpClient();
 
-public class FirstFragment extends Fragment {
-
-    private FragmentFirstBinding binding;
-
-    @Override
-    public View onCreateView(
-            @NonNull LayoutInflater inflater, ViewGroup container,
-            Bundle savedInstanceState
-    ) {
-
-        binding = FragmentFirstBinding.inflate(inflater, container, false);
-        return binding.getRoot();
-
+    public ApiInterface createApiInterface() {
+        return new Retrofit.Builder()
+                .baseUrl(BASE_URL)
+                .client(client)
+                .build()
+                .create(ApiInterface.class);
     }
-
-    public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-
-        binding.buttonFirst.setOnClickListener(v ->
-                NavHostFragment.findNavController(FirstFragment.this)
-                        .navigate(R.id.action_FirstFragment_to_SecondFragment)
-        );
-    }
-
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        binding = null;
-    }
-
 }*/

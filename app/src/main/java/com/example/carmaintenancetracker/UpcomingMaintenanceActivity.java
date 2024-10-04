@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.resources.Compatibility;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import android.view.View;
@@ -37,6 +38,10 @@ public class UpcomingMaintenanceActivity extends Fragment {
         //Add OnClickListener for each tab
         milesTab.setOnClickListener(v -> loadMiles());
         timeTab.setOnClickListener(v -> loadTime());
+
+        //set up API client
+        /*ApiClient apiClient = new ApiClient();
+        ApiInterface apiInterface = apiClient.createApiInterface();*/
     }
 
     //Maintenance by Miles method
@@ -46,7 +51,25 @@ public class UpcomingMaintenanceActivity extends Fragment {
         timeTab.setBackground(ContextCompat.getDrawable(requireContext(), R.drawable.tab_background_unselected));
 
         //update miles text based on vehicle status
+        /*
+        //call the user
+        Call<List<User>> user = apiInterface.getUser();
 
+        //get the user's vehicle
+        Vehicle<List<User>> vehicle = user.vehicle();
+
+        //check that the vehicle exists in the database
+        if (vehicle.exists()) {
+
+            //get an array of maintenance tasks organized by mileage
+            Task arr[] = organizeTasksByMiles(vehicle);
+
+            //print the array to the miles string
+            R.string.upcoming_maintenance_miles_text = printTasksByMiles(arr);
+        } else {
+            // Handle error
+        }
+        */
 
         //change main text
         mainText.setText(R.string.upcoming_maintenance_miles_text);
@@ -59,7 +82,25 @@ public class UpcomingMaintenanceActivity extends Fragment {
         timeTab.setBackground(ContextCompat.getDrawable(requireContext(), R.drawable.tab_background_selected));
 
         //update time text based on vehicle status
+        /*
+        //call the user
+        Call<List<User>> user = apiInterface.getUser();
 
+        //get the user's vehicle
+        Vehicle<List<User>> vehicle = user.vehicle();
+
+        //check that the vehicle exists in the database
+        if (vehicle.exists()) {
+
+            //get an array of maintenance tasks organized by time
+            Task arr[] = organizeTasksByTime(vehicle);
+
+            //print the array to the time string
+            R.string.upcoming_maintenance_time_text = printTasksByMiles(arr);
+        } else {
+            // Handle error
+        }
+        */
 
         //change main text
         mainText.setText(R.string.upcoming_maintenance_time_text);
