@@ -8,6 +8,8 @@ import android.os.Build;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
+import static com.example.carmaintenancetracker.R.*;
+
 public class NotificationHelper {
 
     //Unique ID for the notification channel

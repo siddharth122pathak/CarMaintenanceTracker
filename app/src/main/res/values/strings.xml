@@ -53,6 +53,8 @@
     <string name="add_new_maintenance">Add new maintenance</string>
     <string name="view_upcoming_maintenance">View upcoming maintenance</string>
     <string name="add_new_vehicle">Add new vehicle</string>
+    <string name="add_car_detail">Vehicle Name</string>
+    <string name="add_car_mileage">Vehicle Mileage</string>
 
     <!-- Strings used for content descriptions -->
     <string name="mileage_last_updated_late_icon">It\'s been a while since the last update!</string>
