@@ -225,17 +225,57 @@
                         android:adjustViewBounds="true"
                         android:layout_margin="8dp" tools:ignore="DuplicateSpeakableTextCheck"
                 />
-                <androidx.appcompat.widget.AppCompatButton
+                <FrameLayout
                         android:id="@+id/btn_vehicle_1_text"
-                        android:layout_width="100dp"
-                        android:layout_height="100dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="100dp"
+                        android:minHeight="100dp"
                         android:layout_weight="3"
                         android:background="@drawable/circle_button_border_gradient"
-                        android:text="Vehicle 2"
-                        android:textColor="#333333"
                         android:gravity="center"
                         android:padding="10dp"
-                        android:layout_marginEnd="8dp" tools:ignore="HardcodedText" android:visibility="gone"/>
+                        android:layout_marginEnd="8dp"
+                        android:visibility="gone"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <!-- Car Image (Using an ImageView or Lottie Animation) -->
+                    <com.airbnb.lottie.LottieAnimationView
+                                android:id="@+id/carAnimation1"
+                                android:layout_width="50dp"
+                                android:layout_height="50dp"
+                                android:layout_gravity="top|center"
+                                app:lottie_autoPlay="true"
+                                app:lottie_loop="true"/>
+
+                        <!-- Vehicle details like year, make, and model -->
+                        <TextView
+                                android:id="@+id/car_details1"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center|bottom"
+                                android:src="@string/add_car_detail"
+                                android:textColor="#333333"
+                                android:textStyle="bold"
+                                android:textSize="12sp"
+                                android:gravity="center_horizontal"
+                                android:layout_marginTop="24dp"
+                                android:layout_marginBottom="24dp"/>
+
+                        <!-- Mileage -->
+                        <TextView
+                                android:id="@+id/car_mileage1"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center_horizontal|bottom"
+                                android:src="@string/add_car_mileage"
+                                android:textColor="#333333"
+                                android:textSize="16sp"
+                                android:gravity="center"
+                                android:layout_marginBottom="8dp" tools:ignore="SmallSp"/>
+
+                    </FrameLayout>
                 <ImageButton
                         android:id="@+id/btn_vehicle_2"
                         android:layout_width="100dp"
@@ -247,17 +287,57 @@
                         android:scaleType="fitCenter"
                         android:adjustViewBounds="true"
                         android:layout_margin="8dp"/>
-                <androidx.appcompat.widget.AppCompatButton
+                <FrameLayout
                         android:id="@+id/btn_vehicle_2_text"
-                        android:layout_width="100dp"
-                        android:layout_height="100dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="100dp"
+                        android:minHeight="100dp"
                         android:layout_weight="3"
                         android:background="@drawable/circle_button_border_gradient"
-                        android:text="Vehicle 3"
-                        android:textColor="#333333"
                         android:gravity="center"
                         android:padding="10dp"
-                        android:layout_marginEnd="8dp" tools:ignore="HardcodedText" android:visibility="gone"/>
+                        android:layout_marginEnd="8dp"
+                        android:visibility="gone"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                    <!-- Car Image (Using an ImageView or Lottie Animation) -->
+                    <com.airbnb.lottie.LottieAnimationView
+                            android:id="@+id/carAnimation2"
+                            android:layout_width="50dp"
+                            android:layout_height="50dp"
+                            android:layout_gravity="top|center"
+                            app:lottie_autoPlay="true"
+                            app:lottie_loop="true"/>
+
+                    <!-- Vehicle details like year, make, and model -->
+                    <TextView
+                            android:id="@+id/car_details2"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center|bottom"
+                            android:src="@string/add_car_detail"
+                            android:textColor="#333333"
+                            android:textStyle="bold"
+                            android:textSize="12sp"
+                            android:gravity="center_horizontal"
+                            android:layout_marginTop="24dp"
+                            android:layout_marginBottom="24dp"/>
+
+                    <!-- Mileage -->
+                    <TextView
+                            android:id="@+id/car_mileage2"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center_horizontal|bottom"
+                            android:src="@string/add_car_mileage"
+                            android:textColor="#333333"
+                            android:textSize="16sp"
+                            android:gravity="center"
+                            android:layout_marginBottom="8dp" tools:ignore="SmallSp"/>
+
+                </FrameLayout>
                 <ImageButton
                         android:id="@+id/btn_vehicle_3"
                         android:layout_width="100dp"
@@ -269,17 +349,58 @@
                         android:scaleType="fitCenter"
                         android:adjustViewBounds="true"
                         android:layout_margin="8dp"/>
-                <androidx.appcompat.widget.AppCompatButton
+
+                <FrameLayout
                         android:id="@+id/btn_vehicle_3_text"
-                        android:layout_width="100dp"
-                        android:layout_height="100dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="100dp"
+                        android:minHeight="100dp"
                         android:layout_weight="3"
                         android:background="@drawable/circle_button_border_gradient"
-                        android:text="Vehicle 4"
-                        android:textColor="#4A4A4A"
                         android:gravity="center"
                         android:padding="10dp"
-                        tools:ignore="HardcodedText" android:visibility="gone" android:backgroundTint="@null"/>
+                        android:layout_marginEnd="8dp"
+                        android:visibility="gone"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                    <!-- Car Image (Using an ImageView or Lottie Animation) -->
+                    <com.airbnb.lottie.LottieAnimationView
+                            android:id="@+id/carAnimation3"
+                            android:layout_width="50dp"
+                            android:layout_height="50dp"
+                            android:layout_gravity="top|center"
+                            app:lottie_autoPlay="true"
+                            app:lottie_loop="true"/>
+
+                    <!-- Vehicle details like year, make, and model -->
+                    <TextView
+                            android:id="@+id/car_details3"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center|bottom"
+                            android:src="@string/add_car_detail"
+                            android:textColor="#333333"
+                            android:textStyle="bold"
+                            android:textSize="12sp"
+                            android:gravity="center_horizontal"
+                            android:layout_marginTop="24dp"
+                            android:layout_marginBottom="24dp"/>
+
+                    <!-- Mileage -->
+                    <TextView
+                            android:id="@+id/car_mileage3"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center_horizontal|bottom"
+                            android:src="@string/add_car_mileage"
+                            android:textColor="#333333"
+                            android:textSize="16sp"
+                            android:gravity="center"
+                            android:layout_marginBottom="8dp" tools:ignore="SmallSp"/>
+
+                </FrameLayout>
             </LinearLayout>
             <Space
                     android:layout_width="wrap_content"
