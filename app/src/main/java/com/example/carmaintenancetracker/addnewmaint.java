@@ -1,4 +1,5 @@
 package com.example.carmaintenancetracker;
+
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.os.Bundle;
@@ -9,6 +10,8 @@ import android.widget.*;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.fragment.NavHostFragment;
+
 import java.util.Calendar;
 
 public class addnewmaint extends Fragment {
@@ -118,6 +121,9 @@ public class addnewmaint extends Fragment {
         // Show a simple message (Toast) as an example of handling input
         if (!enteredDate.isEmpty()) {
             Toast.makeText(getContext(), "Maintenance saved for: " + enteredDate, Toast.LENGTH_SHORT).show();
+            // Navigate back to FirstFragment after saving the maintenance
+            NavHostFragment.findNavController(addnewmaint.this)
+                    .navigate(R.id.action_addnewmaint_to_FirstFragment);
         } else {
             Toast.makeText(getContext(), "Please enter a maintenance date!", Toast.LENGTH_SHORT).show();
         }
