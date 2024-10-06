@@ -24,4 +24,12 @@ public interface UserApi {
             @Field("phone_number") String phoneNumber,
             @Field("password") String password
     );
+
+    // POST request to check if a username exists
+    @FormUrlEncoded
+    @POST("/check_username.php")
+    Call<ResponseBody> checkUsername(
+            @Field("username") String username
+    );
+
 }
