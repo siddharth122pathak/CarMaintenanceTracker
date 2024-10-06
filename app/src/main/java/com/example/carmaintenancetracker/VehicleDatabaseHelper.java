@@ -17,7 +17,7 @@ public class VehicleDatabaseHelper extends SQLiteOpenHelper {
     public static final String COLUMN_MAKE = "make";
     public static final String COLUMN_MODEL = "model";
     public static final String COLUMN_YEAR = "year";
-    public static final String COLUMN_LICENSE = "license";
+    public static final String COLUMN_LICENSE = "nickname";
     public static final String COLUMN_MILES = "miles";
     public static final String COLUMN_LAST_UPDATE = "last_update";
     public static final String COLUMN_NOTIFICATION_STATUS = "notification_status";
@@ -53,14 +53,14 @@ public class VehicleDatabaseHelper extends SQLiteOpenHelper {
     }
 
     //Method to add a new vehicle to the database
-    public void addVehicle(String make, String model, String year, String license, String miles) {
+    public void addVehicle(String make, String model, String year, String nickname) {
         SQLiteDatabase db = this.getWritableDatabase(); //Get a writable database
         ContentValues values = new ContentValues(); //Prepare the data for insertion
         values.put(COLUMN_MAKE, make);
         values.put(COLUMN_MODEL, model);
         values.put(COLUMN_YEAR, year);
-        values.put(COLUMN_LICENSE, license);
-        values.put(COLUMN_MILES, miles);
+        values.put(COLUMN_LICENSE, nickname);
+        //values.put(COLUMN_MILES, miles);
         values.put(COLUMN_LAST_UPDATE, System.currentTimeMillis());
         values.put(COLUMN_NOTIFICATION_STATUS, 0);
         db.insert(TABLE_NAME, null, values); //Insert the data into the table

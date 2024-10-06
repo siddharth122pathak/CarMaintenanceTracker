@@ -46,9 +46,16 @@ public class FirstFragment extends Fragment {
     private ImageView carImageView;
     private LottieAnimationView carAnimationView;
 
+    //Views for the new vehicle buttons and animations
+    private FrameLayout vehicle1Button, vehicle2Button, vehicle3Button; //New vehicle buttons
+    private LottieAnimationView carAnimation1, carAnimation2, carAnimation3; //Lottie animations for each vehicle
+    private TextView carDetails1, carMileage1, carDetails2, carMileage2, carDetails3, carMileage3; //New vehicle details and mileage TextViews
+    private ImageButton vehicle1ImageButton, vehicle2ImageButton, vehicle3ImageButton; //Add new vehicle buttons
+
     //List to store chicle mileage and names (IDs or names)
     private final List<Integer> vehicleMileage = new ArrayList<>();
     private final List<String> vehicleList = new ArrayList<>();
+    private final List<String> vehicleMakes = new ArrayList<>();
     private int currentVehicleIndex = 0;
 
     @Nullable
@@ -113,7 +120,7 @@ public class FirstFragment extends Fragment {
         }
     }
 
-    @SuppressLint({"SetTextI18n", "Range"})
+    @SuppressLint({"SetTextI18n", "Range", "WrongViewCast"})
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -128,6 +135,24 @@ public class FirstFragment extends Fragment {
         lastUpdatedText = view.findViewById(R.id.textView_selected_car_mileage_last_updated);
         carImageView = view.findViewById(R.id.imageView_selected_car);
         carAnimationView = view.findViewById(R.id.carAnimation);
+
+        //Initialize new vehicle buttons and animations
+        vehicle1ImageButton = view.findViewById(R.id.btn_vehicle_1);
+        vehicle2ImageButton = view.findViewById(R.id.btn_vehicle_2);
+        vehicle3ImageButton = view.findViewById(R.id.btn_vehicle_3);
+        vehicle1Button = view.findViewById(R.id.btn_vehicle_1_text); //Vehicle 2 button
+        vehicle2Button = view.findViewById(R.id.btn_vehicle_2_text); //Vehicle 3 button
+        vehicle3Button = view.findViewById(R.id.btn_vehicle_3_text); //Vehicle 4 button
+        carAnimation1 = view.findViewById(R.id.carAnimation1); //Vehicle 2 animation
+        carAnimation2 = view.findViewById(R.id.carAnimation2); //Vehicle 3 animation
+        carAnimation3 = view.findViewById(R.id.carAnimation3); //Vehicle 4 animation
+        carDetails1 = view.findViewById(R.id.car_details1); //Vehicle 2 details
+        carMileage1 = view.findViewById(R.id.car_mileage1); //Vehicle 2 mileage
+        carDetails2 = view.findViewById(R.id.car_details2); //Vehicle 3 details
+        carMileage2 = view.findViewById(R.id.car_mileage2); //Vehicle 3 mileage
+        carDetails3 = view.findViewById(R.id.car_details3); //Vehicle 4 details
+        carMileage3 = view.findViewById(R.id.car_mileage3); //Vehicle 4 mileage
+
 
         VehicleDatabaseHelper dbHelper = new VehicleDatabaseHelper(getContext());
         //Check if any vehicle exists in the database
@@ -359,9 +384,12 @@ public class FirstFragment extends Fragment {
             if (!licensePlate.isEmpty()) {
                 //If license plate is provided, set it as the title
                 binding.selectedCarTitle.setText(licensePlate);
+            } else if (vehicleDetails.length >= 3) {
+                //If no license plate, use year, make, and model
+                String displayText = vehicleDetails[2] + " " + vehicleDetails[0] + " " + vehicleDetails[1];
+                binding.selectedCarTitle.setText(displayText);
             } else {
-                //If no license plate, use the year, make, and model
-                yearMakeModel = vehicleDetails[2] + " " + vehicleDetails[0] + " " + vehicleDetails[1];
+                //Fallback to just year and make if model is also missing
                 binding.selectedCarTitle.setText(yearMakeModel);
             }
 
@@ -491,25 +519,19 @@ public class FirstFragment extends Fragment {
 
     //Prompt user to add new vehicle
     private void promptAddVehicle() {
-        Intent intent = new Intent(getContext(), AddVehicleActivity.class);
-        startActivityForResult(intent, 1);
+        NavHostFragment.findNavController(this).navigate(R.id.action_FirstFragment_to_AddVehicleActivity);
     }
 
     //Update the button text dynamically based on the number of vehicles
     @SuppressLint({"Range", "SetTextI18n"})
     private void updateVehicleButtons() {
-        ImageButton vehicle1ImageButton = Objects.requireNonNull(getView()).findViewById(R.id.btn_vehicle_1);
-        ImageButton vehicle2ImageButton = Objects.requireNonNull(getView()).findViewById(R.id.btn_vehicle_2);
-        ImageButton vehicle3ImageButton = Objects.requireNonNull(getView()).findViewById(R.id.btn_vehicle_3);
-        Button vehicle1Button = Objects.requireNonNull(getView()).findViewById(R.id.btn_vehicle_1_text);
-        Button vehicle2Button = Objects.requireNonNull(getView()).findViewById(R.id.btn_vehicle_2_text);
-        Button vehicle3Button = Objects.requireNonNull(getView()).findViewById(R.id.btn_vehicle_3_text);
-
         VehicleDatabaseHelper dbHelper = new VehicleDatabaseHelper(getContext());
         Cursor cursor = dbHelper.getAllVehicles();
 
-        //Clear vehicleList to avoid duplication
+        //Clear vehicleList and mileage to avoid duplication
         vehicleList.clear();
+        vehicleMileage.clear();
+        vehicleMakes.clear();
 
         if (cursor != null && cursor.moveToFirst()) {
             do {
@@ -517,8 +539,21 @@ public class FirstFragment extends Fragment {
                 String model = cursor.getString(cursor.getColumnIndex(COLUMN_MODEL));
                 String year = cursor.getString(cursor.getColumnIndex(COLUMN_YEAR));
                 String license = cursor.getString(cursor.getColumnIndex(COLUMN_LICENSE));
+                String mileStr = cursor.getString(cursor.getColumnIndex(COLUMN_MILES));
 
-                vehicleList.add(year + " " + make + " " + model + " " + license);
+                //Mileage display
+                int mileage = mileStr != null && !mileStr.isEmpty() ? Integer.parseInt(mileStr) : 0;
+                vehicleMileage.add(mileage);
+
+                //Create the display text depending on whether the license plate exists
+                String vehicleText = (license != null && !license.isEmpty())
+                        ? license  //Use license if it's available
+                        : year + " " + make + " " + model;  //Otherwise, use year, make, model
+
+                //Add the vehicle text to the vehicleList
+                vehicleList.add(vehicleText);
+                //Store the make for animation purposes
+                vehicleMakes.add(make);
             } while (cursor.moveToNext());
         }
 
@@ -526,11 +561,14 @@ public class FirstFragment extends Fragment {
         cursor.close();
 
         //Button 1: Assign Vehicle 2 or "Add New Vehicle"
-        if (vehicleList.size() > 1) {
-            //Set the vehicle name and make the Button visible
-            vehicle1Button.setText(vehicleList.get(1));
+        if (vehicleList.size() > 1 && vehicleMileage.size() > 1) {
+            vehicle1ImageButton.setVisibility(View.GONE);
             vehicle1Button.setVisibility(View.VISIBLE);
-            vehicle1ImageButton.setVisibility(View.GONE);//Hide ImageButton
+            carDetails1.setText(vehicleList.get(1));
+            carMileage1.setText(vehicleMileage.get(1) + " miles");
+            carAnimation1.setVisibility(View.VISIBLE);
+            carAnimation1.setAnimation(getAnimationForMake(vehicleMakes.get(1)));
+            carAnimation1.playAnimation();
             vehicle1Button.setOnClickListener(v -> switchVehicle(1));  //Switch to vehicle 2
         } else {
             //Show the ImageButton for adding a new vehicle
@@ -540,11 +578,14 @@ public class FirstFragment extends Fragment {
         }
 
         //Button 2: Assign Vehicle 3 or "Add New Vehicle"
-        if (vehicleList.size() > 2) {
-            //Set the vehicle name and make the Button visible
-            vehicle2Button.setText(vehicleList.get(2));
+        if (vehicleList.size() > 2 && vehicleMileage.size() > 2) {
+            vehicle2ImageButton.setVisibility(View.GONE);
             vehicle2Button.setVisibility(View.VISIBLE);
-            vehicle2ImageButton.setVisibility(View.GONE);  //Hide ImageButton
+            carDetails2.setText(vehicleList.get(2));
+            carMileage2.setText(vehicleMileage.get(2) + " miles");
+            carAnimation2.setVisibility(View.VISIBLE);
+            carAnimation2.setAnimation(getAnimationForMake(vehicleMakes.get(2)));
+            carAnimation2.playAnimation();
             vehicle2Button.setOnClickListener(v -> switchVehicle(2));  //Switch to vehicle 3
         } else {
             //Show the ImageButton for adding a new vehicle
@@ -554,11 +595,14 @@ public class FirstFragment extends Fragment {
         }
 
         //Button 3: Assign Vehicle 4 or "Add New Vehicle"
-        if (vehicleList.size() > 3) {
-            //Set the vehicle name and make the Button visible
-            vehicle3Button.setText(vehicleList.get(3));
+        if (vehicleList.size() > 3 && vehicleMileage.size() > 3) {
+            vehicle3ImageButton.setVisibility(View.GONE);
             vehicle3Button.setVisibility(View.VISIBLE);
-            vehicle3ImageButton.setVisibility(View.GONE);  //Hide ImageButton
+            carDetails3.setText(vehicleList.get(3));
+            carMileage3.setText(vehicleMileage.get(3) + " miles");
+            carAnimation3.setVisibility(View.VISIBLE);
+            carAnimation3.setAnimation(getAnimationForMake(vehicleMakes.get(3)));
+            carAnimation3.playAnimation();
             vehicle3Button.setOnClickListener(v -> switchVehicle(3));  //Switch to vehicle 4
         } else {
             //Show the ImageButton for adding a new vehicle

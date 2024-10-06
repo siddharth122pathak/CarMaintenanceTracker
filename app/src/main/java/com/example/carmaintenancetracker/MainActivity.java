@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.ImageView;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -40,6 +41,16 @@ public class MainActivity extends AppCompatActivity {
 
         //Set up navigation controller for navigating between fragments
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
+        navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
+            if (destination.getId() == R.id.AddVehicleActivity) { // Check if you're on AddVehicleFragment
+                // Hide the toolbar and the entire AppBarLayout
+                binding.appBarLayout.setVisibility(View.GONE);
+            } else {
+                // Show toolbar and AppBarLayout for other fragments
+                binding.appBarLayout.setVisibility(View.VISIBLE);
+            }
+        });
+
         // AppBarConfiguration to handle navigation with a toolbar
         AppBarConfiguration appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();
         //Link the navigation controller with the toolbar
