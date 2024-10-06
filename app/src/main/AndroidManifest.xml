@@ -35,6 +35,9 @@
                 android:exported="true"
                 android:theme="@style/Theme.CarMaintenanceTracker" />
 
+        <!-- New user created animation page -->
+        <activity android:name=".UserCreatedAnimationActivity" />
+
         <!-- Main Activity Declaration -->
         <activity
                 android:name=".MainActivity"
