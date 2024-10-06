@@ -12,7 +12,7 @@ public class VehicleDatabaseHelper extends SQLiteOpenHelper {
     //Define the database name, version, and table structure
     private static final String DATABASE_NAME = "vehicle.db";
     private static final int DATABASE_VERSION = 1;
-    private static final String TABLE_NAME = "vehicles";
+    public static final String TABLE_NAME = "vehicles";
     public static final String COLUMN_ID = "id";
     public static final String COLUMN_MAKE = "make";
     public static final String COLUMN_MODEL = "model";
@@ -173,5 +173,13 @@ public class VehicleDatabaseHelper extends SQLiteOpenHelper {
         values.put(COLUMN_NOTIFICATION_STATUS, notificationsOn ? 1 : 0);
         db.update(TABLE_NAME, values, COLUMN_ID + "=?", new String[]{String.valueOf(activeVehicleId)});
         db.close();
+    }
+
+    //Method to get vehicle details by index
+    public Cursor getVehicleByIndex(int vehicleIndex) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        //Adjusting vehicleIndex + 1 to match database row IDs, or adjust based on your implementation
+        String query = "SELECT * FROM " + TABLE_NAME + " WHERE " + COLUMN_ID + " = ?";
+        return db.rawQuery(query, new String[]{String.valueOf(vehicleIndex)});
     }
 }
