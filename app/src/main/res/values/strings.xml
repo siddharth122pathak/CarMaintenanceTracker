@@ -56,10 +56,14 @@
     <string name="add_new_vehicle">Add new vehicle</string>
     <string name="add_car_detail">Vehicle Name</string>
     <string name="add_car_mileage">Vehicle Mileage</string>
+    <string name="sign_in">Sign In</string>
+    <string name="create_new_account">Create New Account</string>
+    <string name="user_created">Submit</string>
 
     <!-- Strings used for content descriptions -->
     <string name="mileage_last_updated_late_icon">It\'s been a while since the last update!</string>
     <string name="currently_selected_vehicle_image">There is no vehicle displayed.</string>
+    <string name="app_logo"/>
 
     <string-array name="car_makes">
         <item>Toyota</item>
