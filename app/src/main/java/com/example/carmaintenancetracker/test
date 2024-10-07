@@ -1,0 +1,32 @@
+<?php
+// Include database connection file
+include 'db_connect.php';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $year = $_POST['year'];
+    $make = $_POST['make'];
+    $model = $_POST['model'];
+
+    // find the rest of the row pertaining to parameters
+    $iterator rowIterator? //I have no idea how to implement this
+    while (rowIterator) {
+        if (rowIterator.year === $year && rowIterator.make === $make && rowIterator.model === model) {
+            break;
+        }
+        else {
+            rowIterator++;
+        }
+
+    if (rowIterator) {
+        echo json_encode(["message" => "maintenance_type: " + rowIterator.maintenance_type + \n
+                            + "miles_period: " + rowIterator.miles_period + \n
+                            + "maintenance_period: " rowIterator.maintenance_period]);
+    } else {
+        echo json_encode(["message" => "Error: No valid row"]);
+    }
+
+    // Close the prepared statement and connection
+    $stmt->close();
+    $conn->close();
+}
+?>
