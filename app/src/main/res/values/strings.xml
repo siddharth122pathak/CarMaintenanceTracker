@@ -7,6 +7,7 @@
     <!-- Strings used for titles and text -->
     <string name="app_name">AutoIQ</string>
     <string name="homepage_selected_car">Add a vehicle to begin!</string>
+    <string name="add_new_vehicle_title">Add New Vehicle</string>
     <string name="mileage">0 miles</string>
     <string name="mileage_last_updated">Last updated: never</string>
     <string name="notification_setting">Notifications for this vehicle are OFF</string>
@@ -53,10 +54,16 @@
     <string name="add_new_maintenance">Add new maintenance</string>
     <string name="view_upcoming_maintenance">View upcoming maintenance</string>
     <string name="add_new_vehicle">Add new vehicle</string>
+    <string name="add_car_detail">Vehicle Name</string>
+    <string name="add_car_mileage">Vehicle Mileage</string>
+    <string name="sign_in">Sign In</string>
+    <string name="create_new_account">Create New Account</string>
+    <string name="user_created">Submit</string>
 
     <!-- Strings used for content descriptions -->
     <string name="mileage_last_updated_late_icon">It\'s been a while since the last update!</string>
     <string name="currently_selected_vehicle_image">There is no vehicle displayed.</string>
+    <string name="app_logo"/>
 
     <string-array name="car_makes">
         <item>Toyota</item>

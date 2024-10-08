@@ -2,8 +2,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Add the INTERNET permission here -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+
     <application
             android:allowBackup="true"
+            android:usesCleartextTraffic="true"
             android:dataExtractionRules="@xml/data_extraction_rules"
             android:fullBackupContent="@xml/backup_rules"
             android:icon="@mipmap/autoiq_xxxhdpi"
@@ -11,9 +15,12 @@
             android:roundIcon="@mipmap/round_autoiq_xxxhdpi"
             android:supportsRtl="true"
             android:theme="@style/Theme.CarMaintenanceTracker"
-            tools:targetApi="31" tools:ignore="ObsoleteSdkInt">
+            tools:targetApi="31" tools:ignore="ObsoleteSdkInt"
+            android:networkSecurityConfig="@xml/network_security_config">
+
+        <!-- Login Activity Declaration -->
         <activity
-                android:name=".MainActivity"
+                android:name=".LoginActivity"
                 android:exported="true"
                 android:theme="@style/Theme.CarMaintenanceTracker">
             <intent-filter>
@@ -22,6 +29,21 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+
+        <!-- Create Account Activity Declaration -->
+        <activity
+                android:name=".CreateAccountActivity"
+                android:exported="true"
+                android:theme="@style/Theme.CarMaintenanceTracker" />
+
+        <!-- New user created animation page -->
+        <activity android:name=".UserCreatedAnimationActivity" />
+
+        <!-- Main Activity Declaration -->
+        <activity
+                android:name=".MainActivity"
+                android:exported="true"
+                android:theme="@style/Theme.CarMaintenanceTracker" />
 
         <!-- Add Vehicle Activity Declaration -->
         <activity
@@ -35,7 +57,7 @@
                 android:exported="true"
                 android:theme="@style/Theme.CarMaintenanceTracker" />
 
-        <!-- Upcoming Maintenance Activity Declaration -->
+        <!-- Add New Maintenance Activity Declaration -->
         <activity
                 android:name=".addnewmaint"
                 android:exported="true"

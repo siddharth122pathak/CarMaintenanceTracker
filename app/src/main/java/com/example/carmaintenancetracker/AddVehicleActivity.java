@@ -1,67 +1,68 @@
 package com.example.carmaintenancetracker;
 
-import android.content.Intent;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.*;
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.navigation.fragment.NavHostFragment;
 import com.airbnb.lottie.LottieAnimationView;
 
-public class AddVehicleActivity extends AppCompatActivity {
+public class AddVehicleActivity extends Fragment {
 
     private LottieAnimationView carAnimationView;
 
+    @Nullable
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_add_vehicle);
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        View rootView = inflater.inflate(R.layout.activity_add_vehicle, container, false);
 
-        carAnimationView = findViewById(R.id.carAnimation);
+        carAnimationView = rootView.findViewById(R.id.carAnimation);
 
         // Set up Car Make Spinner with custom layout
-        Spinner spinnerCarMake = findViewById(R.id.spinnerCarMake);
-        ArrayAdapter<CharSequence> adapterCarMake = ArrayAdapter.createFromResource(this,
+        Spinner spinnerCarMake = rootView.findViewById(R.id.spinnerCarMake);
+        ArrayAdapter<CharSequence> adapterCarMake = ArrayAdapter.createFromResource(getContext(),
                 R.array.car_makes, R.layout.spinner_item);
         adapterCarMake.setDropDownViewResource(R.layout.spinner_item);
         spinnerCarMake.setAdapter(adapterCarMake);
 
         // Set up Car Model Spinner with custom layout
-        Spinner spinnerCarModel = findViewById(R.id.spinnerCarModel);
-        ArrayAdapter<CharSequence> adapterCarModel = ArrayAdapter.createFromResource(this,
+        Spinner spinnerCarModel = rootView.findViewById(R.id.spinnerCarModel);
+        ArrayAdapter<CharSequence> adapterCarModel = ArrayAdapter.createFromResource(getContext(),
                 R.array.car_models, R.layout.spinner_item);
         adapterCarModel.setDropDownViewResource(R.layout.spinner_item);
         spinnerCarModel.setAdapter(adapterCarModel);
 
         // Set up Year Spinner with custom layout
-        Spinner spinnerCarYear = findViewById(R.id.spinnerCarYear);
-        ArrayAdapter<CharSequence> adapterCarYear = ArrayAdapter.createFromResource(this,
+        Spinner spinnerCarYear = rootView.findViewById(R.id.spinnerCarYear);
+        ArrayAdapter<CharSequence> adapterCarYear = ArrayAdapter.createFromResource(getContext(),
                 R.array.car_years, R.layout.spinner_item);
         adapterCarYear.setDropDownViewResource(R.layout.spinner_item);
         spinnerCarYear.setAdapter(adapterCarYear);
 
         //Save button functionality
-        Button saveButton = findViewById(R.id.btnSave);
+        Button saveButton = rootView.findViewById(R.id.btnSave);
 
         saveButton.setOnClickListener(v -> {
             String make = spinnerCarMake.getSelectedItem().toString();
             String model = spinnerCarModel.getSelectedItem().toString();
             String year = spinnerCarYear.getSelectedItem().toString();
-            String licensePlate = ((EditText) findViewById(R.id.inputCarLicence)).getText().toString();
-            String miles = ((EditText) findViewById(R.id.inputCarMiles)).getText().toString();
+            String nickname = ((EditText) rootView.findViewById(R.id.inputNickName)).getText().toString();
 
             //Save the vehicle data to the Sqlite database
-            VehicleDatabaseHelper dbHelper = new VehicleDatabaseHelper(this);
-            dbHelper.addVehicle(make, model, year, licensePlate, miles);
+            VehicleDatabaseHelper dbHelper = new VehicleDatabaseHelper(getContext());
+            dbHelper.addVehicle(make, model, year, nickname);
 
-            Intent resultIntent = new Intent();
-            resultIntent.putExtra("vehicleMake", make);
-            resultIntent.putExtra("vehicleModel", model);
-            resultIntent.putExtra("vehicleYear", year);
-            resultIntent.putExtra("vehicleLicensePlate", licensePlate);
-            resultIntent.putExtra("vehicleMiles", miles);
+            Bundle bundle = new Bundle();
+            bundle.putString("vehicleMake", make);
+            bundle.putString("vehicleModel", model);
+            bundle.putString("vehicleYear", year);
+            bundle.putString("vehicleLicensePlate", nickname);
 
-            setResult(RESULT_OK, resultIntent);
-            finish();
+            NavHostFragment.findNavController(AddVehicleActivity.this).navigate(R.id.action_AddVehicleActivity_to_addnewmaint, bundle);
         });
 
         // Listener for Car Make Spinner to change the animation dynamically
@@ -77,6 +78,7 @@ public class AddVehicleActivity extends AppCompatActivity {
                 // No action needed
             }
         });
+        return rootView;
     }
 
     private void updateCarAnimation(String carMake) {

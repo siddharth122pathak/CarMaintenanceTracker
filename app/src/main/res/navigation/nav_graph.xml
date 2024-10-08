@@ -13,6 +13,7 @@
         <action android:id="@+id/action_FirstFragment_to_addnewmaint" app:destination="@id/addnewmaint"/>
         <action android:id="@+id/action_FirstFragment_to_upcomingMaintenanceActivity"
                 app:destination="@id/upcomingMaintenanceActivity"/>
+        <action android:id="@+id/action_FirstFragment_to_AddVehicleActivity" app:destination="@id/AddVehicleActivity"/>
     </fragment>
     <fragment android:id="@+id/addnewmaint" android:name="com.example.carmaintenancetracker.addnewmaint"
               android:label="addnewmaint" tools:layout="@layout/new_maint_add">
@@ -24,5 +25,13 @@
               android:label="UpcomingMaintenanceActivity" tools:layout="@layout/activity_upcoming_maintenance">
         <action android:id="@+id/action_upcomingMaintenanceActivity_to_FirstFragment"
                 app:destination="@id/FirstFragment"/>
+    </fragment>
+    <fragment
+            android:id="@+id/AddVehicleActivity"
+            android:name="com.example.carmaintenancetracker.AddVehicleActivity"
+            android:label="AddVehicleActivity" tools:layout="@layout/activity_add_vehicle">
+
+        <action android:id="@+id/action_AddVehicleActivity_to_addnewmaint"
+                app:destination="@id/addnewmaint" />
     </fragment>
 </navigation>

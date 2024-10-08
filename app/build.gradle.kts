@@ -9,6 +9,7 @@ android {
     defaultConfig {
         applicationId = "com.example.carmaintenancetracker"
         minSdk = 34
+        //noinspection OldTargetApi
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -38,8 +39,13 @@ dependencies {
     implementation(libs.constraintlayout)
     implementation(libs.navigation.fragment)
     implementation(libs.navigation.ui)
+    implementation(libs.work.runtime)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
+    //noinspection UseTomlInstead
     implementation("com.airbnb.android:lottie:5.2.0")
+    implementation("mysql:mysql-connector-java:8.0.33")
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
 }
