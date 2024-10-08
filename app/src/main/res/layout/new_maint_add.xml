@@ -30,7 +30,7 @@
         <TextView
                 android:text="@string/homepage_selected_car"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" android:id="@+id/selected_car_title3"
+                android:layout_height="wrap_content" android:id="@+id/notes_sub"
                 android:textAlignment="center"
                 android:textSize="24sp"
                 android:textStyle="bold" android:padding="1dp"

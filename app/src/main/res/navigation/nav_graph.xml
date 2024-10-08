@@ -34,4 +34,6 @@
         <action android:id="@+id/action_AddVehicleActivity_to_addnewmaint"
                 app:destination="@id/addnewmaint" />
     </fragment>
+    <fragment android:id="@+id/notes_Activity" android:name="com.example.carmaintenancetracker.Notes_Activity"
+              android:label="notes_activity" tools:layout="@layout/notes_activity"/>
 </navigation>
