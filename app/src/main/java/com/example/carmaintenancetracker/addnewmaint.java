@@ -11,8 +11,16 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
+import com.example.carmaintenancetracker.api.MaintenanceApi;
+import com.example.carmaintenancetracker.RetrofitClient;
 
 import java.util.Calendar;
+
 
 public class addnewmaint extends Fragment {
 
@@ -80,6 +88,7 @@ public class addnewmaint extends Fragment {
 
         datePickerDialog.show();
     }
+
     // Show the "Add More" dialog
     private void showAddMoreDialog() {
         // Inflate the custom dialog layout
@@ -100,8 +109,25 @@ public class addnewmaint extends Fragment {
                     String date = datePerformed.getText().toString();
 
                     if (!maintenance.isEmpty() && !date.isEmpty()) {
-                        // Show a confirmation message or perform save operation
-                        Toast.makeText(getContext(), "Maintenance added: " + maintenance + " on " + date, Toast.LENGTH_SHORT).show();
+                        // Call API to add additional maintenance
+                        MaintenanceApi maintenanceApi = RetrofitClient.getRetrofitInstance().create(MaintenanceApi.class);
+                        Call<ResponseBody> call = maintenanceApi.addAdditionalMaintenance(maintenance, date);
+
+                        call.enqueue(new Callback<ResponseBody>() {
+                            @Override
+                            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                                if (response.isSuccessful()) {
+                                    Toast.makeText(getContext(), "Additional maintenance added", Toast.LENGTH_SHORT).show();
+                                } else {
+                                    Toast.makeText(getContext(), "Failed to add maintenance", Toast.LENGTH_SHORT).show();
+                                }
+                            }
+
+                            @Override
+                            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                                Toast.makeText(getContext(), "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                            }
+                        });
                     } else {
                         Toast.makeText(getContext(), "Please enter both maintenance and date", Toast.LENGTH_SHORT).show();
                     }
@@ -117,17 +143,33 @@ public class addnewmaint extends Fragment {
     private void saveMaintenance() {
         // Get the entered date from the EditText
         String enteredDate = editTextDate.getText().toString();
+        String maintenanceType = maintenanceActionSpinner.getSelectedItem().toString();
 
-        // Show a simple message (Toast) as an example of handling input
         if (!enteredDate.isEmpty()) {
-            Toast.makeText(getContext(), "Maintenance saved for: " + enteredDate, Toast.LENGTH_SHORT).show();
-            // Navigate back to FirstFragment after saving the maintenance
-            NavHostFragment.findNavController(addnewmaint.this)
-                    .navigate(R.id.action_addnewmaint_to_FirstFragment);
+            // Call API to add the maintenance
+            MaintenanceApi maintenanceApi = RetrofitClient.getRetrofitInstance().create(MaintenanceApi.class);
+            Call<ResponseBody> call = maintenanceApi.addMaintenance(maintenanceType, enteredDate, "");
+
+            call.enqueue(new Callback<ResponseBody>() {
+                @Override
+                public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                    if (response.isSuccessful()) {
+                        Toast.makeText(getContext(), "Maintenance saved successfully", Toast.LENGTH_SHORT).show();
+                        // Navigate back after saving
+                        NavHostFragment.findNavController(addnewmaint.this)
+                                .navigate(R.id.action_addnewmaint_to_FirstFragment);
+                    } else {
+                        Toast.makeText(getContext(), "Failed to save maintenance", Toast.LENGTH_SHORT).show();
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<ResponseBody> call, Throwable t) {
+                    Toast.makeText(getContext(), "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            });
         } else {
             Toast.makeText(getContext(), "Please enter a maintenance date!", Toast.LENGTH_SHORT).show();
         }
-
-        // Add your DB logic or further actions here
     }
 }
