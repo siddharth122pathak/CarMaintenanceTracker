@@ -12,7 +12,7 @@ public interface UserVehicleApi {
     @FormUrlEncoded
     @POST("/add_vehicle.php")
     Call<ResponseBody> addVehicle(
-            @Field("user_id") int userId,
+            @Field("id") int userId,
             @Field("make") String make,
             @Field("model") String model,
             @Field("year") String year,

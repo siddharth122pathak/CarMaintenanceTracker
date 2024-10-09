@@ -1,6 +1,7 @@
 package com.example.carmaintenancetracker;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -8,6 +9,7 @@ import android.widget.*;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.fragment.NavHostFragment;
 import com.airbnb.lottie.LottieAnimationView;
 import okhttp3.ResponseBody;
 import org.jetbrains.annotations.NotNull;
@@ -25,7 +27,7 @@ public class AddVehicleActivity extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.activity_add_vehicle, container, false);
 
-        //Retrieve userId from arguments if passed by previous fragment
+        // Retrieve userId from arguments if passed by previous fragment
         if (getArguments() != null) {
             userId = getArguments().getInt("userId", -1); // -1 if no userId found
         }
@@ -53,7 +55,7 @@ public class AddVehicleActivity extends Fragment {
         adapterCarYear.setDropDownViewResource(R.layout.spinner_item);
         spinnerCarYear.setAdapter(adapterCarYear);
 
-        //Save button functionality
+        // Save button functionality
         Button saveButton = rootView.findViewById(R.id.btnSave);
 
         saveButton.setOnClickListener(v -> {
@@ -62,28 +64,23 @@ public class AddVehicleActivity extends Fragment {
             String year = spinnerCarYear.getSelectedItem().toString();
             String nickname = ((EditText) rootView.findViewById(R.id.inputNickName)).getText().toString();
 
-            // Add locally to SQLite
+            // Save the vehicle data to the SQLite database
             VehicleDatabaseHelper dbHelper = new VehicleDatabaseHelper(getContext());
             dbHelper.addVehicle(make, model, year, nickname);
 
-            // Sync with MySQL
-            UserVehicleApi api = RetrofitClient.getRetrofitInstance().create(UserVehicleApi.class);
-            Call<ResponseBody> call = api.addVehicle(userId, make, model, year, nickname);
-            call.enqueue(new Callback<ResponseBody>() {
-                @Override
-                public void onResponse(@NotNull Call<ResponseBody> call, @NotNull Response<ResponseBody> response) {
-                    if (response.isSuccessful()) {
-                        Toast.makeText(getContext(), "Vehicle added successfully!", Toast.LENGTH_SHORT).show();
-                    } else {
-                        Toast.makeText(getContext(), "Failed to add vehicle to server", Toast.LENGTH_SHORT).show();
-                    }
-                }
+            // Bundle data to pass to another fragment
+            Bundle bundle = new Bundle();
+            bundle.putString("vehicleMake", make);
+            bundle.putString("vehicleModel", model);
+            bundle.putString("vehicleYear", year);
+            bundle.putString("vehicleLicensePlate", nickname);
 
-                @Override
-                public void onFailure(@NotNull Call<ResponseBody> call, @NotNull Throwable t) {
-                    Toast.makeText(getContext(), "API call failed: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-                }
-            });
+            // Navigate to the next fragment
+            NavHostFragment.findNavController(this)
+                    .navigate(R.id.action_AddVehicleActivity_to_addnewmaint, bundle);
+
+            // Sync with MySQL database
+            syncVehicleWithServer(userId, make, model, year, nickname);
         });
 
         // Listener for Car Make Spinner to change the animation dynamically
@@ -99,7 +96,36 @@ public class AddVehicleActivity extends Fragment {
                 // No action needed
             }
         });
+
         return rootView;
+    }
+
+    private void syncVehicleWithServer(int userId, String make, String model, String year, String nickname) {
+        UserVehicleApi api = RetrofitClient.getRetrofitInstance().create(UserVehicleApi.class);
+        Call<ResponseBody> call = api.addVehicle(userId, make, model, year, nickname);
+
+        call.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(@NotNull Call<ResponseBody> call, @NotNull Response<ResponseBody> response) {
+                if (response.isSuccessful()) {
+                    Toast.makeText(getContext(), "Vehicle added successfully!", Toast.LENGTH_SHORT).show();
+                } else {
+                    Log.e("SyncError", "Failed with response code: " + response.code());
+                    try {
+                        Log.e("SyncError", "Error body: " + response.errorBody().string());
+                    } catch (Exception e) {
+                        Log.e("SyncError", "Failed to read error body", e);
+                    }
+                    Toast.makeText(getContext(), "Failed to add vehicle to server", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(@NotNull Call<ResponseBody> call, @NotNull Throwable t) {
+                Log.e("SyncError", "API call failed: " + t.getMessage(), t);
+                Toast.makeText(getContext(), "API call failed: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void updateCarAnimation(String carMake) {
