@@ -5,7 +5,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class RetrofitClient {
 
     private static Retrofit retrofit;
-    private static final String BASE_URL = "http://oriosynology2.ddns.net"; // Replace with your actual base URL
+    private static final String BASE_URL = "http://oriosynology2.ddns.net:5000/"; // Replace with your actual base URL
 
     public static Retrofit getRetrofitInstance() {
         if (retrofit == null) {
