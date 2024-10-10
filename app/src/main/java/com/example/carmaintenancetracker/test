@@ -1,32 +1,32 @@
 <?php
-// Include database connection file
-include 'db_connect.php';
+include 'db_connect.php'; // Connect to the database
 
+// Check if it's a POST request
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Retrieve POST parameters
     $year = $_POST['year'];
     $make = $_POST['make'];
     $model = $_POST['model'];
 
-    // find the rest of the row pertaining to parameters
-    $iterator rowIterator? //I have no idea how to implement this
-    while (rowIterator) {
-        if (rowIterator.year === $year && rowIterator.make === $make && rowIterator.model === model) {
-            break;
-        }
-        else {
-            rowIterator++;
-        }
+    // Check if the username already exists
+    $stmt = $conn->prepare("SELECT * FROM oil_config WHERE make = ?, year = ?, model = ?");
+    $stmt->bind_param("sss", $make, $year, $model);
+    $stmt->execute();
+    $result = $stmt->get_result();
 
-    if (rowIterator) {
-        echo json_encode(["message" => "maintenance_type: " + rowIterator.maintenance_type + \n
-                            + "miles_period: " + rowIterator.miles_period + \n
-                            + "maintenance_period: " rowIterator.maintenance_period]);
+    if ($result->num_rows > 0) {
+        // Username exists
+        echo json_encode(['status' => 'success', 'message' => 'Mainteance found', 'maintenance_type' => $row[maintenance_type], 'maintenance_period' => $row[maintenance_period], 'miles_period' => $row[miles_period]]);
     } else {
-        echo json_encode(["message" => "Error: No valid row"]);
+        // Username is available
+        echo json_encode(['status' => 'error', 'message' => 'Username is available']);
     }
 
-    // Close the prepared statement and connection
-    $stmt->close();
-    $conn->close();
+    $stmt->close(); // Close the prepared statement
+} else {
+    echo json_encode(['status' => 'error', 'message' => 'Invalid request method']);
 }
+
+$stmt->close();
+$conn->close(); // Close the database connection
 ?>
