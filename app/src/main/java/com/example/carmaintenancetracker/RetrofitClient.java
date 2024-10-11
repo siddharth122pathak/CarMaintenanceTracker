@@ -8,7 +8,7 @@ import okhttp3.logging.HttpLoggingInterceptor;
 public class RetrofitClient {
 
     private static Retrofit retrofit;
-    private static final String BASE_URL = "http://oriosynology2.ddns.net";
+    private static final String BASE_URL = "http://oriosynology2.ddns.net"; // Replace with your actual base URL
 
     public static Retrofit getRetrofitInstance() {
         if (retrofit == null) {
