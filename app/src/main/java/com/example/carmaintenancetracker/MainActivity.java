@@ -66,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
         //Add OnClickListener for each button
         //tutorialButton.setOnClickListener(v -> showTutorial());
         homeButton.setOnClickListener(v -> navigateHome());
-        //notesButton.setOnClickListener(v -> openNotes());
+        notesButton.setOnClickListener(v -> openNotes());
 
         //Create the notification channel
         NotificationHelper.createNotificationChannel(this);
@@ -101,9 +101,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     //Method to open the notes screen
-    //private void openNotes(){
-    //Logic to open the notes section
-    //}
+    private void openNotes(){
+        //Logic to open the notes section
+        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
+        if (Objects.requireNonNull(navController.getCurrentDestination()).getId() != R.id.notes_Activity) {
+            navController.navigate(R.id.notes_Activity);
+        }
+    }
 
     //Handles the back/up navigation support for the toolbar
     @Override
