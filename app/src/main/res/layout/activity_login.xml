@@ -68,4 +68,22 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintWidth_percent="0.8"
             android:layout_marginTop="16dp" android:backgroundTint="@color/button_color" android:textColor="#070707"/>
+
+    <TextView
+            android:id="@+id/forgotPasswordTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Forgot Password?"
+            android:textColor="@color/button_text"
+            app:layout_constraintTop_toBottomOf="@id/createAccountButton"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintWidth_percent="0.8"
+            android:layout_marginTop="16dp"
+            android:textSize="16sp"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_gravity="center_horizontal"
+            android:layout_alignParentBottom="true"/>
+
 </androidx.constraintlayout.widget.ConstraintLayout>
