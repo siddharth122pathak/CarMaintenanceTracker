@@ -36,6 +36,9 @@ public class MainActivity extends AppCompatActivity {
         com.example.carmaintenancetracker.databinding.ActivityMainBinding binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot()); //Set the content to the activity's main view
 
+        //Trigger sync
+        SyncData.syncData(getApplicationContext());
+
         //Set up the toolbar as the app's action bar
         setSupportActionBar(binding.toolbar);
 

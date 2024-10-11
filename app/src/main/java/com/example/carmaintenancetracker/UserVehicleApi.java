@@ -21,13 +21,13 @@ public interface UserVehicleApi {
 
     //Retrieve vehicles for a specific user
     @GET("/get_vehicles.php")
-    Call<List<UserVehicle>> getVehicles(@Query("user_id") int userId);
+    Call<List<UserVehicle>> getVehicles(@Query("id") int userId);
 
     //Update a vehicle's information
     @FormUrlEncoded
     @POST("/update_vehicle.php")
     Call<ResponseBody> updateVehicle(
-            @Field("vehicle_id") int vehicleId,
+            @Field("car_id") int vehicleId,
             @Field("make") String make,
             @Field("model") String model,
             @Field("year") String year,
@@ -37,5 +37,5 @@ public interface UserVehicleApi {
     //Delete a vehicle by its ID
     @FormUrlEncoded
     @POST("/delete_vehicle.php")
-    Call<ResponseBody> deleteVehicle(@Field("vehicle_id") int vehicleId);
+    Call<ResponseBody> deleteVehicle(@Field("car_id") int vehicleId);
 }

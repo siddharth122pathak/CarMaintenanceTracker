@@ -6,6 +6,13 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 public class VehicleDatabaseHelper extends SQLiteOpenHelper {
 
@@ -22,11 +29,18 @@ public class VehicleDatabaseHelper extends SQLiteOpenHelper {
     public static final String COLUMN_LAST_UPDATE = "last_update";
     public static final String COLUMN_NOTIFICATION_STATUS = "notification_status";
 
+    private UserVehicleApi apiService;
+
     //Constructor for creating the SQLiteOpenHelper instance
     public VehicleDatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
+        // Initialize Retrofit and apiService
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("http://oriosynology2.ddns.net") //Update with your actual server URL
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+        apiService = retrofit.create(UserVehicleApi.class);
     }
-
     //Method when the database is first created
     @Override
     public void onCreate(SQLiteDatabase db) {
@@ -40,7 +54,8 @@ public class VehicleDatabaseHelper extends SQLiteOpenHelper {
                 + COLUMN_MILES + " TEXT, "
                 + COLUMN_LAST_UPDATE + " INTEGER, " //Store as INTEGER (timestamp)
                 + "active INTEGER DEFAULT 0, "
-                + COLUMN_NOTIFICATION_STATUS + " INTEGER DEFAULT 0" + ")";
+                + COLUMN_NOTIFICATION_STATUS + " INTEGER DEFAULT 0, "
+                + "is_synced INTEGER DEFAULT 0" + ")";
         db.execSQL(CREATE_VEHICLE_TABLE);
     }
 
@@ -54,15 +69,15 @@ public class VehicleDatabaseHelper extends SQLiteOpenHelper {
 
     //Method to add a new vehicle to the database
     public void addVehicle(String make, String model, String year, String nickname) {
-        SQLiteDatabase db = this.getWritableDatabase(); //Get a writable database
         ContentValues values = new ContentValues(); //Prepare the data for insertion
         values.put(COLUMN_MAKE, make);
         values.put(COLUMN_MODEL, model);
         values.put(COLUMN_YEAR, year);
         values.put(COLUMN_LICENSE, nickname);
-        //values.put(COLUMN_MILES, miles);
         values.put(COLUMN_LAST_UPDATE, System.currentTimeMillis());
-        values.put(COLUMN_NOTIFICATION_STATUS, 0);
+        values.put("is_synced", 0);
+
+        SQLiteDatabase db = this.getWritableDatabase();
         db.insert(TABLE_NAME, null, values); //Insert the data into the table
 
         // After inserting the first vehicle, set it as active
@@ -71,6 +86,9 @@ public class VehicleDatabaseHelper extends SQLiteOpenHelper {
         }
 
         db.close();
+
+        // Try syncing with server
+        syncVehicleWithServer(make, model, year, nickname);
     }
 
     //Method to retrieve all vehicles from the database
@@ -181,5 +199,59 @@ public class VehicleDatabaseHelper extends SQLiteOpenHelper {
         //Adjusting vehicleIndex + 1 to match database row IDs, or adjust based on your implementation
         String query = "SELECT * FROM " + TABLE_NAME + " WHERE " + COLUMN_ID + " = ?";
         return db.rawQuery(query, new String[]{String.valueOf(vehicleIndex)});
+    }
+
+    private void syncVehicleWithServer(String make, String model, String year, String nickname) {
+        if (apiService == null) {
+            //Log error or handle gracefully
+            Log.e("VehicleDatabaseHelper", "API service is not initialized");
+            return;
+        }
+
+        //Existing code to sync vehicle
+        apiService.addVehicle(1, make, model, year, nickname).enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                if (response.isSuccessful()) {
+                    markVehicleAsSynced(make, model, year);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                Log.e("VehicleDatabaseHelper", "Failed to sync with server", t);
+            }
+        });
+    }
+
+    private void markVehicleAsSynced(String make, String model, String year) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("is_synced", 1);
+        db.update(TABLE_NAME, values, COLUMN_MAKE + "=? AND " + COLUMN_MODEL + "=? AND " + COLUMN_YEAR + "=?",
+                new String[]{make, model, year});
+        db.close();
+    }
+
+    @SuppressLint("Range")
+    public void syncUnsyncedVehicles(Context context) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_NAME + " WHERE is_synced = 0", null);
+
+        if (cursor.moveToFirst()) {
+            do {
+                String make = cursor.getString(cursor.getColumnIndex(COLUMN_MAKE));
+                String model = cursor.getString(cursor.getColumnIndex(COLUMN_MODEL));
+                String year = cursor.getString(cursor.getColumnIndex(COLUMN_YEAR));
+                String nickname = cursor.getString(cursor.getColumnIndex(COLUMN_LICENSE));
+
+                syncVehicleWithServer(make, model, year, nickname);  //Retry sync for each unsynced vehicle
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        db.close();
+
+        //Trigger sync to the server database
+        SyncData.syncData(context);
     }
 }

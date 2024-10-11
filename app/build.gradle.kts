@@ -45,6 +45,7 @@ dependencies {
     androidTestImplementation(libs.espresso.core)
     //noinspection UseTomlInstead
     implementation("com.airbnb.android:lottie:5.2.0")
+    implementation ("org.xerial:sqlite-jdbc:3.34.0")
     implementation("mysql:mysql-connector-java:8.0.33")
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
