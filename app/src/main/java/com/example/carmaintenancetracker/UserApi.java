@@ -34,7 +34,7 @@ public interface UserApi {
 
     // POST request to check the oil config
     @FormUrlEncoded
-    @POST("/oil_config.php")
+    @POST("/check_oil_config.php")
     Call<ResponseBody> checkOilConfig(
             @Field("year") int year,
             @Field("make") String make,

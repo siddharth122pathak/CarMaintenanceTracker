@@ -1,32 +1,42 @@
 <?php
+// Include database connection file
 include 'db_connect.php'; // Connect to the database
 
 // Check if it's a POST request
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Retrieve POST parameters
-    $year = $_POST['year'];
-    $make = $_POST['make'];
-    $model = $_POST['model'];
+    // Retrieve POST parameters safely
+    $year = isset($_POST['year']) ? $_POST['year'] : '';
+    $make = isset($_POST['make']) ? $_POST['make'] : '';
+    $model = isset($_POST['model']) ? $_POST['model'] : '';
 
-    // Check if the username already exists
-    $stmt = $conn->prepare("SELECT * FROM oil_config WHERE make = ?, year = ?, model = ?");
-    $stmt->bind_param("sss", $make, $year, $model);
+    // Prepare the SQL statement to find the matching row in the oil_config table
+    $stmt = $conn->prepare("SELECT maintenance_type, miles_period, maintenance_period FROM oil_config WHERE year = ? AND make = ? AND model = ?");
+    $stmt->bind_param("sss", $year, $make, $model);
+
+    // Execute the statement and store the result
     $stmt->execute();
     $result = $stmt->get_result();
 
+    // Check if any matching row was found
     if ($result->num_rows > 0) {
-        // Username exists
-        echo json_encode(['status' => 'success', 'message' => 'Mainteance found', 'maintenance_type' => $row[maintenance_type], 'maintenance_period' => $row[maintenance_period], 'miles_period' => $row[miles_period]]);
+        // Fetch the row and return the details in JSON format
+        $row = $result->fetch_assoc();
+        echo json_encode([
+            "status" => "success",
+            "message" => "Maintenance details found",
+            "maintenance_type" => $row['maintenance_type'],
+            "miles_period" => $row['miles_period'],
+            "maintenance_period" => $row['maintenance_period']
+        ]);
     } else {
-        // Username is available
-        echo json_encode(['status' => 'error', 'message' => 'Username is available']);
+        // No matching row found
+        echo json_encode(["status" => "error", "message" => "No valid row found"]);
     }
 
-    $stmt->close(); // Close the prepared statement
+    // Close the statement and the connection
+    $stmt->close();
+    $conn->close();
 } else {
-    echo json_encode(['status' => 'error', 'message' => 'Invalid request method']);
+    echo json_encode(["status" => "error", "message" => "Invalid request method"]);
 }
-
-$stmt->close();
-$conn->close(); // Close the database connection
 ?>
