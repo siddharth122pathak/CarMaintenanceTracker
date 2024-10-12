@@ -32,16 +32,4 @@ public interface UserApi {
             @Field("username") String username
     );
 
-    @FormUrlEncoded
-    @POST("/verify_email.php")
-    Call<ResponseBody> verifyEmail(
-            @Field("email") String email
-    );
-
-    @FormUrlEncoded
-    @POST("/reset_password.php")
-    Call<ResponseBody> resetPassword(
-            @Field("email") String email,
-            @Field("newPassword") String newPassword
-    );
 }
