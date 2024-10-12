@@ -78,7 +78,6 @@ public class LoginActivity extends AppCompatActivity {
                         try {
                             String responseString = response.body().string();
                             System.out.println(responseString);
-                            System.out.println("Response: " + responseString);
 
                             if (responseString.startsWith("Connected successfully to the database!")) {
                                 responseString = responseString.replace("Connected successfully to the database!", "").trim();
