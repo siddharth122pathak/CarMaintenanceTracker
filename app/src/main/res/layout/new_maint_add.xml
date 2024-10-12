@@ -2,7 +2,8 @@
 <androidx.constraintlayout.widget.ConstraintLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
-        xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
         android:layout_height="match_parent">
 
     <!-- Title occupying the top part -->
@@ -30,10 +31,12 @@
         <TextView
                 android:text="@string/homepage_selected_car"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" android:id="@+id/selected_car_title3"
+                android:layout_height="wrap_content"
+                android:id="@+id/selected_car_title3"
                 android:textAlignment="center"
                 android:textSize="24sp"
-                android:textStyle="bold" android:padding="1dp"
+                android:textStyle="bold"
+                android:padding="1dp"
                 android:background="@drawable/light_green_title_color"/>
 
         <!-- Current Mileage Input -->

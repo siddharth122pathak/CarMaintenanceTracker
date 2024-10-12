@@ -36,18 +36,32 @@ public class MainActivity extends AppCompatActivity {
         com.example.carmaintenancetracker.databinding.ActivityMainBinding binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot()); //Set the content to the activity's main view
 
+        //Trigger sync
+        SyncData.syncData(getApplicationContext());
+
         //Set up the toolbar as the app's action bar
         setSupportActionBar(binding.toolbar);
 
         //Set up navigation controller for navigating between fragments
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
         navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
-            if (destination.getId() == R.id.AddVehicleActivity) { // Check if you're on AddVehicleFragment
-                // Hide the toolbar and the entire AppBarLayout
-                binding.appBarLayout.setVisibility(View.GONE);
+            // Check if the destination is AddVehicleActivity, addnewmaint, or UpcomingMaintenanceActivity
+            if (destination.getId() == R.id.AddVehicleActivity ||
+                    destination.getId() == R.id.addnewmaint ||
+                    destination.getId() == R.id.upcomingMaintenanceActivity) {
+
+                // Hide specific buttons in the toolbar
+                binding.btnTutorial.setVisibility(View.GONE);
+                binding.textViewTutorial.setVisibility(View.GONE);
+                binding.btnNotes.setVisibility(View.GONE);
+                binding.textViewNotes.setVisibility(View.GONE);
+
             } else {
-                // Show toolbar and AppBarLayout for other fragments
-                binding.appBarLayout.setVisibility(View.VISIBLE);
+                // Show buttons on other pages
+                binding.btnTutorial.setVisibility(View.VISIBLE);
+                binding.textViewTutorial.setVisibility(View.VISIBLE);
+                binding.btnNotes.setVisibility(View.VISIBLE);
+                binding.textViewNotes.setVisibility(View.VISIBLE);
             }
         });
 

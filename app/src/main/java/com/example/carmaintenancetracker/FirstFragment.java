@@ -2,6 +2,7 @@ package com.example.carmaintenancetracker;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -231,6 +232,12 @@ public class FirstFragment extends Fragment {
                         .navigate(R.id.action_FirstFragment_to_upcomingMaintenanceActivity);
             }
         });
+
+        //Attach long press listener to vehicle buttons and active image
+        carAnimationView.setOnLongClickListener(v -> showVehicleOptionsDialog(0));
+        vehicle1Button.setOnLongClickListener(v -> showVehicleOptionsDialog(1));
+        vehicle2Button.setOnLongClickListener(v -> showVehicleOptionsDialog(2));
+        vehicle3Button.setOnLongClickListener(v -> showVehicleOptionsDialog(3));
     }
 
     //Method to set up vehicle buttons
@@ -479,7 +486,7 @@ public class FirstFragment extends Fragment {
         }
     }
 
-    @SuppressLint("Range")
+    @SuppressLint({"Range", "SetTextI18n"})
     private void updateActiveVehicleUI() {
         VehicleDatabaseHelper dbHelper = new VehicleDatabaseHelper(getContext());
         vehicleList.clear();
@@ -494,6 +501,13 @@ public class FirstFragment extends Fragment {
             String milesStr = activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex(COLUMN_MILES));
 
             vehicleList.add(make + " " + model + " " + year + " " + license);
+
+            //Update the titleText
+            if (license != null && !license.isEmpty()) {
+                titleText.setText(license); //Show nickname if available
+            } else {
+                titleText.setText(year + " " + make + " " + model); // Default to year, make, and model
+            }
 
             //Update the mileage for the active vehicle
             vehicleMileage.clear();
@@ -642,6 +656,95 @@ public class FirstFragment extends Fragment {
             default:
                 return R.raw.car_animation;  //Fallback animation if make doesn't match
         }
+    }
+
+    //Method to create dialog box to choice what to do with a vehicle
+    private boolean showVehicleOptionsDialog(int vehicleIndex) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("Select an action");
+
+        //Options: Update Name, Transfer Vehicle, Update Image
+        String[] options = {"Update Name", "Update Picture", "Transfer Vehicle", "Delete Vehicle"};
+
+        builder.setItems(options, (dialog, which) -> {
+            switch (which) {
+                case 0: //Update Name
+                    showUpdateNameDialog(vehicleIndex);
+                    break;
+                case 1: //Update Picture (implement later)
+                    Toast.makeText(getContext(), "Update Picture feature coming soon", Toast.LENGTH_SHORT).show();
+                    break;
+                case 2: //Transfer Vehicle (implement later)
+                    Toast.makeText(getContext(), "Transfer Vehicle feature coming soon", Toast.LENGTH_SHORT).show();
+                    break;
+                case 3: //Delete Vehicle (implement later)
+                    Toast.makeText(getContext(), "Delete Vehicle feature coming soon", Toast.LENGTH_SHORT).show();
+            }
+        });
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+        builder.show();
+
+        return true;
+    }
+
+    //Method to pop up dialog box to update name
+    @SuppressLint("Range")
+    private void showUpdateNameDialog(int vehicleIndex) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("Update Name");
+
+        //Add input field for the new name
+        final EditText input = new EditText(getContext());
+        input.setHint("Enter new name");
+        input.setInputType(InputType.TYPE_CLASS_TEXT);
+        builder.setView(input);
+
+        //Add update button to submit
+        builder.setPositiveButton("Update", (dialog, which) -> {
+            String newName = input.getText().toString();
+            //Retrieve the correct vehicle ID from the database
+            VehicleDatabaseHelper dbHelper = new VehicleDatabaseHelper(getContext());
+            Cursor cursor = dbHelper.getVehicleByIndex(vehicleIndex + 1); //+1 if ID is 1-based
+            int vehicleId = 0;
+
+            if (cursor != null && cursor.moveToFirst()) {
+                vehicleId = cursor.getInt(cursor.getColumnIndex(VehicleDatabaseHelper.COLUMN_ID));
+            }
+            if (cursor != null) {
+                cursor.close();
+            }
+
+            //If the name is left empty, delete the nickname from the database (set it to NULL)
+            if (newName.isEmpty()) {
+                //Update the vehicle in the database to set nickname to NULL
+                ContentValues values = new ContentValues();
+                values.putNull(VehicleDatabaseHelper.COLUMN_LICENSE); //Set nickname to NULL
+                dbHelper.getWritableDatabase().update(VehicleDatabaseHelper.TABLE_NAME, values, VehicleDatabaseHelper.COLUMN_ID + "=?", new String[]{String.valueOf(vehicleId)});
+            } else {
+                //Otherwise, update the vehicle with the new name
+                updateVehicleNameInDatabase(vehicleId, newName);
+            }
+
+            //Update the name in the database and refresh the UI
+            updateVehicleNameInDatabase(vehicleId, newName);
+            updateActiveVehicleUI(); //Refresh the UI to reflect the updated name
+        });
+
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+        builder.show();
+    }
+
+    //Method to update the vehicle name in the database
+    private void updateVehicleNameInDatabase(int vehicleId, String newName) {
+        VehicleDatabaseHelper dbHelper = new VehicleDatabaseHelper(getContext());
+
+        //Update the license/nickname column in the database
+        ContentValues values = new ContentValues();
+        values.put(VehicleDatabaseHelper.COLUMN_LICENSE, newName);
+
+        //Update the correct vehicle by its ID in the database
+        dbHelper.getWritableDatabase().update(VehicleDatabaseHelper.TABLE_NAME, values, VehicleDatabaseHelper.COLUMN_ID + "=?", new String[]{String.valueOf(vehicleId)});
+        dbHelper.close();
     }
 
     @Override
