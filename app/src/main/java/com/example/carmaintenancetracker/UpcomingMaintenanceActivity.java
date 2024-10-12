@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import com.example.carmaintenancetracker.databinding.ActivityUpcomingMaintenanceBinding;
+import com.example.carmaintenancetracker.FirstFragment;
 
 import java.util.StringTokenizer;
 
@@ -19,7 +20,7 @@ public class UpcomingMaintenanceActivity extends Fragment {
     private TextView timeTab;
     private TextView selectedCar;
     private UserApi api;
-    public int year;
+    public String year;
     public String make;
     public String model;
 
@@ -46,9 +47,13 @@ public class UpcomingMaintenanceActivity extends Fragment {
         milesTab.setOnClickListener(v -> loadMiles());
         timeTab.setOnClickListener(v -> loadTime());
 
+        //get selected car
+        String yearMakeModel = "2001 Toyota Camry";
+        selectedCar.setText(yearMakeModel);
+
         //parse string to assign year/make/model
         StringTokenizer tokenizer = new StringTokenizer(selectedCar.getText().toString(), " ");
-        year = Integer.parseInt(tokenizer.nextToken());
+        year = tokenizer.nextToken();
         make = tokenizer.nextToken();
         model = tokenizer.nextToken();
         while (tokenizer.hasMoreTokens()) {model += " " + tokenizer.nextToken();}
@@ -64,9 +69,6 @@ public class UpcomingMaintenanceActivity extends Fragment {
         timeTab.setBackground(ContextCompat.getDrawable(requireContext(), R.drawable.tab_background_unselected));
 
         //update miles text based on vehicle status
-        //get vehicle information
-
-
         //check that the vehicle exists in the database
         /*if (vehicle.exists()) {
 
