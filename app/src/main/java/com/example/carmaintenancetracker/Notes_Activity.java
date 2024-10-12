@@ -1,10 +1,18 @@
 package com.example.carmaintenancetracker;
 
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.widget.EditText;
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.text.TextWatcher;
+
+import java.io.*;
+import java.util.Objects;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -21,6 +29,16 @@ public class Notes_Activity extends Fragment {
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
+    private EditText editText1;
+    private EditText editText2;
+    private EditText editText3;
+    private EditText editText4;
+    private EditText editText5;
+    private EditText editText6;
+    private EditText editText7;
+    private EditText editText8;
+    private EditText editText9;
+    private EditText editText10;
 
     public Notes_Activity() {
         // Required empty public constructor
@@ -46,6 +64,7 @@ public class Notes_Activity extends Fragment {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             mParam1 = getArguments().getString(ARG_PARAM1);
@@ -59,4 +78,216 @@ public class Notes_Activity extends Fragment {
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.notes_activity, container, false);
     }
+
+    @Override
+    public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        //set up variables
+        editText1 = view.findViewById(R.id.editText1);
+        editText2 = view.findViewById(R.id.editText2);
+        editText3 = view.findViewById(R.id.editText3);
+        editText4 = view.findViewById(R.id.editText4);
+        editText5 = view.findViewById(R.id.editText5);
+        editText6 = view.findViewById(R.id.editText6);
+        editText7 = view.findViewById(R.id.editText7);
+        editText8 = view.findViewById(R.id.editText8);
+        editText9 = view.findViewById(R.id.editText9);
+        editText10 = view.findViewById(R.id.editText10);
+
+        editText1.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                String text = s.toString();
+                saveTextToFile(text, 1);
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {}
+        });
+        editText2.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                String text = s.toString();
+                saveTextToFile(text, 2);
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {}
+        });
+        editText3.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                String text = s.toString();
+                saveTextToFile(text, 3);
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {}
+        });
+        editText4.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                String text = s.toString();
+                saveTextToFile(text, 4);
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {}
+        });
+        editText5.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                String text = s.toString();
+                saveTextToFile(text, 5);
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {}
+        });
+        editText6.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                String text = s.toString();
+                saveTextToFile(text, 6);
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {}
+        });
+        editText7.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                String text = s.toString();
+                saveTextToFile(text, 7);
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {}
+        });
+        editText8.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                String text = s.toString();
+                saveTextToFile(text, 8);
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {}
+        });
+        editText9.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                String text = s.toString();
+                saveTextToFile(text, 9);
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {}
+        });
+        editText10.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                String text = s.toString();
+                saveTextToFile(text, 10);
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {}
+        });
+
+        // read notes from file and populate editText fields
+        File file = new File(Objects.requireNonNull(getContext()).getFilesDir(), "notes.txt");
+        try {
+            FileReader reader = new FileReader(file);
+            BufferedReader bufferedReader = new BufferedReader(reader);
+            String line;
+            int lineNumber = 1;
+            while ((line = bufferedReader.readLine()) != null) {
+                String text = line.substring(line.indexOf(": ") + 2); // extract text after "Line X: "
+                switch (lineNumber) {
+                    case 1:
+                        editText1.setText(text);
+                        break;
+                    case 2:
+                        editText2.setText(text);
+                        break;
+                    case 3:
+                        editText3.setText(text);
+                        break;
+                    case 4:
+                        editText4.setText(text);
+                        break;
+                    case 5:
+                        editText5.setText(text);
+                        break;
+                    case 6:
+                        editText6.setText(text);
+                        break;
+                    case 7:
+                        editText7.setText(text);
+                        break;
+                    case 8:
+                        editText8.setText(text);
+                        break;
+                    case 9:
+                        editText9.setText(text);
+                        break;
+                    case 10:
+                        editText10.setText(text);
+                        break;
+                    default:
+                        break;
+                }
+                lineNumber++;
+            }
+        } catch (java.io.IOException e) {
+            // handle error
+            e.printStackTrace();
+        }
+    }
+
+    private void saveTextToFile(String text, int lineNumber) {
+        String fileName = "notes.txt";
+        File file = new File(Objects.requireNonNull(getContext()).getFilesDir(), fileName);
+        try {
+            FileWriter writer = new FileWriter(file, true); // append to file
+            writer.write("Line " + lineNumber + ": " + text + "\n");
+            writer.close();
+        } catch (java.io.IOException e) {
+            // handle error
+            e.printStackTrace();
+        }
+    }
+
 }
