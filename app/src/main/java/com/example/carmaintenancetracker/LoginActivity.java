@@ -65,7 +65,6 @@ public class LoginActivity extends AppCompatActivity{
                         try {
                             String responseString = response.body().string();
                             System.out.println(responseString);
-                            System.out.println("Response: " + responseString);
 
                             // Remove the "Connected successfully to the database" message if it exists
                             if (responseString.startsWith("Connected successfully to the database!")) {
