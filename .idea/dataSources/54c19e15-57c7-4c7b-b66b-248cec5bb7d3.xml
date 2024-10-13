@@ -652,11 +652,12 @@ sql5733810|schema||sql5733810||UPDATE|G</Grants>
       <Charset>eucjpms</Charset>
     </collation>
     <schema id="199" parent="1" name="information_schema">
-      <LastIntrospectionLocalTimestamp>2024-10-13.16:22:22</LastIntrospectionLocalTimestamp>
+      <LastIntrospectionLocalTimestamp>2024-10-12.15:38:58</LastIntrospectionLocalTimestamp>
       <CollationName>utf8_general_ci</CollationName>
     </schema>
     <schema id="200" parent="1" name="sql5733810">
-      <LastIntrospectionLocalTimestamp>2024-10-13.17:02:24</LastIntrospectionLocalTimestamp>
+      <Current>1</Current>
+      <LastIntrospectionLocalTimestamp>2024-10-13.17:40:36</LastIntrospectionLocalTimestamp>
       <CollationName>latin1_swedish_ci</CollationName>
     </schema>
     <user id="201" parent="1" name="sql5733810"/>
@@ -3500,10 +3501,10 @@ sql5733810|schema||sql5733810||UPDATE|G</Grants>
       <StoredType>int(11)|0s</StoredType>
     </column>
     <column id="728" parent="242" name="car_id">
-      <DefaultExpression>0</DefaultExpression>
+      <DefaultExpression>&apos;0&apos;</DefaultExpression>
       <NotNull>1</NotNull>
       <Position>2</Position>
-      <StoredType>int(11)|0s</StoredType>
+      <StoredType>varchar(255)|0s</StoredType>
     </column>
     <column id="729" parent="242" name="make">
       <NotNull>1</NotNull>

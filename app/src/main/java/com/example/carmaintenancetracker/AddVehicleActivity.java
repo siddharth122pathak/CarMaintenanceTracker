@@ -1,5 +1,7 @@
 package com.example.carmaintenancetracker;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -97,13 +99,16 @@ public class AddVehicleActivity extends Fragment {
 
     // Save vehicle information to the database
     private void saveVehicle(String make, String model, String year, String nickname) {
+
+        String userId = getUserIdFromSession();
+
         if (make.isEmpty() || model.isEmpty() || year.isEmpty()) {
             Toast.makeText(getContext(), "Please fill in the make, model, and year fields!", Toast.LENGTH_SHORT).show();
             return;
         }
 
         UserVehicleApi vehicleApi = RetrofitClient.getRetrofitInstance().create(UserVehicleApi.class);
-        Call<ResponseBody> call = vehicleApi.addVehicle(make, model, year, nickname.isEmpty() ? null : nickname);
+        Call<ResponseBody> call = vehicleApi.setVehicle(userId, make, model, year, nickname.isEmpty() ? null : nickname);
 
         call.enqueue(new Callback<ResponseBody>() {
             @Override
@@ -122,5 +127,12 @@ public class AddVehicleActivity extends Fragment {
                 Toast.makeText(getContext(), "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    // Retrieve user ID from shared preferences
+    private String getUserIdFromSession() {
+        SharedPreferences sharedPreferences = getActivity().getSharedPreferences("UserSession", Context.MODE_PRIVATE);
+        String userId = sharedPreferences.getString("userId", null);
+        return userId;
     }
 }

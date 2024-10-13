@@ -16,6 +16,16 @@ public interface UserVehicleApi {
             @Field("nickname") String nickname
     );
 
+    @FormUrlEncoded
+    @POST("/add_vehicle.php")
+    Call<ResponseBody> setVehicle(
+            @Field("userId") String userId,
+            @Field("make") String make,
+            @Field("model") String model,
+            @Field("year") String year,
+            @Field("nickname") String nickname
+    );
+
     // Get all vehicles
     @GET("/get_all_vehicles.php")
     Call<ResponseBody> getAllVehicles();
