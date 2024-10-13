@@ -6,6 +6,9 @@ public class UserVehicle {
     private String model;
     private String year;
     private String nickname;
+    private int mileage;
+    private boolean notificationsOn;
+    private long lastUpdatedTimestamp;
 
     //Getters and Setters
 
@@ -47,5 +50,29 @@ public class UserVehicle {
 
     public void setNickname(String nickname) {
         this.nickname = nickname;
+    }
+
+    public int getMileage() {
+        return mileage;
+    }
+
+    public void setMileage(int mileage) {
+        this.mileage = mileage;
+    }
+
+    public boolean isNotificationsOn() {
+        return notificationsOn;
+    }
+
+    public void setNotificationsOn(boolean notificationsOn) {
+        this.notificationsOn = notificationsOn;
+    }
+
+    public long getLastUpdatedTimestamp() {
+        return lastUpdatedTimestamp;
+    }
+
+    public void setLastUpdatedTimestamp(long lastUpdatedTimestamp) {
+        this.lastUpdatedTimestamp = lastUpdatedTimestamp;
     }
 }

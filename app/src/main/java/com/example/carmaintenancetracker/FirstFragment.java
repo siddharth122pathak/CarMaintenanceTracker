@@ -2,13 +2,12 @@ package com.example.carmaintenancetracker;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
-import android.database.Cursor;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,103 +21,170 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 import com.airbnb.lottie.LottieAnimationView;
 import com.example.carmaintenancetracker.databinding.FragmentFirstBinding;
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
+import com.google.gson.reflect.TypeToken;
+import okhttp3.ResponseBody;
+import org.jetbrains.annotations.NotNull;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
+import java.io.IOException;
+import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static android.app.Activity.RESULT_OK;
-import static com.example.carmaintenancetracker.VehicleDatabaseHelper.*;
 
+/** @noinspection CallToPrintStackTrace*/
 public class FirstFragment extends Fragment {
 
     private static final int ADD_VEHICLE_REQUEST_CODE = 1;
-    //View binding for the fragment's layout
     private FragmentFirstBinding binding;
-    //Views to handle mileage, notifications, and buttons
     private TextView mileageText;
     private Button notificationToggleButton;
     private View notificationBar;
     private TextView notificationText;
-    private boolean notificationsOn = false; //Default state for notifications
+    private boolean notificationsOn = false;
     public TextView titleText;
     private ImageView lastUpdatedFlareIcon;
     private TextView lastUpdatedText;
-    long lastUpdatedTimestamp;
+    private long lastUpdatedTimestamp;
     private ImageView carImageView;
     private LottieAnimationView carAnimationView;
+    private FrameLayout vehicle1Button, vehicle2Button, vehicle3Button;
+    private LottieAnimationView carAnimation1, carAnimation2, carAnimation3;
+    private TextView carDetails1, carMileage1, carDetails2, carMileage2, carDetails3, carMileage3;
+    private ImageButton vehicle1ImageButton, vehicle2ImageButton, vehicle3ImageButton;
+    private boolean hasNavigatedToAddVehicle = false;
 
-    //Views for the new vehicle buttons and animations
-    private FrameLayout vehicle1Button, vehicle2Button, vehicle3Button; //New vehicle buttons
-    private LottieAnimationView carAnimation1, carAnimation2, carAnimation3; //Lottie animations for each vehicle
-    private TextView carDetails1, carMileage1, carDetails2, carMileage2, carDetails3, carMileage3; //New vehicle details and mileage TextViews
-    private ImageButton vehicle1ImageButton, vehicle2ImageButton, vehicle3ImageButton; //Add new vehicle buttons
-
-    //List to store chicle mileage and names (IDs or names)
     private final List<Integer> vehicleMileage = new ArrayList<>();
     private final List<String> vehicleList = new ArrayList<>();
     private final List<String> vehicleMakes = new ArrayList<>();
+    private final List<UserVehicle> userVehicles = new ArrayList<>(); // Store UserVehicle objects
+
     private int currentVehicleIndex = 0;
+
+    private UserVehicleApi userVehicleApi;  // Retrofit API interface
+    UserVehicle userVehicle = new UserVehicle();
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        // Inflate the fragment layout using binding
         binding = FragmentFirstBinding.inflate(inflater, container, false);
+
+        // Initialize Retrofit and API
+        userVehicleApi = RetrofitClient.getRetrofitInstance().create(UserVehicleApi.class);
+
+        loadVehiclesFromServer();
         return binding.getRoot();
-
     }
 
-    @Override
-    public void onSaveInstanceState(@NonNull Bundle outState) {
-        super.onSaveInstanceState(outState);
-
-        // Save the current vehicle data
-        outState.putStringArrayList("vehicleList", new ArrayList<>(vehicleList));
-        outState.putIntegerArrayList("vehicleMileage", new ArrayList<>(vehicleMileage));
-        outState.putInt("currentVehicleIndex", currentVehicleIndex);
-    }
-
-    //AddVehicleActivity save button storage
     @Override
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == ADD_VEHICLE_REQUEST_CODE && resultCode == RESULT_OK && data != null) {
-            // Extract vehicle details from the returned data
             String make = data.getStringExtra("vehicleMake");
             String model = data.getStringExtra("vehicleModel");
             String year = data.getStringExtra("vehicleYear");
             String licensePlate = data.getStringExtra("vehicleLicensePlate");
             String milesStr = data.getStringExtra("vehicleMiles");
 
-            //Parse the mileage string and add it to the vehicleMileage list
             int miles = 0;
             if (milesStr != null && !milesStr.isEmpty()) {
                 try {
                     miles = Integer.parseInt(milesStr);
                 } catch (NumberFormatException e) {
-                    //Handle invalid mileage input
+                    // Handle invalid mileage input
                 }
             }
 
-            VehicleDatabaseHelper dbHelper = new VehicleDatabaseHelper(getContext());
-
-            //Add the new vehicle's information to the vehicleList
-            vehicleList.add(make + " " + model + " " + year + " " + licensePlate);
-            vehicleMileage.add(miles);
-
-            //Ensure the first vehicle remains as the default active vehicle
-            if (vehicleList.size() == 1) {
-                dbHelper.setActiveVehicle(1);  //Keep the first vehicle as active
-                showVehicle(0);  //Display the first vehicle
-                updateVehicleButtons();
-            }
-
-            //Show the new vehicle but do not change the active vehicle (if it’s not the first one)
-            if (vehicleList.size() > 1) {
-                updateVehicleButtons();
-            }
+            addVehicleToServer(make, model, year, licensePlate);
         }
+    }
+
+    private void addVehicleToServer(String make, String model, String year, String nickname) {
+        userVehicleApi.addVehicle(make, model, year, nickname).enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(@NotNull Call<ResponseBody> call, @NotNull Response<ResponseBody> response) {
+                if (response.isSuccessful()) {
+                    // Refresh list from server to display new vehicle
+                    loadVehiclesFromServer();
+                    Toast.makeText(getContext(), "Vehicle added successfully.", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(getContext(), "Failed to add vehicle.", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(@NotNull Call<ResponseBody> call, @NotNull Throwable t) {
+                Toast.makeText(getContext(), "Error adding vehicle.", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void setActiveVehicle(int carId) {
+        userVehicleApi.setActiveVehicle(carId).enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(@NotNull Call<ResponseBody> call, @NotNull Response<ResponseBody> response) {
+                if (response.isSuccessful()) {
+                    Toast.makeText(getContext(), "Active vehicle updated.", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(getContext(), "Failed to update active vehicle.", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(@NotNull Call<ResponseBody> call, @NotNull Throwable t) {
+                Toast.makeText(getContext(), "Error setting active vehicle.", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void updateMileage(int carId, int newMileage) {
+        userVehicleApi.updateMileage(carId, newMileage).enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(@NotNull Call<ResponseBody> call, @NotNull Response<ResponseBody> response) {
+                if (response.isSuccessful()) {
+                    Toast.makeText(getContext(), "Mileage updated.", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(getContext(), "Failed to update mileage.", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(@NotNull Call<ResponseBody> call, @NotNull Throwable t) {
+                Toast.makeText(getContext(), "Error updating mileage.", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+   // Fetch all vehicles from the server
+    private void loadVehiclesFromServer() {
+        userVehicleApi.getAllVehicles().enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(@NotNull Call<ResponseBody> call, @NotNull Response<ResponseBody> response) {
+                if (response.isSuccessful()) {
+                    // Assume parseVehicleList parses the response into vehicleList and vehicleMileage lists
+                    //parseVehicleList(response.body().string());
+                    if (vehicleList.isEmpty()) {
+                        promptAddVehicle();
+                    } else {
+                        updateVehicleButtons();
+                        showVehicle(0);
+                    }
+                } else {
+                    Toast.makeText(getContext(), "Error loading vehicles", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(@NotNull Call<ResponseBody> call, @NotNull Throwable t) {
+                Toast.makeText(getContext(), "Failed to load vehicles", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     @SuppressLint({"SetTextI18n", "Range", "WrongViewCast"})
@@ -126,7 +192,7 @@ public class FirstFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        //Initialize the UI components with the fragment
+        // Initialize UI components
         mileageText = view.findViewById(R.id.textView_selected_car_mileage);
         notificationToggleButton = view.findViewById(R.id.btn_selected_car_notifications_setting);
         notificationBar = view.findViewById(R.id.textView_selected_car_notifications_setting);
@@ -137,83 +203,54 @@ public class FirstFragment extends Fragment {
         carImageView = view.findViewById(R.id.imageView_selected_car);
         carAnimationView = view.findViewById(R.id.carAnimation);
 
-        //Initialize new vehicle buttons and animations
+        // Initialize new vehicle buttons and animations
         vehicle1ImageButton = view.findViewById(R.id.btn_vehicle_1);
         vehicle2ImageButton = view.findViewById(R.id.btn_vehicle_2);
         vehicle3ImageButton = view.findViewById(R.id.btn_vehicle_3);
-        vehicle1Button = view.findViewById(R.id.btn_vehicle_1_text); //Vehicle 2 button
-        vehicle2Button = view.findViewById(R.id.btn_vehicle_2_text); //Vehicle 3 button
-        vehicle3Button = view.findViewById(R.id.btn_vehicle_3_text); //Vehicle 4 button
-        carAnimation1 = view.findViewById(R.id.carAnimation1); //Vehicle 2 animation
-        carAnimation2 = view.findViewById(R.id.carAnimation2); //Vehicle 3 animation
-        carAnimation3 = view.findViewById(R.id.carAnimation3); //Vehicle 4 animation
-        carDetails1 = view.findViewById(R.id.car_details1); //Vehicle 2 details
-        carMileage1 = view.findViewById(R.id.car_mileage1); //Vehicle 2 mileage
-        carDetails2 = view.findViewById(R.id.car_details2); //Vehicle 3 details
-        carMileage2 = view.findViewById(R.id.car_mileage2); //Vehicle 3 mileage
-        carDetails3 = view.findViewById(R.id.car_details3); //Vehicle 4 details
-        carMileage3 = view.findViewById(R.id.car_mileage3); //Vehicle 4 mileage
+        vehicle1Button = view.findViewById(R.id.btn_vehicle_1_text);
+        vehicle2Button = view.findViewById(R.id.btn_vehicle_2_text);
+        vehicle3Button = view.findViewById(R.id.btn_vehicle_3_text);
+        carAnimation1 = view.findViewById(R.id.carAnimation1);
+        carAnimation2 = view.findViewById(R.id.carAnimation2);
+        carAnimation3 = view.findViewById(R.id.carAnimation3);
+        carDetails1 = view.findViewById(R.id.car_details1);
+        carMileage1 = view.findViewById(R.id.car_mileage1);
+        carDetails2 = view.findViewById(R.id.car_details2);
+        carMileage2 = view.findViewById(R.id.car_mileage2);
+        carDetails3 = view.findViewById(R.id.car_details3);
+        carMileage3 = view.findViewById(R.id.car_mileage3);
 
+        // Initialize Retrofit API client
+        userVehicleApi = RetrofitClient.getRetrofitInstance().create(UserVehicleApi.class);
 
-        VehicleDatabaseHelper dbHelper = new VehicleDatabaseHelper(getContext());
-        //Check if any vehicle exists in the database
-        Cursor cursor = dbHelper.getAllVehicles();
-        vehicleList.clear();  //Ensure list is cleared before populating
-
-        //Setting up default state for Last updated text and icon
+        // Default state for last updated text and icon
         lastUpdatedFlareIcon.setVisibility(View.INVISIBLE);
 
-        if (cursor != null && cursor.getCount() == 0) {
-            //No vehicles found in the database, prompt the user to add the first vehicle
-            promptAddVehicle();
-        } else {
-            //Populate vehicleList with the active vehicle and show it
-            assert cursor != null;
-            if (cursor.moveToFirst()) {
-                vehicleList.clear();
-                do {
-                    vehicleList.add(cursor.getString(cursor.getColumnIndex(COLUMN_MAKE)) + " " +
-                            cursor.getString(cursor.getColumnIndex(COLUMN_MODEL)) + " " +
-                            cursor.getString(cursor.getColumnIndex(COLUMN_YEAR)) + " " +
-                            cursor.getString(cursor.getColumnIndex(COLUMN_LICENSE)));
-                    int activeVehicleID = cursor.getInt(cursor.getColumnIndex("id"));
-                    lastUpdatedTimestamp = dbHelper.getLastUpdated(activeVehicleID);
-                    updateLastUpdatedText(lastUpdatedTimestamp);
-                } while (cursor.moveToNext());
+        // Fetch vehicles from server instead of local database
+        loadVehiclesFromServer();
 
-                //Show the first vehicle immediately if available
-                showVehicle(0);
-            }
-            updateVehicleButtons();
-        }
-
-        cursor.close();
-
-        //If a saved state exists, restore the state (optional)
+        // Restore saved state if available
         if (savedInstanceState != null) {
             vehicleList.addAll(savedInstanceState.getStringArrayList("vehicleList"));
             vehicleMileage.addAll(savedInstanceState.getIntegerArrayList("vehicleMileage"));
             currentVehicleIndex = savedInstanceState.getInt("currentVehicleIndex");
 
-            //Only update the buttons and show the vehicle if there are vehicles in the list
-            if (vehicleList.size() > 0) {
+            if (!vehicleList.isEmpty()) {
                 updateVehicleButtons();
                 showVehicle(currentVehicleIndex);
             }
         }
 
-        setupVehicleButtons(view);  //Set up the click listeners for vehicle buttons
+        setupVehicleButtons(view);
 
-        //Set up listeners for buttons in this fragment
-
-        //Update Mileage Button: Triggers the mileage update dialog
+        // Update Mileage Button
         Button updateButton = view.findViewById(R.id.btn_selected_car_mileage_update);
         updateButton.setOnClickListener(v -> showUpdateMileageDialog());
 
-        //Notification Toggle Button: Toggles notification on or off
+        // Notification Toggle Button
         notificationToggleButton.setOnClickListener(v -> toggleNotifications());
 
-        //Add New Maintenance Button: Opens the add maintenance screen
+        // Add New Maintenance Button
         binding.btnAddNewMaintenance.setOnClickListener(v -> {
             if (vehicleList.isEmpty()) {
                 showNoVehicleSelectedDialog();
@@ -223,7 +260,7 @@ public class FirstFragment extends Fragment {
             }
         });
 
-        //View Upcoming Maintenance Button: Opens the screen showing upcoming maintenance
+        // View Upcoming Maintenance Button
         binding.btnViewUpcomingMaintenance.setOnClickListener(v -> {
             if (vehicleList.isEmpty()) {
                 showNoVehicleSelectedDialog();
@@ -233,32 +270,61 @@ public class FirstFragment extends Fragment {
             }
         });
 
-        //Attach long press listener to vehicle buttons and active image
+        // Long press listeners for vehicle buttons and active image
         carAnimationView.setOnLongClickListener(v -> showVehicleOptionsDialog(0));
         vehicle1Button.setOnLongClickListener(v -> showVehicleOptionsDialog(1));
         vehicle2Button.setOnLongClickListener(v -> showVehicleOptionsDialog(2));
         vehicle3Button.setOnLongClickListener(v -> showVehicleOptionsDialog(3));
     }
 
-    //Method to set up vehicle buttons
+    // Method to set up vehicle buttons
     private void setupVehicleButtons(View view) {
         ImageButton vehicle1Button = view.findViewById(R.id.btn_vehicle_1);
         ImageButton vehicle2Button = view.findViewById(R.id.btn_vehicle_2);
         ImageButton vehicle3Button = view.findViewById(R.id.btn_vehicle_3);
 
-        // Set up button click listeners to swap vehicles
+        // Set up button click listeners to swap or add vehicles
         vehicle1Button.setOnClickListener(v -> switchOrAddVehicle(1));
         vehicle2Button.setOnClickListener(v -> switchOrAddVehicle(2));
         vehicle3Button.setOnClickListener(v -> switchOrAddVehicle(3));
     }
 
-    //Method to update the last updated text
+    // Method to handle switching to or adding a vehicle
+    private void switchOrAddVehicle(int vehicleIndex) {
+        if (vehicleIndex <= vehicleList.size()) {
+            // Get car ID for the selected vehicle
+            int carId = getCarId(vehicleIndex - 1); // Adjust index for list (0-based)
+
+            // Call API to set this vehicle as active
+            userVehicleApi.setActiveVehicle(carId).enqueue(new Callback<ResponseBody>() {
+                @Override
+                public void onResponse(@NotNull Call<ResponseBody> call, @NotNull Response<ResponseBody> response) {
+                    if (response.isSuccessful()) {
+                        Toast.makeText(getContext(), "Vehicle switched", Toast.LENGTH_SHORT).show();
+                        showVehicle(vehicleIndex - 1);  // Show the selected vehicle
+                    } else {
+                        Toast.makeText(getContext(), "Failed to switch vehicle", Toast.LENGTH_SHORT).show();
+                    }
+                }
+
+                @Override
+                public void onFailure(@NotNull Call<ResponseBody> call, @NotNull Throwable t) {
+                    Toast.makeText(getContext(), "Error switching vehicle", Toast.LENGTH_SHORT).show();
+                }
+            });
+        } else {
+            // If vehicleIndex exceeds list size, it indicates adding a new vehicle
+            promptAddVehicle();
+        }
+    }
+
+    // Method to update the last updated text
     @SuppressLint("SetTextI18n")
-    private void updateLastUpdatedText(long lastUpdatedTimestamp){
+    private void updateLastUpdatedText(long lastUpdatedTimestamp) {
         SimpleDateFormat sdf = new SimpleDateFormat("MM-dd-yyyy @ HH:mm", Locale.getDefault());
 
-        //If no update has been made, use placeholder text
-        if (lastUpdatedTimestamp == 0){
+        // If no update has been made, use placeholder text
+        if (lastUpdatedTimestamp == 0) {
             lastUpdatedText.setText("Last updated: never");
             lastUpdatedFlareIcon.setVisibility(View.VISIBLE);
             return;
@@ -267,71 +333,77 @@ public class FirstFragment extends Fragment {
         Date lastUpdated = new Date(lastUpdatedTimestamp);
         lastUpdatedText.setText("Last updated: " + sdf.format(lastUpdated));
 
-        //Check if 3 months have passed
+        // Check if 3 months have passed since the last update
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(lastUpdatedTimestamp);
-        calendar.add(Calendar.MINUTE, 3); //Add 3 months to the last updated date
+        calendar.add(Calendar.MONTH, 3); // Add 3 months to the last updated date
 
-        if (calendar.getTimeInMillis() <= System.currentTimeMillis()){
-            lastUpdatedFlareIcon.setVisibility(View.VISIBLE); //Show the flare icon
+        // Show or hide the flare icon based on the time elapsed
+        if (calendar.getTimeInMillis() <= System.currentTimeMillis()) {
+            lastUpdatedFlareIcon.setVisibility(View.VISIBLE); // Show the flare icon if outdated
         } else {
-            lastUpdatedFlareIcon.setVisibility(View.INVISIBLE); //Hide the flare icon
+            lastUpdatedFlareIcon.setVisibility(View.INVISIBLE); // Hide the flare icon if up-to-date
         }
     }
 
-    //Method to show a dialog for updating the mileage
+    // Method to show a dialog for updating the mileage
     @SuppressLint("SetTextI18n")
     private void showUpdateMileageDialog() {
         if (vehicleList.isEmpty()) {
             showNoVehicleSelectedDialog();
         } else {
-            //Check if there is an active vehicle selected
+            // Check if there is an active vehicle selected
             AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-            //If a vehicle is selected, show the mileage update dialog
             builder.setTitle("Update Mileage");
 
-            //Add input field to dialog
+            // Add input field to dialog
             final EditText input = new EditText(getContext());
             input.setHint("Enter new mileage");
-            //Set input type to number only
             input.setInputType(InputType.TYPE_CLASS_NUMBER);
-            //Ready to type on fillable
             input.requestFocus();
             builder.setView(input);
 
-            //Set up the buttons for the dialog
+            // Set up the dialog buttons
             builder.setPositiveButton("Update", (dialog, which) -> {
-                //Get the new mileage from the input field
                 String newMileageStr = input.getText().toString();
                 if (!newMileageStr.isEmpty()) {
                     int newMileage = Integer.parseInt(newMileageStr);
-                    //Ensure the list is large enough
+
+                    // Ensure the list can hold the new mileage for the current vehicle
                     if (vehicleMileage.size() > currentVehicleIndex) {
-                        vehicleMileage.set(currentVehicleIndex, newMileage); //Update the mileage for the current vehicle
+                        vehicleMileage.set(currentVehicleIndex, newMileage);
                     } else {
-                        vehicleMileage.add(newMileage); //Add the new mileage if the list is not large enough
+                        vehicleMileage.add(newMileage);
                     }
 
-                    mileageText.setText(newMileage + " miles"); //Update the displayed mileage
+                    // Update displayed mileage
+                    mileageText.setText(newMileage + " miles");
 
-                    //Update mileage in the database
-                    VehicleDatabaseHelper dbHelper = new VehicleDatabaseHelper(getContext());
-                    Cursor cursor = dbHelper.getActiveVehicle();  //Get the active vehicle
-                    if (cursor.moveToFirst()) {
-                        @SuppressLint("Range") int activeVehicleId = cursor.getInt(cursor.getColumnIndex(COLUMN_ID));  //Get the ID of the active vehicle
-                        dbHelper.updateMileage(activeVehicleId, newMileage);  //Update the mileage in the database
+                    // Get the active vehicle's ID and update mileage on the server
+                    int carId = getCarId(currentVehicleIndex);
+                    userVehicleApi.updateMileage(carId, newMileage).enqueue(new Callback<ResponseBody>() {
+                        @Override
+                        public void onResponse(@NotNull Call<ResponseBody> call, @NotNull Response<ResponseBody> response) {
+                            if (response.isSuccessful()) {
+                                Toast.makeText(getContext(), "Mileage updated successfully", Toast.LENGTH_SHORT).show();
+                                fetchAndUpdateLastUpdated(carId); // Update the "Last updated" text and icon
+                            } else {
+                                Toast.makeText(getContext(), "Failed to update mileage", Toast.LENGTH_SHORT).show();
+                            }
+                        }
 
-                        //Update the last updated timestamp
-                        long updatedTimestamp = dbHelper.getLastUpdated(activeVehicleId);
-                        updateLastUpdatedText(updatedTimestamp); //Refresh the "Last updated" text and flare icon
-                    }
-                    cursor.close();
+                        @Override
+                        public void onFailure(@NotNull Call<ResponseBody> call, @NotNull Throwable t) {
+                            Toast.makeText(getContext(), "Error updating mileage", Toast.LENGTH_SHORT).show();
+                        }
+                    });
                 }
             });
+
             builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
             builder.show();
 
-            //Pop up keyboard to type
+            // Show the keyboard for input
             new Handler().postDelayed(() -> {
                 InputMethodManager imm = (InputMethodManager) Objects.requireNonNull(getContext()).getSystemService(Context.INPUT_METHOD_SERVICE);
                 imm.showSoftInput(input, InputMethodManager.SHOW_IMPLICIT);
@@ -339,309 +411,387 @@ public class FirstFragment extends Fragment {
         }
     }
 
-    //Method to toggle notifications on/off
+    // Fetch and update the last updated timestamp
+    private void fetchAndUpdateLastUpdated(int carId) {
+        userVehicleApi.getLastUpdated(carId).enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(@NotNull Call<ResponseBody> call, @NotNull Response<ResponseBody> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    try {
+                        // Read and parse the response safely
+                        String responseBody = response.body().string();
+                        long updatedTimestamp = parseLastUpdatedTime(responseBody);
+                        updateLastUpdatedText(updatedTimestamp); // Refresh the "Last updated" text and icon
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        Toast.makeText(getContext(), "Error reading response", Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    Toast.makeText(getContext(), "Failed to retrieve last updated time", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(@NotNull Call<ResponseBody> call, @NotNull Throwable t) {
+                Toast.makeText(getContext(), "Failed to fetch last updated time", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    // Method to toggle notifications on/off
     @SuppressLint("SetTextI18n")
     private void toggleNotifications() {
-        //Check if there are any vehicles added
+        // Check if there are any vehicles added
         if (vehicleList.isEmpty()) {
             showNoVehicleSelectedDialog();
             return;
         }
 
-        notificationsOn = !notificationsOn;// Toggle the boolean value
+        notificationsOn = !notificationsOn; // Toggle the notification state
 
+        // Update the UI based on the new state
         if (notificationsOn) {
-            //Set the button text and bar color when notifications are ON
             notificationToggleButton.setText("Turn Off");
             Drawable greenGradient = ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.green_border_gradient);
             notificationBar.setBackground(greenGradient);
             notificationText.setText("Notifications for this vehicle are ON");
         } else {
-            //Set the button text and bar color when notifications are OFF
             notificationToggleButton.setText("Turn On");
-            Drawable redGradient = ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.gray_border_gradient);
-            notificationBar.setBackground(redGradient);
+            Drawable grayGradient = ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.gray_border_gradient);
+            notificationBar.setBackground(grayGradient);
             notificationText.setText("Notifications for this vehicle are OFF");
         }
 
-        //Update the notification setting in the database
-        VehicleDatabaseHelper dbHelper = new VehicleDatabaseHelper(getContext());
-        Cursor cursor = dbHelper.getActiveVehicle();
+        // Update the notification setting on the server
+        int carId = getCarId(currentVehicleIndex);
+        userVehicleApi.updateNotificationSetting(carId, notificationsOn ? 1 : 0).enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(@NotNull Call<ResponseBody> call, @NotNull Response<ResponseBody> response) {
+                if (response.isSuccessful()) {
+                    Toast.makeText(getContext(), "Notification setting updated", Toast.LENGTH_SHORT).show();
+                } else {
+                    // Revert the UI and toggle if update fails
+                    notificationsOn = !notificationsOn;
+                    revertNotificationUI();
+                    Toast.makeText(getContext(), "Failed to update notification setting", Toast.LENGTH_SHORT).show();
+                }
+            }
 
-        if (cursor != null && cursor.moveToFirst()) {
-            @SuppressLint("Range") int activeVehicleId = cursor.getInt(cursor.getColumnIndex(COLUMN_ID));
-            dbHelper.updateNotificationSetting(activeVehicleId, notificationsOn);
-        }
+            @Override
+            public void onFailure(@NotNull Call<ResponseBody> call, @NotNull Throwable t) {
+                // Revert the UI and toggle if there's a server error
+                notificationsOn = !notificationsOn;
+                revertNotificationUI();
+                Toast.makeText(getContext(), "Error updating notification setting", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
 
-        if (cursor != null) {
-            cursor.close();
+    // Method to revert the UI to previous notification state if update fails
+    @SuppressLint("SetTextI18n")
+    private void revertNotificationUI() {
+        if (notificationsOn) {
+            notificationToggleButton.setText("Turn Off");
+            Drawable greenGradient = ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.green_border_gradient);
+            notificationBar.setBackground(greenGradient);
+            notificationText.setText("Notifications for this vehicle are ON");
+        } else {
+            notificationToggleButton.setText("Turn On");
+            Drawable grayGradient = ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.gray_border_gradient);
+            notificationBar.setBackground(grayGradient);
+            notificationText.setText("Notifications for this vehicle are OFF");
         }
     }
 
-    //Method to display mileage for the selected vehicle
+    // Method to display mileage for the selected vehicle
     @SuppressLint({"SetTextI18n", "Range"})
     private void showVehicle(int vehicleIndex) {
-        if (vehicleIndex >= 0 && vehicleIndex < vehicleList.size()) {
-            //Show the selected vehicle
-            String yearMakeModel = vehicleList.get(vehicleIndex);
-            String[] vehicleDetails = yearMakeModel.split(" ");
-            String licensePlate = vehicleDetails.length > 3 ? vehicleDetails[3] : "";
+        if (vehicleIndex >= 0 && vehicleIndex < userVehicles.size()) {
+            UserVehicle selectedVehicle = userVehicles.get(vehicleIndex);
 
-            //Check if the license plate is available and non-empty
-            if (!licensePlate.isEmpty()) {
-                //If license plate is provided, set it as the title
+            // Display title based on license plate or year, make, model details
+            String yearMakeModel = selectedVehicle.getYear() + " " + selectedVehicle.getMake() + " " + selectedVehicle.getModel();
+            String licensePlate = selectedVehicle.getNickname();
+
+            if (licensePlate != null && !licensePlate.isEmpty()) {
                 binding.selectedCarTitle.setText(licensePlate);
-            } else if (vehicleDetails.length >= 3) {
-                //If no license plate, use year, make, and model
-                String displayText = vehicleDetails[2] + " " + vehicleDetails[0] + " " + vehicleDetails[1];
-                binding.selectedCarTitle.setText(displayText);
             } else {
-                //Fallback to just year and make if model is also missing
                 binding.selectedCarTitle.setText(yearMakeModel);
             }
 
-            //Retrieve the mileage and notification status for the active vehicle
-            VehicleDatabaseHelper dbHelper = new VehicleDatabaseHelper(getContext());
-            Cursor cursor = dbHelper.getActiveVehicle();
+            // Fetch vehicle details from server using API
+            int carId = selectedVehicle.getCarId();
+            userVehicleApi.getVehicleByIndex(carId).enqueue(new Callback<ResponseBody>() {
+                @Override
+                public void onResponse(@NotNull Call<ResponseBody> call, @NotNull Response<ResponseBody> response) {
+                    if (response.isSuccessful() && response.body() != null) {
+                        try {
+                            // Parse response safely
+                            String responseBody = response.body().string();
+                            UserVehicle vehicleDetails = parseVehicleDetails(responseBody);
 
-            if (cursor.moveToFirst()) {
-                @SuppressLint("Range") String milesStr = cursor.getString(cursor.getColumnIndex(COLUMN_MILES));
-                @SuppressLint("Range") int notificationEnabled = cursor.getInt(cursor.getColumnIndex(COLUMN_NOTIFICATION_STATUS));
-                String carMake = cursor.getString(cursor.getColumnIndex(VehicleDatabaseHelper.COLUMN_MAKE));
-                int mileage = 0;
-                notificationsOn = (notificationEnabled == 1);
+                            // Display mileage or fallback text
+                            int mileage = vehicleDetails.getMileage();
+                            mileageText.setText(mileage > 0 ? mileage + " miles" : "Mileage not available");
 
-                if (milesStr != null && !milesStr.isEmpty()) {
-                    try {
-                        mileage = Integer.parseInt(milesStr);
-                    } catch (NumberFormatException e) {
-                        // Handle invalid mileage
+                            // Update UI based on notification status
+                            notificationsOn = vehicleDetails.isNotificationsOn();
+                            notificationToggleButton.setText(notificationsOn ? "Turn Off" : "Turn On");
+                            notificationText.setText(notificationsOn ? "Notifications for this vehicle are ON" : "Notifications for this vehicle are OFF");
+                            Drawable gradient = ContextCompat.getDrawable(
+                                    Objects.requireNonNull(getContext()),
+                                    notificationsOn ? R.drawable.green_border_gradient : R.drawable.gray_border_gradient
+                            );
+                            notificationBar.setBackground(gradient);
+
+                            // Update last updated timestamp in the UI
+                            updateLastUpdatedText(vehicleDetails.getLastUpdatedTimestamp());
+
+                            // Display the correct animation based on car make
+                            int animationResource = getAnimationForMake(vehicleDetails.getMake());
+                            carImageView.setVisibility(animationResource == 0 ? View.VISIBLE : View.GONE);
+                            carAnimationView.setVisibility(animationResource != 0 ? View.VISIBLE : View.GONE);
+                            if (animationResource != 0) {
+                                carAnimationView.setAnimation(animationResource);
+                                carAnimationView.playAnimation();
+                            }
+
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            Toast.makeText(getContext(), "Error reading vehicle details response", Toast.LENGTH_SHORT).show();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            Toast.makeText(getContext(), "Error parsing vehicle details", Toast.LENGTH_SHORT).show();
+                        }
+                    } else {
+                        Toast.makeText(getContext(), "Failed to retrieve vehicle details", Toast.LENGTH_SHORT).show();
                     }
                 }
-                if (mileage > 0) {
-                    mileageText.setText(mileage + " miles");
-                } else {
-                    mileageText.setText("Mileage not available");
+
+                @Override
+                public void onFailure(@NotNull Call<ResponseBody> call, @NotNull Throwable t) {
+                    Toast.makeText(getContext(), "Error loading vehicle details", Toast.LENGTH_SHORT).show();
                 }
-
-                //Update the UI based on the notification setting
-                if (notificationsOn) {
-                    notificationToggleButton.setText("Turn Off");
-                    notificationText.setText("Notifications for this vehicle are ON");
-                    notificationBar.setBackground(ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.green_border_gradient));
-                } else {
-                    notificationToggleButton.setText("Turn On");
-                    notificationText.setText("Notifications for this vehicle are OFF");
-                    notificationBar.setBackground(ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.gray_border_gradient));
-                }
-
-                //Fetch and display the correct last updated timestamp for the active vehicle
-                long lastUpdatedTimestamp = cursor.getLong(cursor.getColumnIndex(COLUMN_LAST_UPDATE));
-                updateLastUpdatedText(lastUpdatedTimestamp);  //Pass the timestamp to the update method
-
-                //Get the appropriate animation based on the car make
-                int animationResource = getAnimationForMake(carMake);
-
-                //Set and play the animation
-                if (animationResource == 0) {
-                    //Handle missing animation by showing default image
-                    carImageView.setVisibility(View.VISIBLE);
-                    carAnimationView.setVisibility(View.GONE);
-                } else {
-                    //Animation found, display it
-                    carImageView.setVisibility(View.GONE);
-                    carAnimationView.setVisibility(View.VISIBLE);
-                    carAnimationView.setAnimation(animationResource);
-                    carAnimationView.playAnimation();
-                }
-            }
-            cursor.close();
+            });
         }
     }
 
-    //Method to switch between existing vehicles or add a new one
-    private void switchOrAddVehicle(int index) {
-        if (index < vehicleList.size()) {
-            switchVehicle(index);
-        } else {
-            promptAddVehicle();
-        }
-    }
-
-    //Switch between vehicles based on index
+    // Switch between vehicles based on index
     @SuppressLint("Range")
     private void switchVehicle(int vehicleIndex) {
         if (vehicleIndex >= 1 && vehicleIndex < vehicleList.size()) {
-            VehicleDatabaseHelper dbHelper = new VehicleDatabaseHelper(getContext());
+            // Swap the data between the active vehicle (index 1) and the selected vehicle (vehicleIndex + 1)
+            int primaryVehicleId = getCarId(0);  // Active vehicle is at index 0
+            int targetVehicleId = getCarId(vehicleIndex);  // Get the target vehicle's ID
 
-            //Swap the data between Vehicle 0 (id 1 in the database) and the selected vehicle (vehicleIndex + 1)
-            dbHelper.swapVehicles(1, vehicleIndex + 1);  //Swapping Vehicle 0 and the selected vehicle
+            // API call to swap vehicles on the server
+            userVehicleApi.swapVehicles(primaryVehicleId, targetVehicleId).enqueue(new Callback<ResponseBody>() {
+                @Override
+                public void onResponse(@NotNull Call<ResponseBody> call, @NotNull Response<ResponseBody> response) {
+                    if (response.isSuccessful()) {
+                        // API call to set the active vehicle on the server
+                        userVehicleApi.setActiveVehicle(primaryVehicleId).enqueue(new Callback<ResponseBody>() {
+                            @Override
+                            public void onResponse(@NotNull Call<ResponseBody> call, @NotNull Response<ResponseBody> response) {
+                                if (response.isSuccessful()) {
+                                    // Update UI to reflect the newly active vehicle
+                                    updateActiveVehicleUI();
+                                    updateVehicleButtons();
+                                    Toast.makeText(getContext(), "Vehicle switched successfully", Toast.LENGTH_SHORT).show();
+                                } else {
+                                    Toast.makeText(getContext(), "Failed to set active vehicle", Toast.LENGTH_SHORT).show();
+                                }
+                            }
 
-            //Set the newly active vehicle
-            dbHelper.setActiveVehicle(1);  //Vehicle 0 is now the active vehicle
+                            @Override
+                            public void onFailure(@NotNull Call<ResponseBody> call, @NotNull Throwable t) {
+                                Toast.makeText(getContext(), "Error setting active vehicle", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    } else {
+                        Toast.makeText(getContext(), "Failed to swap vehicles", Toast.LENGTH_SHORT).show();
+                    }
+                }
 
-            //Update UI with the newly active vehicle
-            updateActiveVehicleUI();
-            updateVehicleButtons();
+                @Override
+                public void onFailure(@NotNull Call<ResponseBody> call, @NotNull Throwable t) {
+                    Toast.makeText(getContext(), "Error swapping vehicles", Toast.LENGTH_SHORT).show();
+                }
+            });
         }
     }
 
     @SuppressLint({"Range", "SetTextI18n"})
     private void updateActiveVehicleUI() {
-        VehicleDatabaseHelper dbHelper = new VehicleDatabaseHelper(getContext());
-        vehicleList.clear();
+        vehicleList.clear();  // Clear the list to update it with the active vehicle
 
-        //Fetch the newly active vehicle
-        Cursor activeVehicleCursor = dbHelper.getActiveVehicle();
-        if (activeVehicleCursor != null && activeVehicleCursor.moveToFirst()) {
-            String make = activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex(COLUMN_MAKE));
-            String model = activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex(COLUMN_MODEL));
-            String year = activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex(COLUMN_YEAR));
-            String license = activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex(COLUMN_LICENSE));
-            String milesStr = activeVehicleCursor.getString(activeVehicleCursor.getColumnIndex(COLUMN_MILES));
+        // Fetch the active vehicle's details from the server
+        userVehicleApi.getActiveVehicle().enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(@NotNull Call<ResponseBody> call, @NotNull Response<ResponseBody> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    try {
+                        // Parse the response to extract active vehicle details
+                        UserVehicle activeVehicle = parseVehicleDetails(response.body().string());
 
-            vehicleList.add(make + " " + model + " " + year + " " + license);
+                        // Extract and format the vehicle details
+                        String make = activeVehicle.getMake();
+                        String model = activeVehicle.getModel();
+                        String year = activeVehicle.getYear();
+                        String license = activeVehicle.getNickname();
+                        int mileage = activeVehicle.getMileage();
 
-            //Update the titleText
-            if (license != null && !license.isEmpty()) {
-                titleText.setText(license); //Show nickname if available
-            } else {
-                titleText.setText(year + " " + make + " " + model); // Default to year, make, and model
-            }
+                        // Add vehicle details to the list
+                        vehicleList.add(make + " " + model + " " + year + " " + license);
 
-            //Update the mileage for the active vehicle
-            vehicleMileage.clear();
-            int mileage = 0;
-            if (milesStr != null && !milesStr.isEmpty()) {
-                try {
-                    mileage = Integer.parseInt(milesStr);
-                } catch (NumberFormatException e) {
-                    // Handle invalid mileage
+                        // Update title based on license or year, make, and model
+                        if (license != null && !license.isEmpty()) {
+                            titleText.setText(license);  // Use nickname if available
+                        } else {
+                            titleText.setText(year + " " + make + " " + model);
+                        }
+
+                        // Update mileage display for the active vehicle
+                        vehicleMileage.clear();
+                        vehicleMileage.add(mileage);
+                        mileageText.setText(mileage > 0 ? mileage + " miles" : "Mileage not available");
+
+                        // Display the active vehicle in the UI
+                        showVehicle(0);
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        Toast.makeText(getContext(), "Error parsing vehicle details", Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    Toast.makeText(getContext(), "Failed to retrieve active vehicle details", Toast.LENGTH_SHORT).show();
                 }
             }
-            vehicleMileage.add(mileage);
 
-            showVehicle(0);  // Show the updated active vehicle
-        }
+            @Override
+            public void onFailure(@NotNull Call<ResponseBody> call, @NotNull Throwable t) {
+                Toast.makeText(getContext(), "Error loading active vehicle", Toast.LENGTH_SHORT).show();
+            }
+        });
 
-        if (activeVehicleCursor != null) {
-            activeVehicleCursor.close();
-        }
-
+        // Update vehicle buttons
         updateVehicleButtons();
     }
 
-    //Prompt user to add new vehicle
+    // Prompt user to add a new vehicle
     private void promptAddVehicle() {
-        NavHostFragment.findNavController(this).navigate(R.id.action_FirstFragment_to_AddVehicleActivity);
+        if (!hasNavigatedToAddVehicle) {
+            hasNavigatedToAddVehicle = true;
+
+            // Use a Handler to introduce a 300ms delay before navigation
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                NavHostFragment.findNavController(this)
+                        .navigate(R.id.action_FirstFragment_to_AddVehicleActivity);
+            }, 300); // delay in milliseconds
+        }
     }
 
-    //Update the button text dynamically based on the number of vehicles
+    // Method to update the button text dynamically based on the number of vehicles
     @SuppressLint({"Range", "SetTextI18n"})
     private void updateVehicleButtons() {
-        VehicleDatabaseHelper dbHelper = new VehicleDatabaseHelper(getContext());
-        Cursor cursor = dbHelper.getAllVehicles();
-
-        //Clear vehicleList and mileage to avoid duplication
+        // Clear lists to avoid duplication
         vehicleList.clear();
         vehicleMileage.clear();
         vehicleMakes.clear();
 
-        if (cursor != null && cursor.moveToFirst()) {
-            do {
-                String make = cursor.getString(cursor.getColumnIndex(COLUMN_MAKE));
-                String model = cursor.getString(cursor.getColumnIndex(COLUMN_MODEL));
-                String year = cursor.getString(cursor.getColumnIndex(COLUMN_YEAR));
-                String license = cursor.getString(cursor.getColumnIndex(COLUMN_LICENSE));
-                String mileStr = cursor.getString(cursor.getColumnIndex(COLUMN_MILES));
+        // Fetch all vehicles from the server
+        userVehicleApi.getAllVehicles().enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(@NotNull Call<ResponseBody> call, @NotNull Response<ResponseBody> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    try {
+                        // Parse the response to update vehicleList, vehicleMileage, and vehicleMakes
+                        List<UserVehicle> allVehicles = parseAllVehicles(response.body().string());
+                        for (UserVehicle vehicle : allVehicles) {
+                            String make = vehicle.getMake();
+                            String model = vehicle.getModel();
+                            String year = vehicle.getYear();
+                            String license = vehicle.getNickname();
+                            int mileage = vehicle.getMileage();
 
-                //Mileage display
-                int mileage = mileStr != null && !mileStr.isEmpty() ? Integer.parseInt(mileStr) : 0;
-                vehicleMileage.add(mileage);
+                            // Create display text
+                            String vehicleText = (license != null && !license.isEmpty())
+                                    ? license  // Use license if available
+                                    : year + " " + make + " " + model;
 
-                //Create the display text depending on whether the license plate exists
-                String vehicleText = (license != null && !license.isEmpty())
-                        ? license  //Use license if it's available
-                        : year + " " + make + " " + model;  //Otherwise, use year, make, model
+                            // Populate lists with vehicle details
+                            vehicleList.add(vehicleText);
+                            vehicleMileage.add(mileage);
+                            vehicleMakes.add(make);
+                        }
 
-                //Add the vehicle text to the vehicleList
-                vehicleList.add(vehicleText);
-                //Store the make for animation purposes
-                vehicleMakes.add(make);
-            } while (cursor.moveToNext());
-        }
+                        // Update buttons dynamically based on available vehicles
+                        assignVehicleButton(vehicle1ImageButton, vehicle1Button, carDetails1, carMileage1, carAnimation1, 1);
+                        assignVehicleButton(vehicle2ImageButton, vehicle2Button, carDetails2, carMileage2, carAnimation2, 2);
+                        assignVehicleButton(vehicle3ImageButton, vehicle3Button, carDetails3, carMileage3, carAnimation3, 3);
 
-        assert cursor != null;
-        cursor.close();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        Toast.makeText(getContext(), "Error parsing vehicle data", Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    Toast.makeText(getContext(), "Failed to retrieve vehicles", Toast.LENGTH_SHORT).show();
+                }
+            }
 
-        //Button 1: Assign Vehicle 2 or "Add New Vehicle"
-        if (vehicleList.size() > 1 && vehicleMileage.size() > 1) {
-            vehicle1ImageButton.setVisibility(View.GONE);
-            vehicle1Button.setVisibility(View.VISIBLE);
-            carDetails1.setText(vehicleList.get(1));
-            carMileage1.setText(vehicleMileage.get(1) + " miles");
-            carAnimation1.setVisibility(View.VISIBLE);
-            carAnimation1.setAnimation(getAnimationForMake(vehicleMakes.get(1)));
-            carAnimation1.playAnimation();
-            vehicle1Button.setOnClickListener(v -> switchVehicle(1));  //Switch to vehicle 2
+            @Override
+            public void onFailure(@NotNull Call<ResponseBody> call, @NotNull Throwable t) {
+                Toast.makeText(getContext(), "Error loading vehicles", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    // Helper method to assign vehicle or "Add New Vehicle" functionality to a button
+    @SuppressLint("SetTextI18n")
+    private void assignVehicleButton(ImageButton addButton, FrameLayout vehicleButton, TextView carDetails,
+                                     TextView carMileage, LottieAnimationView carAnimation, int index) {
+        if (vehicleList.size() > index && vehicleMileage.size() > index) {
+            addButton.setVisibility(View.GONE);
+            vehicleButton.setVisibility(View.VISIBLE);
+            carDetails.setText(vehicleList.get(index));
+            carMileage.setText(vehicleMileage.get(index) + " miles");
+
+            // Set up animation for the vehicle make
+            carAnimation.setVisibility(View.VISIBLE);
+            carAnimation.setAnimation(getAnimationForMake(vehicleMakes.get(index)));
+            carAnimation.playAnimation();
+
+            // Set the button to switch to this vehicle
+            vehicleButton.setOnClickListener(v -> switchVehicle(index));
         } else {
-            //Show the ImageButton for adding a new vehicle
-            vehicle1ImageButton.setVisibility(View.VISIBLE);
-            vehicle1Button.setVisibility(View.GONE);  //Hide Button
-            vehicle1ImageButton.setOnClickListener(v -> promptAddVehicle());  //Add new vehicle
-        }
-
-        //Button 2: Assign Vehicle 3 or "Add New Vehicle"
-        if (vehicleList.size() > 2 && vehicleMileage.size() > 2) {
-            vehicle2ImageButton.setVisibility(View.GONE);
-            vehicle2Button.setVisibility(View.VISIBLE);
-            carDetails2.setText(vehicleList.get(2));
-            carMileage2.setText(vehicleMileage.get(2) + " miles");
-            carAnimation2.setVisibility(View.VISIBLE);
-            carAnimation2.setAnimation(getAnimationForMake(vehicleMakes.get(2)));
-            carAnimation2.playAnimation();
-            vehicle2Button.setOnClickListener(v -> switchVehicle(2));  //Switch to vehicle 3
-        } else {
-            //Show the ImageButton for adding a new vehicle
-            vehicle2ImageButton.setVisibility(View.VISIBLE);
-            vehicle2Button.setVisibility(View.GONE);  //Hide Button
-            vehicle2ImageButton.setOnClickListener(v -> promptAddVehicle());  //Add new vehicle
-        }
-
-        //Button 3: Assign Vehicle 4 or "Add New Vehicle"
-        if (vehicleList.size() > 3 && vehicleMileage.size() > 3) {
-            vehicle3ImageButton.setVisibility(View.GONE);
-            vehicle3Button.setVisibility(View.VISIBLE);
-            carDetails3.setText(vehicleList.get(3));
-            carMileage3.setText(vehicleMileage.get(3) + " miles");
-            carAnimation3.setVisibility(View.VISIBLE);
-            carAnimation3.setAnimation(getAnimationForMake(vehicleMakes.get(3)));
-            carAnimation3.playAnimation();
-            vehicle3Button.setOnClickListener(v -> switchVehicle(3));  //Switch to vehicle 4
-        } else {
-            //Show the ImageButton for adding a new vehicle
-            vehicle3ImageButton.setVisibility(View.VISIBLE);
-            vehicle3Button.setVisibility(View.GONE);  //Hide Button
-            vehicle3ImageButton.setOnClickListener(v -> promptAddVehicle());  //Add new vehicle
+            // Display "Add New Vehicle" option if no vehicle exists at this index
+            addButton.setVisibility(View.VISIBLE);
+            vehicleButton.setVisibility(View.GONE);
+            addButton.setOnClickListener(v -> promptAddVehicle());
         }
     }
 
-    //Method to display the alert dialog when no vehicle is selected
+    // Method to display the alert dialog when no vehicle is selected
     private void showNoVehicleSelectedDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-        builder.setTitle("No Vehicle Selected");
-        builder.setMessage("You need to add a vehicle first before using this feature.");
-        builder.setCancelable(false);
-        builder.setPositiveButton("OK", (dialog, which) -> {
-            dialog.dismiss();
-            //Navigate to the Add Vehicle Activity
-            Intent intent = new Intent(getContext(), AddVehicleActivity.class);
-            startActivityForResult(intent, ADD_VEHICLE_REQUEST_CODE);
-        });
+        builder.setTitle("No Vehicle Selected")
+                .setMessage("You need to add a vehicle first before using this feature.")
+                .setCancelable(false)
+                .setPositiveButton("OK", (dialog, which) -> {
+                    dialog.dismiss();
+                    // Navigate to Add Vehicle Activity
+                    NavHostFragment.findNavController(this)
+                            .navigate(R.id.action_FirstFragment_to_AddVehicleActivity);
+                });
         builder.show();
     }
 
+    // Method to retrieve the appropriate animation resource based on car make
     private int getAnimationForMake(String carMake) {
+        if (carMake == null) {
+            return R.raw.car_animation; // Fallback animation if make is null
+        }
+
         switch (carMake.toLowerCase()) {
             case "toyota":
                 return R.raw.car_animation_toyota;
@@ -654,31 +804,32 @@ public class FirstFragment extends Fragment {
             case "chevrolet":
                 return R.raw.car_animation_chevrolet;
             default:
-                return R.raw.car_animation;  //Fallback animation if make doesn't match
+                return R.raw.car_animation;  // Fallback animation for unlisted makes
         }
     }
 
-    //Method to create dialog box to choice what to do with a vehicle
+    // Method to create a dialog box with options for managing a vehicle
     private boolean showVehicleOptionsDialog(int vehicleIndex) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         builder.setTitle("Select an action");
 
-        //Options: Update Name, Transfer Vehicle, Update Image
+        // Options: Update Name, Update Picture, Transfer Vehicle, Delete Vehicle
         String[] options = {"Update Name", "Update Picture", "Transfer Vehicle", "Delete Vehicle"};
 
         builder.setItems(options, (dialog, which) -> {
             switch (which) {
-                case 0: //Update Name
+                case 0: // Update Name
                     showUpdateNameDialog(vehicleIndex);
                     break;
-                case 1: //Update Picture (implement later)
-                    Toast.makeText(getContext(), "Update Picture feature coming soon", Toast.LENGTH_SHORT).show();
+                case 1: // Update Picture
+                    handleUpdatePicture();
                     break;
-                case 2: //Transfer Vehicle (implement later)
-                    Toast.makeText(getContext(), "Transfer Vehicle feature coming soon", Toast.LENGTH_SHORT).show();
+                case 2: // Transfer Vehicle
+                    handleTransferVehicle();
                     break;
-                case 3: //Delete Vehicle (implement later)
-                    Toast.makeText(getContext(), "Delete Vehicle feature coming soon", Toast.LENGTH_SHORT).show();
+                case 3: // Delete Vehicle
+                    handleDeleteVehicle(vehicleIndex);
+                    break;
             }
         });
         builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
@@ -687,70 +838,111 @@ public class FirstFragment extends Fragment {
         return true;
     }
 
-    //Method to pop up dialog box to update name
+    // Placeholder for handling the update picture action
+    private void handleUpdatePicture() {
+        Toast.makeText(getContext(), "Update Picture feature coming soon", Toast.LENGTH_SHORT).show();
+    }
+
+    // Placeholder for handling the transfer vehicle action
+    private void handleTransferVehicle() {
+        Toast.makeText(getContext(), "Transfer Vehicle feature coming soon", Toast.LENGTH_SHORT).show();
+    }
+
+    // Placeholder for handling the delete vehicle action
+    private void handleDeleteVehicle(int vehicleIndex) {
+        Toast.makeText(getContext(), "Delete Vehicle feature coming soon", Toast.LENGTH_SHORT).show();
+    }
+
+    // Method to pop up dialog box to update vehicle name
     @SuppressLint("Range")
     private void showUpdateNameDialog(int vehicleIndex) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         builder.setTitle("Update Name");
 
-        //Add input field for the new name
+        // Add input field for the new name
         final EditText input = new EditText(getContext());
         input.setHint("Enter new name");
         input.setInputType(InputType.TYPE_CLASS_TEXT);
         builder.setView(input);
 
-        //Add update button to submit
+        // Add update button to submit
         builder.setPositiveButton("Update", (dialog, which) -> {
             String newName = input.getText().toString();
-            //Retrieve the correct vehicle ID from the database
-            VehicleDatabaseHelper dbHelper = new VehicleDatabaseHelper(getContext());
-            Cursor cursor = dbHelper.getVehicleByIndex(vehicleIndex + 1); //+1 if ID is 1-based
-            int vehicleId = 0;
 
-            if (cursor != null && cursor.moveToFirst()) {
-                vehicleId = cursor.getInt(cursor.getColumnIndex(VehicleDatabaseHelper.COLUMN_ID));
-            }
-            if (cursor != null) {
-                cursor.close();
-            }
+            // Get the vehicle ID based on the vehicle index
+            int vehicleId = getCarId(vehicleIndex);
 
-            //If the name is left empty, delete the nickname from the database (set it to NULL)
+            // Handle the case where the name is empty (delete nickname)
             if (newName.isEmpty()) {
-                //Update the vehicle in the database to set nickname to NULL
-                ContentValues values = new ContentValues();
-                values.putNull(VehicleDatabaseHelper.COLUMN_LICENSE); //Set nickname to NULL
-                dbHelper.getWritableDatabase().update(VehicleDatabaseHelper.TABLE_NAME, values, VehicleDatabaseHelper.COLUMN_ID + "=?", new String[]{String.valueOf(vehicleId)});
+                updateVehicleNameOnServer(vehicleId, null);
             } else {
-                //Otherwise, update the vehicle with the new name
-                updateVehicleNameInDatabase(vehicleId, newName);
+                updateVehicleNameOnServer(vehicleId, newName);
             }
-
-            //Update the name in the database and refresh the UI
-            updateVehicleNameInDatabase(vehicleId, newName);
-            updateActiveVehicleUI(); //Refresh the UI to reflect the updated name
         });
 
         builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
         builder.show();
     }
 
-    //Method to update the vehicle name in the database
-    private void updateVehicleNameInDatabase(int vehicleId, String newName) {
-        VehicleDatabaseHelper dbHelper = new VehicleDatabaseHelper(getContext());
+    // Helper method to update vehicle name on the server
+    private void updateVehicleNameOnServer(int vehicleId, String newName) {
+        Call<ResponseBody> call;
+        if (newName == null) {
+            call = userVehicleApi.updateVehicleNickname(vehicleId, ""); // Set nickname to empty string for deletion
+        } else {
+            call = userVehicleApi.updateVehicleNickname(vehicleId, newName);
+        }
 
-        //Update the license/nickname column in the database
-        ContentValues values = new ContentValues();
-        values.put(VehicleDatabaseHelper.COLUMN_LICENSE, newName);
+        call.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(@NotNull Call<ResponseBody> call, @NotNull Response<ResponseBody> response) {
+                if (response.isSuccessful()) {
+                    Toast.makeText(getContext(), "Vehicle name updated", Toast.LENGTH_SHORT).show();
+                    updateActiveVehicleUI(); // Refresh UI to reflect updated name
+                } else {
+                    Toast.makeText(getContext(), "Failed to update vehicle name", Toast.LENGTH_SHORT).show();
+                }
+            }
 
-        //Update the correct vehicle by its ID in the database
-        dbHelper.getWritableDatabase().update(VehicleDatabaseHelper.TABLE_NAME, values, VehicleDatabaseHelper.COLUMN_ID + "=?", new String[]{String.valueOf(vehicleId)});
-        dbHelper.close();
+            @Override
+            public void onFailure(@NotNull Call<ResponseBody> call, @NotNull Throwable t) {
+                Toast.makeText(getContext(), "Error updating vehicle name", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    // Updated getCarId method to retrieve the car ID for a given index
+    private int getCarId(int vehicleIndex) {
+        if (vehicleIndex >= 0 && vehicleIndex < userVehicles.size()) {
+            return userVehicles.get(vehicleIndex).getCarId(); // Use getCarId from UserVehicle
+        }
+        return -1; // Return -1 if index is out of bounds
+    }
+
+    private long parseLastUpdatedTime(String response) {
+        try {
+            return Long.parseLong(response.trim());
+        } catch (NumberFormatException e) {
+            e.printStackTrace();
+            return 0; // Return 0 if parsing fails
+        }
+    }
+
+    private UserVehicle parseVehicleDetails(String jsonResponse) throws JsonSyntaxException {
+        Gson gson = new Gson();
+        return gson.fromJson(jsonResponse, UserVehicle.class);
+    }
+
+    private List<UserVehicle> parseAllVehicles(String jsonResponse) {
+        Gson gson = new Gson();
+        Type vehicleListType = new TypeToken<List<UserVehicle>>(){}.getType();
+        return gson.fromJson(jsonResponse, vehicleListType);
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        //Nullify the binding to avoid memory leaks
+        // Nullify the binding to avoid memory leaks
         binding = null;
     }
 }
