@@ -11,10 +11,13 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 import com.airbnb.lottie.LottieAnimationView;
 import org.jetbrains.annotations.NotNull;
+import org.json.JSONObject;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import okhttp3.ResponseBody;
+
+import java.io.IOException;
 
 public class AddVehicleActivity extends Fragment {
 
@@ -108,12 +111,31 @@ public class AddVehicleActivity extends Fragment {
         call.enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(@NotNull Call<ResponseBody> call, @NotNull Response<ResponseBody> response) {
-                if (response.isSuccessful()) {
-                    Toast.makeText(getContext(), "Vehicle added successfully", Toast.LENGTH_SHORT).show();
-                    NavHostFragment.findNavController(AddVehicleActivity.this)
-                            .navigate(R.id.action_AddVehicleActivity_to_addnewmaint);
+                if (response.isSuccessful() && response.body() != null) {
+                    try {
+                        String responseString = response.body().string();
+
+                        // Remove any unnecessary connection messages
+                        if (responseString.startsWith("Connected successfully to the database!")) {
+                            responseString = responseString.replace("Connected successfully to the database!", "").trim();
+                        }
+
+                        if (responseString.trim().startsWith("{")) {
+                            JSONObject jsonResponse = new JSONObject(responseString);
+                            if (jsonResponse.getString("status").equals("success")) {
+                                Toast.makeText(getContext(), "Vehicle added successfully", Toast.LENGTH_SHORT).show();
+                                NavHostFragment.findNavController(AddVehicleActivity.this)
+                                        .navigate(R.id.action_AddVehicleActivity_to_addnewmaint);
+                            } else {
+                                Toast.makeText(getContext(), "Error add vehicle: " , Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        Toast.makeText(getContext(), "Response parsing error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
                 } else {
-                    Toast.makeText(getContext(), "Failed to add vehicle", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "Error: Invalid response", Toast.LENGTH_SHORT).show();
                 }
             }
 
