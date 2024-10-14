@@ -44,6 +44,7 @@ public interface UserVehicleApi {
     @GET("/get_active_vehicle.php")
     Call<ResponseBody> getActiveVehicle();
 
+
     // Update mileage for a vehicle
     @FormUrlEncoded
     @POST("/update_mileage.php")
