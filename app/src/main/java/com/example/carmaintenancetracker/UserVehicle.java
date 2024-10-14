@@ -9,6 +9,8 @@ public class UserVehicle {
     private int mileage;
     private boolean notificationsOn;
     private long lastUpdatedTimestamp;
+    private boolean active; //New field to indicate if the vehicle is active
+
 
     //Getters and Setters
 
@@ -74,5 +76,14 @@ public class UserVehicle {
 
     public void setLastUpdatedTimestamp(long lastUpdatedTimestamp) {
         this.lastUpdatedTimestamp = lastUpdatedTimestamp;
+    }
+
+    // New getter and setter for the active field
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
     }
 }
