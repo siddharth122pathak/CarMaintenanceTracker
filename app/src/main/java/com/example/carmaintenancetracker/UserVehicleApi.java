@@ -27,8 +27,11 @@ public interface UserVehicleApi {
     );
 
     // Get all vehicles
-    @GET("/get_all_vehicles.php")
-    Call<ResponseBody> getAllVehicles();
+    @FormUrlEncoded
+    @POST("/get_all_vehicles.php")
+    Call<ResponseBody> getAllVehicles(
+            @Field("userId") String userId
+    );
 
     // Set a vehicle as active
     @FormUrlEncoded

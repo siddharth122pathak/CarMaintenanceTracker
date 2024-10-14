@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
@@ -163,7 +164,8 @@ public class FirstFragment extends Fragment {
 
    // Fetch all vehicles from the server
     private void loadVehiclesFromServer() {
-        userVehicleApi.getAllVehicles().enqueue(new Callback<ResponseBody>() {
+        String userId = getUserIdFromSession();
+        userVehicleApi.getAllVehicles(userId).enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(@NotNull Call<ResponseBody> call, @NotNull Response<ResponseBody> response) {
                 if (response.isSuccessful()) {
@@ -185,6 +187,13 @@ public class FirstFragment extends Fragment {
                 Toast.makeText(getContext(), "Failed to load vehicles", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    // Retrieve user ID from shared preferences
+    private String getUserIdFromSession() {
+        SharedPreferences sharedPreferences = getActivity().getSharedPreferences("UserSession", Context.MODE_PRIVATE);
+        String userId = sharedPreferences.getString("userId", null);
+        return userId;
     }
 
     @SuppressLint({"SetTextI18n", "Range", "WrongViewCast"})
@@ -699,8 +708,10 @@ public class FirstFragment extends Fragment {
         vehicleMileage.clear();
         vehicleMakes.clear();
 
+        String userId = getUserIdFromSession();
+
         // Fetch all vehicles from the server
-        userVehicleApi.getAllVehicles().enqueue(new Callback<ResponseBody>() {
+        userVehicleApi.getAllVehicles(userId).enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(@NotNull Call<ResponseBody> call, @NotNull Response<ResponseBody> response) {
                 if (response.isSuccessful() && response.body() != null) {
