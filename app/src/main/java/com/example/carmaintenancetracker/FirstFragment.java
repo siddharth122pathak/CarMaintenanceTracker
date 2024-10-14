@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
@@ -163,28 +164,34 @@ public class FirstFragment extends Fragment {
 
    // Fetch all vehicles from the server
     private void loadVehiclesFromServer() {
-        userVehicleApi.getAllVehicles().enqueue(new Callback<ResponseBody>() {
-            @Override
-            public void onResponse(@NotNull Call<ResponseBody> call, @NotNull Response<ResponseBody> response) {
-                if (response.isSuccessful()) {
-                    // Assume parseVehicleList parses the response into vehicleList and vehicleMileage lists
-                    //parseVehicleList(response.body().string());
-                    if (vehicleList.isEmpty()) {
-                        promptAddVehicle();
+        String userId = getUserIdFromSession();
+        if (userId != null) {
+            userVehicleApi.getAllVehicles(userId).enqueue(new Callback<ResponseBody>() {
+                @Override
+                public void onResponse(@NotNull Call<ResponseBody> call, @NotNull Response<ResponseBody> response) {
+                    if (response.isSuccessful()) {
+                        // Assume parseVehicleList parses the response into vehicleList and vehicleMileage lists
+                        //parseVehicleList(response.body().string());
+                        if (vehicleList.isEmpty()) {
+                            promptAddVehicle();
+                        } else {
+                            updateVehicleButtons();
+                            showVehicle(0);
+                        }
                     } else {
-                        updateVehicleButtons();
-                        showVehicle(0);
+                        Toast.makeText(getContext(), "Error loading vehicles", Toast.LENGTH_SHORT).show();
                     }
-                } else {
-                    Toast.makeText(getContext(), "Error loading vehicles", Toast.LENGTH_SHORT).show();
                 }
-            }
 
-            @Override
-            public void onFailure(@NotNull Call<ResponseBody> call, @NotNull Throwable t) {
-                Toast.makeText(getContext(), "Failed to load vehicles", Toast.LENGTH_SHORT).show();
-            }
-        });
+                @Override
+                public void onFailure(@NotNull Call<ResponseBody> call, @NotNull Throwable t) {
+                    Toast.makeText(getContext(), "Failed to load vehicles", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }else {
+            // Handle the case when userId is not available
+            Toast.makeText(getContext(), "User ID not found. Please log in again.", Toast.LENGTH_SHORT).show();
+        }
     }
 
     @SuppressLint({"SetTextI18n", "Range", "WrongViewCast"})
@@ -626,7 +633,9 @@ public class FirstFragment extends Fragment {
         vehicleList.clear();  // Clear the list to update it with the active vehicle
 
         // Fetch the active vehicle's details from the server
-        userVehicleApi.getActiveVehicle().enqueue(new Callback<ResponseBody>() {
+        String userId = getUserIdFromSession();
+        if (userId != null) {
+            userVehicleApi.getAllVehicles(userId).enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(@NotNull Call<ResponseBody> call, @NotNull Response<ResponseBody> response) {
                 if (response.isSuccessful() && response.body() != null) {
@@ -673,6 +682,10 @@ public class FirstFragment extends Fragment {
                 Toast.makeText(getContext(), "Error loading active vehicle", Toast.LENGTH_SHORT).show();
             }
         });
+    }else {
+        // Handle the case when userId is not available
+        Toast.makeText(getContext(), "User ID not found. Please log in again.", Toast.LENGTH_SHORT).show();
+    }
 
         // Update vehicle buttons
         updateVehicleButtons();
@@ -700,7 +713,9 @@ public class FirstFragment extends Fragment {
         vehicleMakes.clear();
 
         // Fetch all vehicles from the server
-        userVehicleApi.getAllVehicles().enqueue(new Callback<ResponseBody>() {
+        String userId = getUserIdFromSession();
+        if (userId != null) {
+            userVehicleApi.getAllVehicles(userId).enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(@NotNull Call<ResponseBody> call, @NotNull Response<ResponseBody> response) {
                 if (response.isSuccessful() && response.body() != null) {
@@ -737,6 +752,7 @@ public class FirstFragment extends Fragment {
                 } else {
                     Toast.makeText(getContext(), "Failed to retrieve vehicles", Toast.LENGTH_SHORT).show();
                 }
+
             }
 
             @Override
@@ -744,6 +760,10 @@ public class FirstFragment extends Fragment {
                 Toast.makeText(getContext(), "Error loading vehicles", Toast.LENGTH_SHORT).show();
             }
         });
+        } else {
+            // Handle the case when userId is not available
+            Toast.makeText(getContext(), "User ID not found. Please log in again.", Toast.LENGTH_SHORT).show();
+        }
     }
 
     // Helper method to assign vehicle or "Add New Vehicle" functionality to a button
@@ -937,6 +957,11 @@ public class FirstFragment extends Fragment {
         Gson gson = new Gson();
         Type vehicleListType = new TypeToken<List<UserVehicle>>(){}.getType();
         return gson.fromJson(jsonResponse, vehicleListType);
+    }
+
+    private String getUserIdFromSession() {
+        SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("UserSession", Context.MODE_PRIVATE);
+        return sharedPreferences.getString("userId", null);
     }
 
     @Override

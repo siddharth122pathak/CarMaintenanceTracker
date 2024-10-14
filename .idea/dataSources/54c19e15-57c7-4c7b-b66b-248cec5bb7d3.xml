@@ -652,12 +652,11 @@ sql5733810|schema||sql5733810||UPDATE|G</Grants>
       <Charset>eucjpms</Charset>
     </collation>
     <schema id="199" parent="1" name="information_schema">
-      <LastIntrospectionLocalTimestamp>2024-10-12.15:38:58</LastIntrospectionLocalTimestamp>
+      <LastIntrospectionLocalTimestamp>2024-10-13.16:22:22</LastIntrospectionLocalTimestamp>
       <CollationName>utf8_general_ci</CollationName>
     </schema>
     <schema id="200" parent="1" name="sql5733810">
-      <Current>1</Current>
-      <LastIntrospectionLocalTimestamp>2024-10-13.17:40:36</LastIntrospectionLocalTimestamp>
+      <LastIntrospectionLocalTimestamp>2024-10-13.21:05:13</LastIntrospectionLocalTimestamp>
       <CollationName>latin1_swedish_ci</CollationName>
     </schema>
     <user id="201" parent="1" name="sql5733810"/>
@@ -3535,153 +3534,159 @@ sql5733810|schema||sql5733810||UPDATE|G</Grants>
       <Position>8</Position>
       <StoredType>datetime|0s</StoredType>
     </column>
-    <index id="735" parent="242" name="PRIMARY">
+    <column id="735" parent="242" name="active">
+      <DefaultExpression>0</DefaultExpression>
+      <NotNull>1</NotNull>
+      <Position>9</Position>
+      <StoredType>tinyint(1)|0s</StoredType>
+    </column>
+    <index id="736" parent="242" name="PRIMARY">
       <ColNames>car_id</ColNames>
       <Type>btree</Type>
       <Unique>1</Unique>
     </index>
-    <key id="736" parent="242" name="PRIMARY">
+    <key id="737" parent="242" name="PRIMARY">
       <NameSurrogate>1</NameSurrogate>
       <Primary>1</Primary>
       <UnderlyingIndexName>PRIMARY</UnderlyingIndexName>
     </key>
-    <column id="737" parent="243" name="car_id">
+    <column id="738" parent="243" name="car_id">
       <Position>1</Position>
       <StoredType>int(11)|0s</StoredType>
     </column>
-    <column id="738" parent="243" name="maintenance_type">
+    <column id="739" parent="243" name="maintenance_type">
       <NotNull>1</NotNull>
       <Position>2</Position>
       <StoredType>varchar(255)|0s</StoredType>
     </column>
-    <column id="739" parent="243" name="maintenance_date">
+    <column id="740" parent="243" name="maintenance_date">
       <NotNull>1</NotNull>
       <Position>3</Position>
       <StoredType>date|0s</StoredType>
     </column>
-    <column id="740" parent="243" name="maintenance_description">
+    <column id="741" parent="243" name="maintenance_description">
       <Position>4</Position>
       <StoredType>text|0s</StoredType>
     </column>
-    <column id="741" parent="243" name="created_at">
+    <column id="742" parent="243" name="created_at">
       <DefaultExpression>CURRENT_TIMESTAMP</DefaultExpression>
       <NotNull>1</NotNull>
       <Position>5</Position>
       <StoredType>timestamp|0s</StoredType>
     </column>
-    <column id="742" parent="244" name="make">
+    <column id="743" parent="244" name="make">
       <NotNull>1</NotNull>
       <Position>1</Position>
       <StoredType>varchar(20)|0s</StoredType>
     </column>
-    <column id="743" parent="244" name="model">
+    <column id="744" parent="244" name="model">
       <NotNull>1</NotNull>
       <Position>2</Position>
       <StoredType>varchar(20)|0s</StoredType>
     </column>
-    <column id="744" parent="244" name="year">
+    <column id="745" parent="244" name="year">
       <NotNull>1</NotNull>
       <Position>3</Position>
       <StoredType>int(11)|0s</StoredType>
     </column>
-    <column id="745" parent="244" name="maintenance_type">
+    <column id="746" parent="244" name="maintenance_type">
       <NotNull>1</NotNull>
       <Position>4</Position>
       <StoredType>varchar(20)|0s</StoredType>
     </column>
-    <column id="746" parent="244" name="miles_period">
+    <column id="747" parent="244" name="miles_period">
       <NotNull>1</NotNull>
       <Position>5</Position>
       <StoredType>int(11)|0s</StoredType>
     </column>
-    <column id="747" parent="244" name="maintenance_period">
+    <column id="748" parent="244" name="maintenance_period">
       <NotNull>1</NotNull>
       <Position>6</Position>
       <StoredType>int(11)|0s</StoredType>
     </column>
-    <column id="748" parent="245" name="id">
+    <column id="749" parent="245" name="id">
       <DefaultExpression>0</DefaultExpression>
       <NotNull>1</NotNull>
       <Position>1</Position>
       <StoredType>int(6)|0s</StoredType>
     </column>
-    <column id="749" parent="245" name="username">
+    <column id="750" parent="245" name="username">
       <NotNull>1</NotNull>
       <Position>2</Position>
       <StoredType>varchar(20)|0s</StoredType>
     </column>
-    <column id="750" parent="245" name="name">
+    <column id="751" parent="245" name="name">
       <Position>3</Position>
       <StoredType>varchar(20)|0s</StoredType>
     </column>
-    <column id="751" parent="245" name="email">
+    <column id="752" parent="245" name="email">
       <Position>4</Position>
       <StoredType>varchar(255)|0s</StoredType>
     </column>
-    <column id="752" parent="245" name="phone_number">
+    <column id="753" parent="245" name="phone_number">
       <NotNull>1</NotNull>
       <Position>5</Position>
       <StoredType>int(20)|0s</StoredType>
     </column>
-    <column id="753" parent="245" name="password">
+    <column id="754" parent="245" name="password">
       <Position>6</Position>
       <StoredType>varchar(255)|0s</StoredType>
       <CollationName>utf8_bin</CollationName>
     </column>
-    <column id="754" parent="245" name="creation_date">
+    <column id="755" parent="245" name="creation_date">
       <Position>7</Position>
       <StoredType>datetime|0s</StoredType>
     </column>
-    <index id="755" parent="245" name="PRIMARY">
+    <index id="756" parent="245" name="PRIMARY">
       <ColNames>id</ColNames>
       <Type>btree</Type>
       <Unique>1</Unique>
     </index>
-    <key id="756" parent="245" name="PRIMARY">
+    <key id="757" parent="245" name="PRIMARY">
       <NameSurrogate>1</NameSurrogate>
       <Primary>1</Primary>
       <UnderlyingIndexName>PRIMARY</UnderlyingIndexName>
     </key>
-    <column id="757" parent="246" name="car_id">
+    <column id="758" parent="246" name="car_id">
       <NotNull>1</NotNull>
       <Position>1</Position>
       <StoredType>int(11)|0s</StoredType>
     </column>
-    <column id="758" parent="246" name="make">
+    <column id="759" parent="246" name="make">
       <NotNull>1</NotNull>
       <Position>2</Position>
       <StoredType>varchar(20)|0s</StoredType>
     </column>
-    <column id="759" parent="246" name="model">
+    <column id="760" parent="246" name="model">
       <NotNull>1</NotNull>
       <Position>3</Position>
       <StoredType>varchar(20)|0s</StoredType>
     </column>
-    <column id="760" parent="246" name="year">
+    <column id="761" parent="246" name="year">
       <NotNull>1</NotNull>
       <Position>4</Position>
       <StoredType>int(11)|0s</StoredType>
     </column>
-    <column id="761" parent="246" name="maintenance_type">
+    <column id="762" parent="246" name="maintenance_type">
       <NotNull>1</NotNull>
       <Position>5</Position>
       <StoredType>varchar(20)|0s</StoredType>
     </column>
-    <column id="762" parent="246" name="last_maintenance">
+    <column id="763" parent="246" name="last_maintenance">
       <Position>6</Position>
       <StoredType>date|0s</StoredType>
     </column>
-    <column id="763" parent="246" name="creation_date">
+    <column id="764" parent="246" name="creation_date">
       <NotNull>1</NotNull>
       <Position>7</Position>
       <StoredType>datetime|0s</StoredType>
     </column>
-    <index id="764" parent="246" name="PRIMARY">
+    <index id="765" parent="246" name="PRIMARY">
       <ColNames>car_id</ColNames>
       <Type>btree</Type>
       <Unique>1</Unique>
     </index>
-    <key id="765" parent="246" name="PRIMARY">
+    <key id="766" parent="246" name="PRIMARY">
       <NameSurrogate>1</NameSurrogate>
       <Primary>1</Primary>
       <UnderlyingIndexName>PRIMARY</UnderlyingIndexName>

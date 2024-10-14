@@ -27,8 +27,10 @@ public interface UserVehicleApi {
     );
 
     // Get all vehicles
-    @GET("/get_all_vehicles.php")
-    Call<ResponseBody> getAllVehicles();
+    @POST("/get_all_vehicles.php")
+    Call<ResponseBody> getAllVehicles(
+            @Field("userId") String userId
+    );
 
     // Set a vehicle as active
     @FormUrlEncoded
@@ -38,8 +40,10 @@ public interface UserVehicleApi {
     );
 
     // Get the active vehicle
-    @GET("/get_active_vehicle.php")
-    Call<ResponseBody> getActiveVehicle();
+    @POST("/get_active_vehicle.php")
+    Call<ResponseBody> getActiveVehicle(
+            @Field("userId") String userId
+    );
 
     // Update mileage for a vehicle
     @FormUrlEncoded
