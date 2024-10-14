@@ -5,13 +5,13 @@ include 'db_connect.php'; // Connect to the database
 // Check if it's a POST request
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Retrieve POST parameters safely
-    $year = isset($_POST['year']) ? $_POST['year'] : '';
     $make = isset($_POST['make']) ? $_POST['make'] : '';
     $model = isset($_POST['model']) ? $_POST['model'] : '';
+    $year = isset($_POST['year']) ? $_POST['year'] : '';
 
     // Prepare the SQL statement to find the matching row in the oil_config table
-    $stmt = $conn->prepare("SELECT maintenance_type, miles_period, maintenance_period FROM oil_config WHERE year = ? AND make = ? AND model = ?");
-    $stmt->bind_param("sss", $year, $make, $model);
+    $stmt = $conn->prepare("SELECT maintenance_type, miles_period, maintenance_period FROM oil_config WHERE make = ? AND model = ? AND year = ?");
+    $stmt->bind_param("sss", $make, $model, $year);
 
     // Execute the statement and store the result
     $stmt->execute();

@@ -49,7 +49,7 @@ public interface UserApi {
     @FormUrlEncoded
     @POST("/check_oil_config.php")
     Call<ResponseBody> checkOilConfig(
-            @Field("year") int year,
+            @Field("year") String year,
             @Field("make") String make,
             @Field("model") String model
     );

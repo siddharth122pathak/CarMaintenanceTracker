@@ -2,6 +2,7 @@ package com.example.carmaintenancetracker;
 
 import android.os.Bundle;
 import android.widget.TextView;
+import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
@@ -10,7 +11,11 @@ import android.view.View;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import com.example.carmaintenancetracker.databinding.ActivityUpcomingMaintenanceBinding;
-import com.example.carmaintenancetracker.FirstFragment;
+import okhttp3.ResponseBody;
+import org.json.JSONObject;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 import java.util.StringTokenizer;
 
@@ -69,20 +74,23 @@ public class UpcomingMaintenanceActivity extends Fragment {
         timeTab.setBackground(ContextCompat.getDrawable(requireContext(), R.drawable.tab_background_unselected));
 
         //update miles text based on vehicle status
+
+        testPrintOilConfig();
+
         //check that the vehicle exists in the database
-        /*if (vehicle.exists()) {
+        /*if (vehicleExists()) {
 
             //get an array of maintenance tasks organized by mileage
-            Task arr[] = organizeTasksByMiles(vehicle);
+            Task tasks[] = organizeTasksByMiles(vehicle);
 
             //print the array to the miles string
-            R.string.upcoming_maintenance_miles_text = printTasksByMiles(arr);
+            R.string.upcoming_maintenance_miles_text = printTasksByMiles(tasks);
         } else {
             // Handle error
         }*/
 
         //change main text
-        mainText.setText(R.string.upcoming_maintenance_miles_text);
+        //mainText.setText(R.string.upcoming_maintenance_miles_text);
     }
 
     //Maintenance by Time method
@@ -114,5 +122,54 @@ public class UpcomingMaintenanceActivity extends Fragment {
 
         //change main text
         mainText.setText(R.string.upcoming_maintenance_time_text);
+    }
+
+    //method to check if the vehicle exists in the db
+    private void testPrintOilConfig() {
+        //api call to the db
+        Call<ResponseBody> checkOilConfig = api.checkOilConfig(year, make, model);
+        checkOilConfig.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    try {
+                        String responseString = response.body().string();
+
+                        // Remove any unnecessary connection messages
+                        if (responseString.startsWith("Connected successfully to the database!")) {
+                            responseString = responseString.replace("Connected successfully to the database!", "").trim();
+                        }
+
+                        if (responseString.trim().startsWith("{")) {
+                            JSONObject jsonResponse = new JSONObject(responseString);
+                            if (jsonResponse.getString("status").equals("success")) {
+                                if (jsonResponse.getString("message").equals("Maintenance detail found")) {
+                                    String printString = "At ";
+                                    printString += jsonResponse.getString("miles_period");
+                                    printString += " miles: \n";
+                                    printString += jsonResponse.getString("maintenance_type");
+                                    printString += "\n";
+                                    mainText.setText(printString);
+                                }
+                            } else {
+                                // show error
+                                Toast.makeText(requireContext(), jsonResponse.getString("message"), Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        Toast.makeText(requireContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    Toast.makeText(requireContext(), response.toString(), Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                Toast.makeText(requireContext(), t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+
     }
 }
