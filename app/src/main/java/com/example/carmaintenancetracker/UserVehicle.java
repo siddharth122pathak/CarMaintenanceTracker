@@ -1,7 +1,7 @@
 package com.example.carmaintenancetracker;
 
 public class UserVehicle {
-    private int car_id;
+    private String car_id;
     private String make;
     private String model;
     private String year;
@@ -14,11 +14,11 @@ public class UserVehicle {
 
     //Getters and Setters
 
-    public int getCarId() {
+    public String getCarId() {
         return car_id;
     }
 
-    public void setCarId(int car_id) {
+    public void setCarId(String car_id) {
         this.car_id = car_id;
     }
 

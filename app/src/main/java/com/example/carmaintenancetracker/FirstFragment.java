@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.InputType;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,7 +25,6 @@ import com.airbnb.lottie.LottieAnimationView;
 import com.example.carmaintenancetracker.databinding.FragmentFirstBinding;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
-import com.google.gson.reflect.TypeToken;
 import okhttp3.ResponseBody;
 import org.jetbrains.annotations.NotNull;
 import retrofit2.Call;
@@ -32,7 +32,6 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -126,7 +125,7 @@ public class FirstFragment extends Fragment {
         });
     }
 
-    private void setActiveVehicle(int carId) {
+    private void setActiveVehicle(String carId) {
         userVehicleApi.setActiveVehicle(carId).enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(@NotNull Call<ResponseBody> call, @NotNull Response<ResponseBody> response) {
@@ -144,7 +143,7 @@ public class FirstFragment extends Fragment {
         });
     }
 
-    private void updateMileage(int carId, int newMileage) {
+    private void updateMileage(String carId, int newMileage) {
         userVehicleApi.updateMileage(carId, newMileage).enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(@NotNull Call<ResponseBody> call, @NotNull Response<ResponseBody> response) {
@@ -162,20 +161,31 @@ public class FirstFragment extends Fragment {
         });
     }
 
-   // Fetch all vehicles from the server
     private void loadVehiclesFromServer() {
         String userId = getUserIdFromSession();
+
         userVehicleApi.getAllVehicles(userId).enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(@NotNull Call<ResponseBody> call, @NotNull Response<ResponseBody> response) {
-                if (response.isSuccessful()) {
-                    // Assume parseVehicleList parses the response into vehicleList and vehicleMileage lists
-                    //parseVehicleList(response.body().string());
-                    if (vehicleList.isEmpty()) {
-                        promptAddVehicle();
-                    } else {
-                        updateVehicleButtons();
-                        showVehicle(0);
+                if (response.isSuccessful() && response.body() != null) {
+                    try {
+                        String jsonResponse = response.body().string();
+                        List<UserVehicle> vehicles = parseAllVehicles(jsonResponse);
+
+                        userVehicles.clear();
+                        if (vehicles != null) {
+                            userVehicles.addAll(vehicles);
+                        }
+
+                        if (userVehicles.isEmpty()) {
+                            promptAddVehicle();
+                        } else {
+                            updateVehicleButtons(); // Update UI elements
+                            showVehicle(0); // Display the first vehicle by default
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        Toast.makeText(getContext(), "Failed to load vehicle data", Toast.LENGTH_SHORT).show();
                     }
                 } else {
                     Toast.makeText(getContext(), "Error loading vehicles", Toast.LENGTH_SHORT).show();
@@ -189,11 +199,11 @@ public class FirstFragment extends Fragment {
         });
     }
 
+
     // Retrieve user ID from shared preferences
     private String getUserIdFromSession() {
-        SharedPreferences sharedPreferences = getActivity().getSharedPreferences("UserSession", Context.MODE_PRIVATE);
-        String userId = sharedPreferences.getString("userId", null);
-        return userId;
+        SharedPreferences sharedPreferences = Objects.requireNonNull(getActivity()).getSharedPreferences("UserSession", Context.MODE_PRIVATE);
+        return sharedPreferences.getString("userId", null);
     }
 
     @SuppressLint({"SetTextI18n", "Range", "WrongViewCast"})
@@ -302,7 +312,7 @@ public class FirstFragment extends Fragment {
     private void switchOrAddVehicle(int vehicleIndex) {
         if (vehicleIndex <= vehicleList.size()) {
             // Get car ID for the selected vehicle
-            int carId = getCarId(vehicleIndex - 1); // Adjust index for list (0-based)
+            String carId = getCarId(vehicleIndex - 1); // Adjust index for list (0-based)
 
             // Call API to set this vehicle as active
             userVehicleApi.setActiveVehicle(carId).enqueue(new Callback<ResponseBody>() {
@@ -389,7 +399,7 @@ public class FirstFragment extends Fragment {
                     mileageText.setText(newMileage + " miles");
 
                     // Get the active vehicle's ID and update mileage on the server
-                    int carId = getCarId(currentVehicleIndex);
+                    String carId = getCarId(currentVehicleIndex);
                     userVehicleApi.updateMileage(carId, newMileage).enqueue(new Callback<ResponseBody>() {
                         @Override
                         public void onResponse(@NotNull Call<ResponseBody> call, @NotNull Response<ResponseBody> response) {
@@ -421,7 +431,7 @@ public class FirstFragment extends Fragment {
     }
 
     // Fetch and update the last updated timestamp
-    private void fetchAndUpdateLastUpdated(int carId) {
+    private void fetchAndUpdateLastUpdated(String carId) {
         userVehicleApi.getLastUpdated(carId).enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(@NotNull Call<ResponseBody> call, @NotNull Response<ResponseBody> response) {
@@ -472,7 +482,7 @@ public class FirstFragment extends Fragment {
         }
 
         // Update the notification setting on the server
-        int carId = getCarId(currentVehicleIndex);
+        String carId = getCarId(currentVehicleIndex);
         userVehicleApi.updateNotificationSetting(carId, notificationsOn ? 1 : 0).enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(@NotNull Call<ResponseBody> call, @NotNull Response<ResponseBody> response) {
@@ -515,83 +525,84 @@ public class FirstFragment extends Fragment {
     // Method to display mileage for the selected vehicle
     @SuppressLint({"SetTextI18n", "Range"})
     private void showVehicle(int vehicleIndex) {
-        if (vehicleIndex >= 0 && vehicleIndex < userVehicles.size()) {
-            UserVehicle selectedVehicle = userVehicles.get(vehicleIndex);
+        if (vehicleIndex < 0 || vehicleIndex >= userVehicles.size()) return;
 
-            // Display title based on license plate or year, make, model details
-            String yearMakeModel = selectedVehicle.getYear() + " " + selectedVehicle.getMake() + " " + selectedVehicle.getModel();
-            String licensePlate = selectedVehicle.getNickname();
+        UserVehicle selectedVehicle = userVehicles.get(vehicleIndex);
 
-            if (licensePlate != null && !licensePlate.isEmpty()) {
-                binding.selectedCarTitle.setText(licensePlate);
-            } else {
-                binding.selectedCarTitle.setText(yearMakeModel);
+        // Set Title
+        String title = (selectedVehicle.getNickname() != null && !selectedVehicle.getNickname().isEmpty())
+                ? selectedVehicle.getNickname()
+                : selectedVehicle.getYear() + " " + selectedVehicle.getMake() + " " + selectedVehicle.getModel();
+        binding.selectedCarTitle.setText(title);
+
+        // Fetch additional vehicle details
+        userVehicleApi.getVehicleByIndex(selectedVehicle.getCarId()).enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(@NotNull Call<ResponseBody> call, @NotNull Response<ResponseBody> response) {
+                if (!response.isSuccessful() || response.body() == null) {
+                    Toast.makeText(getContext(), "Failed to retrieve vehicle details", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                try {
+                    String responseBody = response.body().string();
+                    UserVehicle vehicleDetails = parseVehicleDetails(responseBody);
+
+                    if (vehicleDetails == null) {
+                        Toast.makeText(getContext(), "Error parsing vehicle details", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    // Display vehicle mileage
+                    int mileage = vehicleDetails.getMileage();
+                    mileageText.setText(mileage > 0 ? mileage + " miles" : "Mileage not available");
+
+                    // Notification settings update
+                    notificationsOn = vehicleDetails.isNotificationsOn();
+                    notificationToggleButton.setText(notificationsOn ? "Turn Off" : "Turn On");
+                    notificationText.setText(notificationsOn ? "Notifications for this vehicle are ON" : "Notifications for this vehicle are OFF");
+
+                    // Background Gradient Update
+                    Context context = getContext();
+                    if (context != null) {
+                        Drawable gradient = ContextCompat.getDrawable(context,
+                                notificationsOn ? R.drawable.green_border_gradient : R.drawable.gray_border_gradient);
+                        notificationBar.setBackground(gradient);
+                    }
+
+                    // Last updated timestamp
+                    updateLastUpdatedText(vehicleDetails.getLastUpdatedTimestamp());
+
+                    // Set Animation
+                    int animationResource = getAnimationForMake(vehicleDetails.getMake());
+                    carImageView.setVisibility(animationResource == 0 ? View.VISIBLE : View.GONE);
+                    carAnimationView.setVisibility(animationResource != 0 ? View.VISIBLE : View.GONE);
+                    if (animationResource != 0) {
+                        carAnimationView.setAnimation(animationResource);
+                        carAnimationView.playAnimation();
+                    }
+                } catch (IOException e) {
+                    Toast.makeText(getContext(), "Error reading vehicle details response", Toast.LENGTH_SHORT).show();
+                    Log.e("showVehicle", "IOException during response parsing", e);
+                }
             }
 
-            // Fetch vehicle details from server using API
-            int carId = selectedVehicle.getCarId();
-            userVehicleApi.getVehicleByIndex(carId).enqueue(new Callback<ResponseBody>() {
-                @Override
-                public void onResponse(@NotNull Call<ResponseBody> call, @NotNull Response<ResponseBody> response) {
-                    if (response.isSuccessful() && response.body() != null) {
-                        try {
-                            // Parse response safely
-                            String responseBody = response.body().string();
-                            UserVehicle vehicleDetails = parseVehicleDetails(responseBody);
-
-                            // Display mileage or fallback text
-                            int mileage = vehicleDetails.getMileage();
-                            mileageText.setText(mileage > 0 ? mileage + " miles" : "Mileage not available");
-
-                            // Update UI based on notification status
-                            notificationsOn = vehicleDetails.isNotificationsOn();
-                            notificationToggleButton.setText(notificationsOn ? "Turn Off" : "Turn On");
-                            notificationText.setText(notificationsOn ? "Notifications for this vehicle are ON" : "Notifications for this vehicle are OFF");
-                            Drawable gradient = ContextCompat.getDrawable(
-                                    Objects.requireNonNull(getContext()),
-                                    notificationsOn ? R.drawable.green_border_gradient : R.drawable.gray_border_gradient
-                            );
-                            notificationBar.setBackground(gradient);
-
-                            // Update last updated timestamp in the UI
-                            updateLastUpdatedText(vehicleDetails.getLastUpdatedTimestamp());
-
-                            // Display the correct animation based on car make
-                            int animationResource = getAnimationForMake(vehicleDetails.getMake());
-                            carImageView.setVisibility(animationResource == 0 ? View.VISIBLE : View.GONE);
-                            carAnimationView.setVisibility(animationResource != 0 ? View.VISIBLE : View.GONE);
-                            if (animationResource != 0) {
-                                carAnimationView.setAnimation(animationResource);
-                                carAnimationView.playAnimation();
-                            }
-
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                            Toast.makeText(getContext(), "Error reading vehicle details response", Toast.LENGTH_SHORT).show();
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            Toast.makeText(getContext(), "Error parsing vehicle details", Toast.LENGTH_SHORT).show();
-                        }
-                    } else {
-                        Toast.makeText(getContext(), "Failed to retrieve vehicle details", Toast.LENGTH_SHORT).show();
-                    }
-                }
-
-                @Override
-                public void onFailure(@NotNull Call<ResponseBody> call, @NotNull Throwable t) {
-                    Toast.makeText(getContext(), "Error loading vehicle details", Toast.LENGTH_SHORT).show();
-                }
-            });
-        }
+            @Override
+            public void onFailure(@NotNull Call<ResponseBody> call, @NotNull Throwable t) {
+                Toast.makeText(getContext(), "Error loading vehicle details", Toast.LENGTH_SHORT).show();
+                Log.e("showVehicle", "API call failed", t);
+            }
+        });
     }
+
 
     // Switch between vehicles based on index
     @SuppressLint("Range")
     private void switchVehicle(int vehicleIndex) {
         if (vehicleIndex >= 1 && vehicleIndex < vehicleList.size()) {
             // Swap the data between the active vehicle (index 1) and the selected vehicle (vehicleIndex + 1)
-            int primaryVehicleId = getCarId(0);  // Active vehicle is at index 0
-            int targetVehicleId = getCarId(vehicleIndex);  // Get the target vehicle's ID
+            String primaryVehicleId = getCarId(0);  // Active vehicle is at index 0
+            String targetVehicleId = getCarId(vehicleIndex);  // Get the target vehicle's ID
 
             // API call to swap vehicles on the server
             userVehicleApi.swapVehicles(primaryVehicleId, targetVehicleId).enqueue(new Callback<ResponseBody>() {
@@ -703,45 +714,46 @@ public class FirstFragment extends Fragment {
     // Method to update the button text dynamically based on the number of vehicles
     @SuppressLint({"Range", "SetTextI18n"})
     private void updateVehicleButtons() {
-        // Clear lists to avoid duplication
+        // Clear existing lists to prevent duplication
         vehicleList.clear();
         vehicleMileage.clear();
         vehicleMakes.clear();
 
         String userId = getUserIdFromSession();
 
-        // Fetch all vehicles from the server
         userVehicleApi.getAllVehicles(userId).enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(@NotNull Call<ResponseBody> call, @NotNull Response<ResponseBody> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     try {
-                        // Parse the response to update vehicleList, vehicleMileage, and vehicleMakes
-                        List<UserVehicle> allVehicles = parseAllVehicles(response.body().string());
-                        for (UserVehicle vehicle : allVehicles) {
-                            String make = vehicle.getMake();
-                            String model = vehicle.getModel();
-                            String year = vehicle.getYear();
-                            String license = vehicle.getNickname();
-                            int mileage = vehicle.getMileage();
+                        // Parse the response into a list of UserVehicle objects
+                        String jsonResponse = response.body().string();
+                        List<UserVehicle> allVehicles = parseAllVehicles(jsonResponse);
 
-                            // Create display text
-                            String vehicleText = (license != null && !license.isEmpty())
-                                    ? license  // Use license if available
-                                    : year + " " + make + " " + model;
+                        userVehicles.clear();
+                        userVehicles.addAll(allVehicles);
 
-                            // Populate lists with vehicle details
-                            vehicleList.add(vehicleText);
-                            vehicleMileage.add(mileage);
-                            vehicleMakes.add(make);
+                        // Populate UI based on the number of vehicles
+                        for (int i = 0; i < 3; i++) {
+                            if (i < userVehicles.size()) {
+                                UserVehicle vehicle = userVehicles.get(i);
+                                String vehicleText = (vehicle.getNickname() != null && !vehicle.getNickname().isEmpty())
+                                        ? vehicle.getNickname()
+                                        : vehicle.getYear() + " " + vehicle.getMake() + " " + vehicle.getModel();
+
+                                // Track vehicle information
+                                vehicleList.add(vehicleText);
+                                vehicleMileage.add(vehicle.getMileage());
+                                vehicleMakes.add(vehicle.getMake());
+
+                                // Assign each vehicle to UI slot using helper method
+                                assignVehicleButton(i, vehicleText, vehicle.getMileage());
+                            } else {
+                                // Show "Add Vehicle" option for empty slots
+                                showAddVehicleOption(i);
+                            }
                         }
-
-                        // Update buttons dynamically based on available vehicles
-                        assignVehicleButton(vehicle1ImageButton, vehicle1Button, carDetails1, carMileage1, carAnimation1, 1);
-                        assignVehicleButton(vehicle2ImageButton, vehicle2Button, carDetails2, carMileage2, carAnimation2, 2);
-                        assignVehicleButton(vehicle3ImageButton, vehicle3Button, carDetails3, carMileage3, carAnimation3, 3);
-
-                    } catch (Exception e) {
+                    } catch (IOException e) {
                         e.printStackTrace();
                         Toast.makeText(getContext(), "Error parsing vehicle data", Toast.LENGTH_SHORT).show();
                     }
@@ -755,6 +767,55 @@ public class FirstFragment extends Fragment {
                 Toast.makeText(getContext(), "Error loading vehicles", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    // Helper method to assign vehicle data to a specific slot
+    @SuppressLint("SetTextI18n")
+    private void assignVehicleButton(int index, String vehicleText, int mileage) {
+        switch (index) {
+            case 0:
+                carDetails1.setText(vehicleText);
+                carMileage1.setText(mileage + " miles");
+                vehicle1Button.setVisibility(View.VISIBLE);
+                vehicle1ImageButton.setVisibility(View.GONE);
+                vehicle1Button.setOnClickListener(v -> showVehicle(index));
+                break;
+            case 1:
+                carDetails2.setText(vehicleText);
+                carMileage2.setText(mileage + " miles");
+                vehicle2Button.setVisibility(View.VISIBLE);
+                vehicle2ImageButton.setVisibility(View.GONE);
+                vehicle2Button.setOnClickListener(v -> showVehicle(index));
+                break;
+            case 2:
+                carDetails3.setText(vehicleText);
+                carMileage3.setText(mileage + " miles");
+                vehicle3Button.setVisibility(View.VISIBLE);
+                vehicle3ImageButton.setVisibility(View.GONE);
+                vehicle3Button.setOnClickListener(v -> showVehicle(index));
+                break;
+        }
+    }
+
+    // Helper method to show "Add New Vehicle" button for empty slots
+    private void showAddVehicleOption(int index) {
+        switch (index) {
+            case 0:
+                vehicle1ImageButton.setVisibility(View.VISIBLE);
+                vehicle1Button.setVisibility(View.GONE);
+                vehicle1ImageButton.setOnClickListener(v -> promptAddVehicle());
+                break;
+            case 1:
+                vehicle2ImageButton.setVisibility(View.VISIBLE);
+                vehicle2Button.setVisibility(View.GONE);
+                vehicle2ImageButton.setOnClickListener(v -> promptAddVehicle());
+                break;
+            case 2:
+                vehicle3ImageButton.setVisibility(View.VISIBLE);
+                vehicle3Button.setVisibility(View.GONE);
+                vehicle3ImageButton.setOnClickListener(v -> promptAddVehicle());
+                break;
+        }
     }
 
     // Helper method to assign vehicle or "Add New Vehicle" functionality to a button
@@ -881,7 +942,7 @@ public class FirstFragment extends Fragment {
             String newName = input.getText().toString();
 
             // Get the vehicle ID based on the vehicle index
-            int vehicleId = getCarId(vehicleIndex);
+            String vehicleId = getCarId(vehicleIndex);
 
             // Handle the case where the name is empty (delete nickname)
             if (newName.isEmpty()) {
@@ -896,7 +957,7 @@ public class FirstFragment extends Fragment {
     }
 
     // Helper method to update vehicle name on the server
-    private void updateVehicleNameOnServer(int vehicleId, String newName) {
+    private void updateVehicleNameOnServer(String vehicleId, String newName) {
         Call<ResponseBody> call;
         if (newName == null) {
             call = userVehicleApi.updateVehicleNickname(vehicleId, ""); // Set nickname to empty string for deletion
@@ -923,11 +984,11 @@ public class FirstFragment extends Fragment {
     }
 
     // Updated getCarId method to retrieve the car ID for a given index
-    private int getCarId(int vehicleIndex) {
+    private String getCarId(int vehicleIndex) {
         if (vehicleIndex >= 0 && vehicleIndex < userVehicles.size()) {
-            return userVehicles.get(vehicleIndex).getCarId(); // Use getCarId from UserVehicle
+            return userVehicles.get(vehicleIndex).getCarId(); // Return carId as String
         }
-        return -1; // Return -1 if index is out of bounds
+        return ""; // Return empty string if index is out of bounds
     }
 
     private long parseLastUpdatedTime(String response) {
@@ -939,15 +1000,40 @@ public class FirstFragment extends Fragment {
         }
     }
 
-    private UserVehicle parseVehicleDetails(String jsonResponse) throws JsonSyntaxException {
+    private UserVehicle parseVehicleDetails(String jsonResponse) {
         Gson gson = new Gson();
-        return gson.fromJson(jsonResponse, UserVehicle.class);
+        try {
+            // Check if the response is in the expected JSON object format
+            if (jsonResponse.startsWith("{") || jsonResponse.startsWith("[")) {
+                // Parse the JSON into a UserVehicle object
+                return gson.fromJson(jsonResponse, UserVehicle.class);
+            } else {
+                // Log an error and return null or a default UserVehicle if the response is unexpected
+                Log.e("parseVehicleDetails", "Unexpected response format: " + jsonResponse);
+                return null;
+            }
+        } catch (JsonSyntaxException e) {
+            // Log the error and handle the parsing exception
+            Log.e("parseVehicleDetails", "JSON parsing error", e);
+            return null;
+        }
     }
 
     private List<UserVehicle> parseAllVehicles(String jsonResponse) {
         Gson gson = new Gson();
-        Type vehicleListType = new TypeToken<List<UserVehicle>>(){}.getType();
-        return gson.fromJson(jsonResponse, vehicleListType);
+        try {
+            // Check if response starts with '{' indicating JSON object or '[' for JSON array
+            if (!jsonResponse.trim().startsWith("{")) {
+                Log.e("parseAllVehicles", "Unexpected response format: " + jsonResponse);
+                return new ArrayList<>();
+            }
+
+            VehicleResponse vehicleResponse = gson.fromJson(jsonResponse, VehicleResponse.class);
+            return vehicleResponse != null ? vehicleResponse.getVehicles() : new ArrayList<>();
+        } catch (JsonSyntaxException e) {
+            Log.e("parseAllVehicles", "JSON parsing error", e);
+            return new ArrayList<>(); // Return empty list on error
+        }
     }
 
     @Override
