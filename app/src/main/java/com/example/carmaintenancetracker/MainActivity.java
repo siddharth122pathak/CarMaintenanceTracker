@@ -2,24 +2,18 @@ package com.example.carmaintenancetracker;
 
 import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
-import androidx.work.PeriodicWorkRequest;
-import androidx.work.WorkManager;
 import com.example.carmaintenancetracker.databinding.ActivityMainBinding;
 
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -35,9 +29,6 @@ public class MainActivity extends AppCompatActivity {
         // View binding for the activity's main layout
         com.example.carmaintenancetracker.databinding.ActivityMainBinding binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot()); //Set the content to the activity's main view
-
-        //Trigger sync
-        SyncData.syncData(getApplicationContext());
 
         //Set up the toolbar as the app's action bar
         setSupportActionBar(binding.toolbar);
@@ -85,18 +76,18 @@ public class MainActivity extends AppCompatActivity {
         //Create the notification channel
         NotificationHelper.createNotificationChannel(this);
 
-        //Schedule periodic work for mileage check (runs every 24 hours)
-        PeriodicWorkRequest mileageCheckWorkRequest = new PeriodicWorkRequest.Builder(MileageCheckWorker.class, 24, TimeUnit.HOURS).build();
-
-        //Enqueue the work request
-        WorkManager.getInstance(this).enqueue(mileageCheckWorkRequest);
-        // Check and request notification permission on Android 13+ (API level 33 and above)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS)
-                    != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, 101);
-            }
-        }
+//       //Schedule periodic work for mileage check (runs every 24 hours)
+//        PeriodicWorkRequest mileageCheckWorkRequest = new PeriodicWorkRequest.Builder(MileageCheckWorker.class, 24, TimeUnit.HOURS).build();
+//
+//        //Enqueue the work request
+//        WorkManager.getInstance(this).enqueue(mileageCheckWorkRequest);
+//        // Check and request notification permission on Android 13+ (API level 33 and above)
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+//            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS)
+//                    != PackageManager.PERMISSION_GRANTED) {
+//                ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, 101);
+//            }
+//        }
     }
 
     //Method to display the tutorial
