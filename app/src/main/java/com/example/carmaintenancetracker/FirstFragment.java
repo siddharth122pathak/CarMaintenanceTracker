@@ -525,17 +525,35 @@ public class FirstFragment extends Fragment {
     // Method to display mileage for the selected vehicle
     @SuppressLint({"SetTextI18n", "Range"})
     private void showVehicle(int vehicleIndex) {
-        if (vehicleIndex < 0 || vehicleIndex >= userVehicles.size()) return;
+        if (vehicleIndex < 0 || vehicleIndex >= userVehicles.size()) {
+            Log.e("showVehicle", "Invalid vehicle index: " + vehicleIndex);
+            return;
+        }
 
         UserVehicle selectedVehicle = userVehicles.get(vehicleIndex);
+        if (selectedVehicle == null) {
+            Log.e("showVehicle", "Selected vehicle is null at index: " + vehicleIndex);
+            return;
+        }
+
+        // Check if make and model are correctly assigned
+        String make = selectedVehicle.getMake();
+        String model = selectedVehicle.getModel();
+        String year = selectedVehicle.getYear();
+        String nickname = selectedVehicle.getNickname();
+
+        if (make == null || model == null || year == null) {
+            Log.e("showVehicle", "Vehicle data is incomplete: Make - " + make + ", Model - " + model + ", Year - " + year);
+            return;
+        }
 
         // Set Title
-        String title = (selectedVehicle.getNickname() != null && !selectedVehicle.getNickname().isEmpty())
-                ? selectedVehicle.getNickname()
-                : selectedVehicle.getYear() + " " + selectedVehicle.getMake() + " " + selectedVehicle.getModel();
+        String title = (nickname != null && !nickname.isEmpty())
+                ? nickname
+                : year + " " + make + " " + model;
         binding.selectedCarTitle.setText(title);
 
-        // Fetch additional vehicle details
+        // Fetch additional vehicle details if needed (e.g., mileage and last update time)
         userVehicleApi.getVehicleByIndex(selectedVehicle.getCarId()).enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(@NotNull Call<ResponseBody> call, @NotNull Response<ResponseBody> response) {
@@ -573,12 +591,23 @@ public class FirstFragment extends Fragment {
                     // Last updated timestamp
                     updateLastUpdatedText(vehicleDetails.getLastUpdatedTimestamp());
 
-                    // Set Animation
-                    int animationResource = getAnimationForMake(vehicleDetails.getMake());
+                    // Set Animation for the make
+                    String carMake = make.toLowerCase();  // make should be non-null here
+                    int animationResource = getAnimationForMake(carMake);
+
+                    Log.d("AnimationCheck", "Setting animation for make: " + carMake + " with resource ID: " + animationResource);
+
+                    // Reset and set the correct animation resource for carAnimationView
+                    carAnimationView.cancelAnimation();
+                    carAnimationView.clearAnimation();
+                    carAnimationView.setAnimation(animationResource);
+
+                    // Handle visibility: if no specific animation is found, display a static car image
                     carImageView.setVisibility(animationResource == 0 ? View.VISIBLE : View.GONE);
                     carAnimationView.setVisibility(animationResource != 0 ? View.VISIBLE : View.GONE);
+
+                    // Play the animation if an animation resource is available
                     if (animationResource != 0) {
-                        carAnimationView.setAnimation(animationResource);
                         carAnimationView.playAnimation();
                     }
                 } catch (IOException e) {
@@ -594,6 +623,7 @@ public class FirstFragment extends Fragment {
             }
         });
     }
+
 
 
     // Switch between vehicles based on index
@@ -726,28 +756,33 @@ public class FirstFragment extends Fragment {
             public void onResponse(@NotNull Call<ResponseBody> call, @NotNull Response<ResponseBody> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     try {
-                        // Parse the response into a list of UserVehicle objects
                         String jsonResponse = response.body().string();
                         List<UserVehicle> allVehicles = parseAllVehicles(jsonResponse);
 
                         userVehicles.clear();
                         userVehicles.addAll(allVehicles);
 
-                        // Populate UI based on the number of vehicles
-                        for (int i = 0; i < 3; i++) {
+                        // Populate UI based on the number of vehicles for indices 1, 2, and 3 only
+                        for (int i = 1; i <= 3; i++) {
                             if (i < userVehicles.size()) {
                                 UserVehicle vehicle = userVehicles.get(i);
                                 String vehicleText = (vehicle.getNickname() != null && !vehicle.getNickname().isEmpty())
                                         ? vehicle.getNickname()
                                         : vehicle.getYear() + " " + vehicle.getMake() + " " + vehicle.getModel();
 
-                                // Track vehicle information
+                                // Track vehicle information with standardized make
+                                String carMake = vehicle.getMake() != null ? vehicle.getMake().toLowerCase() : "";
                                 vehicleList.add(vehicleText);
                                 vehicleMileage.add(vehicle.getMileage());
-                                vehicleMakes.add(vehicle.getMake());
+                                vehicleMakes.add(carMake);
 
-                                // Assign each vehicle to UI slot using helper method
-                                assignVehicleButton(i, vehicleText, vehicle.getMileage());
+                                // Log each vehicle’s make and animation resource for debugging
+                                int animationResource = getAnimationForMake(carMake);
+                                Log.d("AnimationCheck", "Setting vehicle at index " + i + " with make: " + carMake +
+                                        " and animation resource: " + animationResource);
+
+                                // Assign each vehicle to a button using the helper method
+                                assignVehicleButton(i, vehicleText, vehicle.getMileage(), animationResource);
                             } else {
                                 // Show "Add Vehicle" option for empty slots
                                 showAddVehicleOption(i);
@@ -771,28 +806,55 @@ public class FirstFragment extends Fragment {
 
     // Helper method to assign vehicle data to a specific slot
     @SuppressLint("SetTextI18n")
-    private void assignVehicleButton(int index, String vehicleText, int mileage) {
+    private void assignVehicleButton(int index, String vehicleText, int mileage, int animationResource) {
         switch (index) {
-            case 0:
+            case 1:
                 carDetails1.setText(vehicleText);
                 carMileage1.setText(mileage + " miles");
                 vehicle1Button.setVisibility(View.VISIBLE);
                 vehicle1ImageButton.setVisibility(View.GONE);
+
+                // Set animation for vehicle 1 and play it
+                carAnimation1.cancelAnimation();
+                carAnimation1.clearAnimation();
+                carAnimation1.setAnimation(animationResource);
+                carAnimation1.playAnimation();
+
                 vehicle1Button.setOnClickListener(v -> showVehicle(index));
                 break;
-            case 1:
+
+            case 2:
                 carDetails2.setText(vehicleText);
                 carMileage2.setText(mileage + " miles");
                 vehicle2Button.setVisibility(View.VISIBLE);
                 vehicle2ImageButton.setVisibility(View.GONE);
+
+                // Set animation for vehicle 2 and play it
+                carAnimation2.cancelAnimation();
+                carAnimation2.clearAnimation();
+                carAnimation2.setAnimation(animationResource);
+                carAnimation2.playAnimation();
+
                 vehicle2Button.setOnClickListener(v -> showVehicle(index));
                 break;
-            case 2:
+
+            case 3:
                 carDetails3.setText(vehicleText);
                 carMileage3.setText(mileage + " miles");
                 vehicle3Button.setVisibility(View.VISIBLE);
                 vehicle3ImageButton.setVisibility(View.GONE);
+
+                // Set animation for vehicle 3 and play it
+                carAnimation3.cancelAnimation();
+                carAnimation3.clearAnimation();
+                carAnimation3.setAnimation(animationResource);
+                carAnimation3.playAnimation();
+
                 vehicle3Button.setOnClickListener(v -> showVehicle(index));
+                break;
+
+            default:
+                // Do nothing for case 0 as it's the active vehicle and does not need a button
                 break;
         }
     }
@@ -800,17 +862,17 @@ public class FirstFragment extends Fragment {
     // Helper method to show "Add New Vehicle" button for empty slots
     private void showAddVehicleOption(int index) {
         switch (index) {
-            case 0:
+            case 1:
                 vehicle1ImageButton.setVisibility(View.VISIBLE);
                 vehicle1Button.setVisibility(View.GONE);
                 vehicle1ImageButton.setOnClickListener(v -> promptAddVehicle());
                 break;
-            case 1:
+            case 2:
                 vehicle2ImageButton.setVisibility(View.VISIBLE);
                 vehicle2Button.setVisibility(View.GONE);
                 vehicle2ImageButton.setOnClickListener(v -> promptAddVehicle());
                 break;
-            case 2:
+            case 3:
                 vehicle3ImageButton.setVisibility(View.VISIBLE);
                 vehicle3Button.setVisibility(View.GONE);
                 vehicle3ImageButton.setOnClickListener(v -> promptAddVehicle());
@@ -858,11 +920,13 @@ public class FirstFragment extends Fragment {
         builder.show();
     }
 
-    // Method to retrieve the appropriate animation resource based on car make
     private int getAnimationForMake(String carMake) {
         if (carMake == null) {
+            Log.d("AnimationCheck", "Car make is null, returning default animation");
             return R.raw.car_animation; // Fallback animation if make is null
         }
+
+        Log.d("AnimationCheck", "Received car make: " + carMake);
 
         switch (carMake.toLowerCase()) {
             case "toyota":
@@ -876,6 +940,7 @@ public class FirstFragment extends Fragment {
             case "chevrolet":
                 return R.raw.car_animation_chevrolet;
             default:
+                Log.d("AnimationCheck", "Unknown car make, returning default animation");
                 return R.raw.car_animation;  // Fallback animation for unlisted makes
         }
     }
