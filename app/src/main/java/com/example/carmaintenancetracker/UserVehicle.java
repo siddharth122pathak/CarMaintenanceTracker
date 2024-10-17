@@ -1,19 +1,24 @@
 package com.example.carmaintenancetracker;
 
 public class UserVehicle {
-    private int car_id;
+    private String car_id;
     private String make;
     private String model;
     private String year;
     private String nickname;
+    private int mileage;
+    private boolean notificationsOn;
+    private long lastUpdatedTimestamp;
+    private boolean active; //New field to indicate if the vehicle is active
+
 
     //Getters and Setters
 
-    public int getCarId() {
+    public String getCarId() {
         return car_id;
     }
 
-    public void setCarId(int car_id) {
+    public void setCarId(String car_id) {
         this.car_id = car_id;
     }
 
@@ -47,5 +52,38 @@ public class UserVehicle {
 
     public void setNickname(String nickname) {
         this.nickname = nickname;
+    }
+
+    public int getMileage() {
+        return mileage;
+    }
+
+    public void setMileage(int mileage) {
+        this.mileage = mileage;
+    }
+
+    public boolean isNotificationsOn() {
+        return notificationsOn;
+    }
+
+    public void setNotificationsOn(boolean notificationsOn) {
+        this.notificationsOn = notificationsOn;
+    }
+
+    public long getLastUpdatedTimestamp() {
+        return lastUpdatedTimestamp;
+    }
+
+    public void setLastUpdatedTimestamp(long lastUpdatedTimestamp) {
+        this.lastUpdatedTimestamp = lastUpdatedTimestamp;
+    }
+
+    // New getter and setter for the active field
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
     }
 }
