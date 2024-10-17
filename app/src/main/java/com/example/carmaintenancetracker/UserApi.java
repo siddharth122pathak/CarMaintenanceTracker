@@ -45,13 +45,12 @@ public interface UserApi {
             @Field("newPassword") String newPassword
     );
 
-    // POST request to check the oil config
-    @FormUrlEncoded
-    @POST("/check_oil_config.php")
+    // GET request to check the oil config
+    @GET("/check_oil_config.php")
     Call<ResponseBody> checkOilConfig(
-            @Field("year") String year,
-            @Field("make") String make,
-            @Field("model") String model
+            @Query("year") String year,
+            @Query("make") String make,
+            @Query("model") String model
     );
 
 }

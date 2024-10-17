@@ -12,11 +12,13 @@ import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import com.example.carmaintenancetracker.databinding.ActivityUpcomingMaintenanceBinding;
 import okhttp3.ResponseBody;
+import org.json.JSONException;
 import org.json.JSONObject;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+import java.io.IOException;
 import java.util.StringTokenizer;
 
 public class UpcomingMaintenanceActivity extends Fragment {
@@ -28,6 +30,7 @@ public class UpcomingMaintenanceActivity extends Fragment {
     public String year;
     public String make;
     public String model;
+    private String blankString;
 
     //View binding for the fragment's layout
     private ActivityUpcomingMaintenanceBinding binding;
@@ -75,22 +78,12 @@ public class UpcomingMaintenanceActivity extends Fragment {
 
         //update miles text based on vehicle status
 
+        blankString = getResources().getString(R.string.upcoming_maintenance_miles_text);
+
         testPrintOilConfig();
 
-        //check that the vehicle exists in the database
-        /*if (vehicleExists()) {
-
-            //get an array of maintenance tasks organized by mileage
-            Task tasks[] = organizeTasksByMiles(vehicle);
-
-            //print the array to the miles string
-            R.string.upcoming_maintenance_miles_text = printTasksByMiles(tasks);
-        } else {
-            // Handle error
-        }*/
-
         //change main text
-        //mainText.setText(R.string.upcoming_maintenance_miles_text);
+        mainText.setText(blankString);
     }
 
     //Maintenance by Time method
@@ -100,76 +93,94 @@ public class UpcomingMaintenanceActivity extends Fragment {
         timeTab.setBackground(ContextCompat.getDrawable(requireContext(), R.drawable.tab_background_selected));
 
         //update time text based on vehicle status
-        /*
-        //call the user
-        Call<List<User>> user = apiInterface.getUser();
-
-        //get the user's vehicle
-        Vehicle<List<User>> vehicle = user.vehicle();
-
-        //check that the vehicle exists in the database
-        if (vehicle.exists()) {
-
-            //get an array of maintenance tasks organized by time
-            Task arr[] = organizeTasksByTime(vehicle);
-
-            //print the array to the time string
-            R.string.upcoming_maintenance_time_text = printTasksByMiles(arr);
-        } else {
-            // Handle error
-        }
-        */
+        blankString = getResources().getString(R.string.upcoming_maintenance_time_text);
 
         //change main text
-        mainText.setText(R.string.upcoming_maintenance_time_text);
+        mainText.setText(blankString);
     }
 
-    //method to check if the vehicle exists in the db
     private void testPrintOilConfig() {
-        //api call to the db
-        Call<ResponseBody> checkOilConfig = api.checkOilConfig(year, make, model);
-        checkOilConfig.enqueue(new Callback<ResponseBody>() {
+        // API call to the database
+        Call<ResponseBody> checkOilConfig2 = api.checkOilConfig(year, make, model);
+        checkOilConfig2.enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     try {
                         String responseString = response.body().string();
 
-                        // Remove any unnecessary connection messages
-                        if (responseString.startsWith("Connected successfully to the database!")) {
-                            responseString = responseString.replace("Connected successfully to the database!", "").trim();
-                        }
-
-                        if (responseString.trim().startsWith("{")) {
+                        // Ensure response only contains JSON, handle any extra messages on the server-side
+                        if (responseString.startsWith("{")) {
                             JSONObject jsonResponse = new JSONObject(responseString);
+
                             if (jsonResponse.getString("status").equals("success")) {
-                                if (jsonResponse.getString("message").equals("Maintenance detail found")) {
+                                if (jsonResponse.getString("message").startsWith("Maintenance details found")) {
                                     String printString = "At ";
                                     printString += jsonResponse.getString("miles_period");
                                     printString += " miles: \n";
                                     printString += jsonResponse.getString("maintenance_type");
                                     printString += "\n";
-                                    mainText.setText(printString);
+
+                                    // Ensure UI updates are done on the main thread
+                                    String finalPrintString = printString;
+                                    if (isAdded()) {
+                                        requireActivity().runOnUiThread(() -> {
+                                            blankString = finalPrintString;
+                                            mainText.setText(blankString);
+                                        });
+                                    }
                                 }
                             } else {
-                                // show error
-                                Toast.makeText(requireContext(), jsonResponse.getString("message"), Toast.LENGTH_SHORT).show();
+                                // Show error message in a toast
+                                requireActivity().runOnUiThread(() ->
+                                        {
+                                            Toast.makeText(requireContext(), "JSON status: failure", Toast.LENGTH_SHORT).show();
+                                        }
+                                );
                             }
+                        } else {
+                            requireActivity().runOnUiThread(() ->
+                                    {
+                                        Toast.makeText(requireContext(), "Invalid response format", Toast.LENGTH_SHORT).show();
+                                    }
+                            );
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
-                        Toast.makeText(requireContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
+                        String errorMessage = e.getMessage() != null ? e.getMessage() : "Unknown error 1";
+
+                        requireActivity().runOnUiThread(() ->
+                                Toast.makeText(requireContext(), e.getMessage(), Toast.LENGTH_SHORT).show()
+                        );
                     }
                 } else {
-                    Toast.makeText(requireContext(), response.toString(), Toast.LENGTH_SHORT).show();
+                    // Handle HTTP error response
+                    String errorBody = null;
+                    try {
+                        if (response.errorBody() != null) {
+                            errorBody = response.errorBody().string();
+                        }
+                    } catch (Exception e) {
+                        errorBody = "Error processing error response.";
+                    }
+                    final String finalErrorBody = errorBody != null ? errorBody : "Unknown error 2";
+                    requireActivity().runOnUiThread(() ->
+                            Toast.makeText(requireContext(), finalErrorBody, Toast.LENGTH_SHORT).show()
+                    );
                 }
             }
 
             @Override
             public void onFailure(Call<ResponseBody> call, Throwable t) {
-                Toast.makeText(requireContext(), t.getMessage(), Toast.LENGTH_SHORT).show();
+                String errorMessage = t.getMessage() != null ? t.getMessage() : "Unknown error 3";
+
+                requireActivity().runOnUiThread(() ->
+                    Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_SHORT).show()
+
+                );
             }
         });
-
     }
+
 }
+
