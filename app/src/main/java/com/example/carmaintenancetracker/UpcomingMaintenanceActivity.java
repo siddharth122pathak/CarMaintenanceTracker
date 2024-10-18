@@ -12,13 +12,11 @@ import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import com.example.carmaintenancetracker.databinding.ActivityUpcomingMaintenanceBinding;
 import okhttp3.ResponseBody;
-import org.json.JSONException;
 import org.json.JSONObject;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-import java.io.IOException;
 import java.util.StringTokenizer;
 
 public class UpcomingMaintenanceActivity extends Fragment {
@@ -30,7 +28,7 @@ public class UpcomingMaintenanceActivity extends Fragment {
     public String year;
     public String make;
     public String model;
-    private String blankString;
+    private String oilConfigString;
 
     //View binding for the fragment's layout
     private ActivityUpcomingMaintenanceBinding binding;
@@ -79,14 +77,13 @@ public class UpcomingMaintenanceActivity extends Fragment {
         milesTab.setBackground(ContextCompat.getDrawable(requireContext(), R.drawable.tab_background_selected));
         timeTab.setBackground(ContextCompat.getDrawable(requireContext(), R.drawable.tab_background_unselected));
 
-        //update miles text based on vehicle status
+        //change main text to default
+        oilConfigString = getResources().getString(R.string.upcoming_maintenance_miles_text);
 
-        blankString = getResources().getString(R.string.upcoming_maintenance_miles_text);
-
-        //testPrintOilConfig();
+        String testStr = UpcomingMaintenanceMethods.getInstance().concatenateConfigStr("5000:oil change", "", "", "", "");
 
         //change main text
-        mainText.setText(VariableAccess.getInstance().getUpcomingMaintenanceMiles());
+        mainText.setText(testStr);
     }
 
     //Maintenance by Time method
@@ -96,7 +93,7 @@ public class UpcomingMaintenanceActivity extends Fragment {
         timeTab.setBackground(ContextCompat.getDrawable(requireContext(), R.drawable.tab_background_selected));
 
         //update time text based on vehicle status
-        blankString = getResources().getString(R.string.upcoming_maintenance_time_text);
+        oilConfigString = getResources().getString(R.string.upcoming_maintenance_time_text);
 
         //change main text
         mainText.setText(VariableAccess.getInstance().getUpcomingMaintenanceTime());
@@ -104,8 +101,8 @@ public class UpcomingMaintenanceActivity extends Fragment {
 
     private void testPrintOilConfig() {
         // API call to the database
-        Call<ResponseBody> checkOilConfig2 = api.checkOilConfig(year, make, model);
-        checkOilConfig2.enqueue(new Callback<ResponseBody>() {
+        Call<ResponseBody> checkOilConfig = api.checkOilConfig(year, make, model);
+        checkOilConfig.enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
                 if (response.isSuccessful() && response.body() != null) {
@@ -118,20 +115,15 @@ public class UpcomingMaintenanceActivity extends Fragment {
 
                             if (jsonResponse.getString("status").equals("success")) {
                                 if (jsonResponse.getString("message").startsWith("Maintenance details found")) {
-                                    String printString = "At ";
-                                    printString += jsonResponse.getString("miles_period");
-                                    printString += " miles: \n";
+                                    String printString = jsonResponse.getString("miles_period");
+                                    printString += ":";
                                     printString += jsonResponse.getString("maintenance_type");
-                                    printString += "\n";
 
-                                    // Ensure UI updates are done on the main thread
                                     String finalPrintString = printString;
-                                    if (isAdded()) {
-                                        requireActivity().runOnUiThread(() -> {
-                                            blankString = finalPrintString;
-                                            mainText.setText(blankString);
-                                        });
-                                    }
+                                    requireActivity().runOnUiThread(() ->
+                                    {
+                                        oilConfigString = finalPrintString;
+                                    });
                                 }
                             } else {
                                 // Show error message in a toast
