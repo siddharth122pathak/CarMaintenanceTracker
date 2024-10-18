@@ -3,7 +3,6 @@ package com.example.carmaintenancetracker;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
@@ -34,8 +33,6 @@ import retrofit2.Response;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.*;
-
-import static android.app.Activity.RESULT_OK;
 
 /** @noinspection CallToPrintStackTrace*/
 public class FirstFragment extends Fragment {
@@ -270,29 +267,11 @@ public class FirstFragment extends Fragment {
 
     // Method to handle switching to or adding a vehicle
     private void switchOrAddVehicle(int vehicleIndex) {
-        if (vehicleIndex <= vehicleList.size()) {
-            // Get car ID for the selected vehicle
-            String carId = getCarId(vehicleIndex - 1); // Adjust index for list (0-based)
-
-            // Call API to set this vehicle as active
-            userVehicleApi.setActiveVehicle(carId).enqueue(new Callback<ResponseBody>() {
-                @Override
-                public void onResponse(@NotNull Call<ResponseBody> call, @NotNull Response<ResponseBody> response) {
-                    if (response.isSuccessful()) {
-                        Toast.makeText(getContext(), "Vehicle switched", Toast.LENGTH_SHORT).show();
-                        showVehicle(vehicleIndex - 1);  // Show the selected vehicle
-                    } else {
-                        Toast.makeText(getContext(), "Failed to switch vehicle", Toast.LENGTH_SHORT).show();
-                    }
-                }
-
-                @Override
-                public void onFailure(@NotNull Call<ResponseBody> call, @NotNull Throwable t) {
-                    Toast.makeText(getContext(), "Error switching vehicle", Toast.LENGTH_SHORT).show();
-                }
-            });
+        if (vehicleIndex < vehicleList.size()) {
+            // Call switchVehicle for the specified index
+            switchVehicle(vehicleIndex);
         } else {
-            // If vehicleIndex exceeds list size, it indicates adding a new vehicle
+            // If vehicleIndex exceeds list size, prompt to add a new vehicle
             promptAddVehicle();
         }
     }
@@ -584,40 +563,23 @@ public class FirstFragment extends Fragment {
         });
     }
 
-
-
-    // Switch between vehicles based on index
+    //Method to switch between vehicles
     @SuppressLint("Range")
     private void switchVehicle(int vehicleIndex) {
-        if (vehicleIndex >= 1 && vehicleIndex < vehicleList.size()) {
-            // Swap the data between the active vehicle (index 1) and the selected vehicle (vehicleIndex + 1)
-            String primaryVehicleId = getCarId(0);  // Active vehicle is at index 0
-            String targetVehicleId = getCarId(vehicleIndex);  // Get the target vehicle's ID
+        if (vehicleIndex >= 1 && vehicleIndex < userVehicles.size()) {
+            String userId = getUserIdFromSession();  // Retrieve the user ID
+            String primaryVehicleId = getCarId(0);   // The currently active vehicle (index 0)
+            String targetVehicleId = getCarId(vehicleIndex);  // Get the target vehicle's ID to swap with
 
-            // API call to swap vehicles on the server
-            userVehicleApi.swapVehicles(primaryVehicleId, targetVehicleId).enqueue(new Callback<ResponseBody>() {
+            // Use Retrofit to make the POST request to swap vehicles
+            userVehicleApi.swapVehicles(userId, primaryVehicleId, targetVehicleId).enqueue(new Callback<ResponseBody>() {
                 @Override
                 public void onResponse(@NotNull Call<ResponseBody> call, @NotNull Response<ResponseBody> response) {
                     if (response.isSuccessful()) {
-                        // API call to set the active vehicle on the server
-                        userVehicleApi.setActiveVehicle(primaryVehicleId).enqueue(new Callback<ResponseBody>() {
-                            @Override
-                            public void onResponse(@NotNull Call<ResponseBody> call, @NotNull Response<ResponseBody> response) {
-                                if (response.isSuccessful()) {
-                                    // Update UI to reflect the newly active vehicle
-                                    updateActiveVehicleUI();
-                                    updateVehicleButtons();
-                                    Toast.makeText(getContext(), "Vehicle switched successfully", Toast.LENGTH_SHORT).show();
-                                } else {
-                                    Toast.makeText(getContext(), "Failed to set active vehicle", Toast.LENGTH_SHORT).show();
-                                }
-                            }
-
-                            @Override
-                            public void onFailure(@NotNull Call<ResponseBody> call, @NotNull Throwable t) {
-                                Toast.makeText(getContext(), "Error setting active vehicle", Toast.LENGTH_SHORT).show();
-                            }
-                        });
+                        // Update UI to reflect the newly active vehicle
+                        updateActiveVehicleUI();
+                        updateVehicleButtons();
+                        Toast.makeText(getContext(), "Vehicle switched successfully", Toast.LENGTH_SHORT).show();
                     } else {
                         Toast.makeText(getContext(), "Failed to swap vehicles", Toast.LENGTH_SHORT).show();
                     }
@@ -645,7 +607,7 @@ public class FirstFragment extends Fragment {
                         UserVehicle activeVehicle = parseVehicleDetails(response.body().string());
 
                         // Extract and format the vehicle details
-                        String make = activeVehicle.getMake();
+                        String make = Objects.requireNonNull(activeVehicle).getMake();
                         String model = activeVehicle.getModel();
                         String year = activeVehicle.getYear();
                         String license = activeVehicle.getNickname();

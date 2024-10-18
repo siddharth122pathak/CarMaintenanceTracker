@@ -54,8 +54,9 @@ public interface UserVehicleApi {
     @FormUrlEncoded
     @POST("/swap_vehicles.php")
     Call<ResponseBody> swapVehicles(
-            @Field("car_id1") String carId1,
-            @Field("car_id2") String carId2
+            @Field("userId") String userId,
+            @Field("primaryVehicleId") String primaryVehicleId,
+            @Field("targetVehicleId") String targetVehicleId
     );
 
     // Get the last updated date of a vehicle
