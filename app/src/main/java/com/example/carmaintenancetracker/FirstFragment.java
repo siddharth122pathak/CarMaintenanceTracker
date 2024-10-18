@@ -81,50 +81,6 @@ public class FirstFragment extends Fragment {
         return binding.getRoot();
     }
 
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (requestCode == ADD_VEHICLE_REQUEST_CODE && resultCode == RESULT_OK && data != null) {
-            String make = data.getStringExtra("vehicleMake");
-            String model = data.getStringExtra("vehicleModel");
-            String year = data.getStringExtra("vehicleYear");
-            String licensePlate = data.getStringExtra("vehicleLicensePlate");
-            String milesStr = data.getStringExtra("vehicleMiles");
-
-            int miles = 0;
-            if (milesStr != null && !milesStr.isEmpty()) {
-                try {
-                    miles = Integer.parseInt(milesStr);
-                } catch (NumberFormatException e) {
-                    // Handle invalid mileage input
-                }
-            }
-
-            addVehicleToServer(make, model, year, licensePlate);
-        }
-    }
-
-    private void addVehicleToServer(String make, String model, String year, String nickname) {
-        userVehicleApi.addVehicle(make, model, year, nickname).enqueue(new Callback<ResponseBody>() {
-            @Override
-            public void onResponse(@NotNull Call<ResponseBody> call, @NotNull Response<ResponseBody> response) {
-                if (response.isSuccessful()) {
-                    // Refresh list from server to display new vehicle
-                    loadVehiclesFromServer();
-                    Toast.makeText(getContext(), "Vehicle added successfully.", Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(getContext(), "Failed to add vehicle.", Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onFailure(@NotNull Call<ResponseBody> call, @NotNull Throwable t) {
-                Toast.makeText(getContext(), "Error adding vehicle.", Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-
     private void setActiveVehicle(String carId) {
         userVehicleApi.setActiveVehicle(carId).enqueue(new Callback<ResponseBody>() {
             @Override

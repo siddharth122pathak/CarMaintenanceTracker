@@ -6,16 +6,6 @@ import retrofit2.http.*;
 
 public interface UserVehicleApi {
 
-    // Add a new vehicle
-    @FormUrlEncoded
-    @POST("/add_vehicle.php")
-    Call<ResponseBody> addVehicle(
-            @Field("make") String make,
-            @Field("model") String model,
-            @Field("year") String year,
-            @Field("nickname") String nickname
-    );
-
     @FormUrlEncoded
     @POST("/add_vehicle.php")
     Call<ResponseBody> setVehicle(
