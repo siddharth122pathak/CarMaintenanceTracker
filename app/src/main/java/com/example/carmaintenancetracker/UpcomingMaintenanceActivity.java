@@ -68,6 +68,9 @@ public class UpcomingMaintenanceActivity extends Fragment {
 
         //set up API client
         api = RetrofitClient.getRetrofitInstance().create(UserApi.class);
+
+        // load first page
+        loadMiles();
     }
 
     //Maintenance by Miles method

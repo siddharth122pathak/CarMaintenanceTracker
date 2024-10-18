@@ -294,6 +294,8 @@ public class FirstFragment extends Fragment {
         vehicle1Button.setOnLongClickListener(v -> showVehicleOptionsDialog(1));
         vehicle2Button.setOnLongClickListener(v -> showVehicleOptionsDialog(2));
         vehicle3Button.setOnLongClickListener(v -> showVehicleOptionsDialog(3));
+
+        //assign upcoming maintenance strings
     }
 
     // Method to set up vehicle buttons

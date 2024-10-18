@@ -19,6 +19,8 @@ public class MainActivity extends AppCompatActivity {
 
     // AppBarConfiguration to handle navigation with a toolbar
     private final ThreadLocal<AppBarConfiguration> appBarConfiguration = new ThreadLocal<>();
+    public String upcomingMaintenanceMiles;
+    public String upcomingMaintenanceTime;
 
     @SuppressLint("ObsoleteSdkInt")
     @Override
