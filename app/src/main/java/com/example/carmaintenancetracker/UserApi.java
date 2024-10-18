@@ -44,13 +44,4 @@ public interface UserApi {
             @Field("email") String email,
             @Field("newPassword") String newPassword
     );
-
-    // GET request to check the oil config
-    @GET("/check_oil_config.php")
-    Call<ResponseBody> checkOilConfig(
-            @Query("year") String year,
-            @Query("make") String make,
-            @Query("model") String model
-    );
-
 }

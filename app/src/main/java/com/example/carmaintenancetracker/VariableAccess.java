@@ -5,6 +5,8 @@ public class VariableAccess {
 
     //ADD VARIABLES HERE
     private String exampleVariable;
+    private String upcomingMaintenanceMiles;
+    private String upcomingMaintenanceTime;
 
     //private constructor to prevent instantiation
     private VariableAccess() {}
@@ -21,9 +23,17 @@ public class VariableAccess {
     public String getExampleVariable() {
         return exampleVariable;
     }
+    public String getUpcomingMaintenanceMiles() {
+        return upcomingMaintenanceMiles;
+    }
+    public String getUpcomingMaintenanceTime() {
+        return upcomingMaintenanceTime;
+    }
 
     //SET VARIABLES HERE
     public void setExampleVariable(String exampleVariable) {
         this.exampleVariable = exampleVariable;
     }
+    public void setUpcomingMaintenanceMiles(String upcomingMaintenanceMiles) { this.upcomingMaintenanceMiles = upcomingMaintenanceMiles; }
+    public void setUpcomingMaintenanceTime(String upcomingMaintenanceTime) { this.upcomingMaintenanceTime = upcomingMaintenanceTime; }
 }

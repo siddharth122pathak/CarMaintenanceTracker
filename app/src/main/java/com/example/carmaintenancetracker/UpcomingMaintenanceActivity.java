@@ -26,7 +26,7 @@ public class UpcomingMaintenanceActivity extends Fragment {
     private TextView milesTab;
     private TextView timeTab;
     private TextView selectedCar;
-    private UserApi api;
+    private FortuneApi api;
     public String year;
     public String make;
     public String model;
@@ -67,7 +67,7 @@ public class UpcomingMaintenanceActivity extends Fragment {
         while (tokenizer.hasMoreTokens()) {model += " " + tokenizer.nextToken();}
 
         //set up API client
-        api = RetrofitClient.getRetrofitInstance().create(UserApi.class);
+        api = RetrofitClient.getRetrofitInstance().create(FortuneApi.class);
 
         // load first page
         loadMiles();
@@ -83,10 +83,10 @@ public class UpcomingMaintenanceActivity extends Fragment {
 
         blankString = getResources().getString(R.string.upcoming_maintenance_miles_text);
 
-        testPrintOilConfig();
+        //testPrintOilConfig();
 
         //change main text
-        mainText.setText(blankString);
+        mainText.setText(VariableAccess.getInstance().getUpcomingMaintenanceMiles());
     }
 
     //Maintenance by Time method
@@ -99,7 +99,7 @@ public class UpcomingMaintenanceActivity extends Fragment {
         blankString = getResources().getString(R.string.upcoming_maintenance_time_text);
 
         //change main text
-        mainText.setText(blankString);
+        mainText.setText(VariableAccess.getInstance().getUpcomingMaintenanceTime());
     }
 
     private void testPrintOilConfig() {

@@ -296,6 +296,8 @@ public class FirstFragment extends Fragment {
         vehicle3Button.setOnLongClickListener(v -> showVehicleOptionsDialog(3));
 
         //assign upcoming maintenance strings
+        VariableAccess.getInstance().setUpcomingMaintenanceMiles("testing miles");
+        VariableAccess.getInstance().setUpcomingMaintenanceTime("testing time");
     }
 
     // Method to set up vehicle buttons
