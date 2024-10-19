@@ -1,6 +1,7 @@
 package com.example.carmaintenancetracker;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
@@ -24,11 +25,6 @@ public class UpcomingMaintenanceActivity extends Fragment {
     private TextView milesTab;
     private TextView timeTab;
     private TextView selectedCar;
-    private FortuneApi api;
-    public String year;
-    public String make;
-    public String model;
-    private String oilConfigString;
 
     //View binding for the fragment's layout
     private ActivityUpcomingMaintenanceBinding binding;
@@ -54,18 +50,11 @@ public class UpcomingMaintenanceActivity extends Fragment {
         timeTab.setOnClickListener(v -> loadTime());
 
         //get selected car
-        String yearMakeModel = "2001 Toyota Camry";
-        selectedCar.setText(yearMakeModel);
-
-        //parse string to assign year/make/model
-        StringTokenizer tokenizer = new StringTokenizer(selectedCar.getText().toString(), " ");
-        year = tokenizer.nextToken();
-        make = tokenizer.nextToken();
-        model = tokenizer.nextToken();
-        while (tokenizer.hasMoreTokens()) {model += " " + tokenizer.nextToken();}
-
-        //set up API client
-        api = RetrofitClient.getRetrofitInstance().create(FortuneApi.class);
+        String year = VariableAccess.getInstance().getActiveVehicle().get(0);
+        String make = VariableAccess.getInstance().getActiveVehicle().get(1);
+        String model = VariableAccess.getInstance().getActiveVehicle().get(2);
+        String ymmFinal = year + " " + make + " " + model;
+        selectedCar.setText(ymmFinal);
 
         // load first page
         loadMiles();
@@ -78,12 +67,18 @@ public class UpcomingMaintenanceActivity extends Fragment {
         timeTab.setBackground(ContextCompat.getDrawable(requireContext(), R.drawable.tab_background_unselected));
 
         //change main text to default
-        oilConfigString = getResources().getString(R.string.upcoming_maintenance_miles_text);
+        String mainStr = getResources().getString(R.string.upcoming_maintenance_miles_text);
 
-        String testStr = UpcomingMaintenanceMethods.getInstance().concatenateConfigStr("5000:oil change", "", "", "", "");
+        mainStr = UpcomingMaintenanceMethods.getInstance().concatenateConfigStr(
+                VariableAccess.getInstance().getOilConfig(),
+                "",
+                "",
+                "",
+                ""
+        );
 
         //change main text
-        mainText.setText(testStr);
+        mainText.setText(mainStr);
     }
 
     //Maintenance by Time method
@@ -93,88 +88,10 @@ public class UpcomingMaintenanceActivity extends Fragment {
         timeTab.setBackground(ContextCompat.getDrawable(requireContext(), R.drawable.tab_background_selected));
 
         //update time text based on vehicle status
-        oilConfigString = getResources().getString(R.string.upcoming_maintenance_time_text);
+        //oilConfigString = getResources().getString(R.string.upcoming_maintenance_time_text);
 
         //change main text
         mainText.setText(VariableAccess.getInstance().getUpcomingMaintenanceTime());
-    }
-
-    private void testPrintOilConfig() {
-        // API call to the database
-        Call<ResponseBody> checkOilConfig = api.checkOilConfig(year, make, model);
-        checkOilConfig.enqueue(new Callback<ResponseBody>() {
-            @Override
-            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    try {
-                        String responseString = response.body().string();
-
-                        // Ensure response only contains JSON, handle any extra messages on the server-side
-                        if (responseString.startsWith("{")) {
-                            JSONObject jsonResponse = new JSONObject(responseString);
-
-                            if (jsonResponse.getString("status").equals("success")) {
-                                if (jsonResponse.getString("message").startsWith("Maintenance details found")) {
-                                    String printString = jsonResponse.getString("miles_period");
-                                    printString += ":";
-                                    printString += jsonResponse.getString("maintenance_type");
-
-                                    String finalPrintString = printString;
-                                    requireActivity().runOnUiThread(() ->
-                                    {
-                                        oilConfigString = finalPrintString;
-                                    });
-                                }
-                            } else {
-                                // Show error message in a toast
-                                requireActivity().runOnUiThread(() ->
-                                        {
-                                            Toast.makeText(requireContext(), "JSON status: failure", Toast.LENGTH_SHORT).show();
-                                        }
-                                );
-                            }
-                        } else {
-                            requireActivity().runOnUiThread(() ->
-                                    {
-                                        Toast.makeText(requireContext(), "Invalid response format", Toast.LENGTH_SHORT).show();
-                                    }
-                            );
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        String errorMessage = e.getMessage() != null ? e.getMessage() : "Unknown error 1";
-
-                        requireActivity().runOnUiThread(() ->
-                                Toast.makeText(requireContext(), e.getMessage(), Toast.LENGTH_SHORT).show()
-                        );
-                    }
-                } else {
-                    // Handle HTTP error response
-                    String errorBody = null;
-                    try {
-                        if (response.errorBody() != null) {
-                            errorBody = response.errorBody().string();
-                        }
-                    } catch (Exception e) {
-                        errorBody = "Error processing error response.";
-                    }
-                    final String finalErrorBody = errorBody != null ? errorBody : "Unknown error 2";
-                    requireActivity().runOnUiThread(() ->
-                            Toast.makeText(requireContext(), finalErrorBody, Toast.LENGTH_SHORT).show()
-                    );
-                }
-            }
-
-            @Override
-            public void onFailure(Call<ResponseBody> call, Throwable t) {
-                String errorMessage = t.getMessage() != null ? t.getMessage() : "Unknown error 3";
-
-                requireActivity().runOnUiThread(() ->
-                    Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_SHORT).show()
-
-                );
-            }
-        });
     }
 
 }

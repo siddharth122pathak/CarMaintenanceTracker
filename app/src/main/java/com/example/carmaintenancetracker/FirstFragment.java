@@ -27,6 +27,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import okhttp3.ResponseBody;
 import org.jetbrains.annotations.NotNull;
+import org.json.JSONObject;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -67,6 +68,7 @@ public class FirstFragment extends Fragment {
     private int currentVehicleIndex = 0;
 
     private UserVehicleApi userVehicleApi;  // Retrofit API interface
+    private FortuneApi fortuneApi;
     UserVehicle userVehicle = new UserVehicle();
 
     @Nullable
@@ -76,6 +78,7 @@ public class FirstFragment extends Fragment {
 
         // Initialize Retrofit and API
         userVehicleApi = RetrofitClient.getRetrofitInstance().create(UserVehicleApi.class);
+        fortuneApi = RetrofitClient.getRetrofitInstance().create(FortuneApi.class);
 
         loadVehiclesFromServer();
         return binding.getRoot();
@@ -539,6 +542,13 @@ public class FirstFragment extends Fragment {
                 : selectedVehicle.getYear() + " " + selectedVehicle.getMake() + " " + selectedVehicle.getModel();
         binding.selectedCarTitle.setText(title);
 
+        // Set selected car in VariableAccess
+        VariableAccess.getInstance().setActiveVehicle(
+                selectedVehicle.getYear(),
+                selectedVehicle.getMake(),
+                selectedVehicle.getModel()
+        );
+
         // Fetch additional vehicle details
         userVehicleApi.getVehicleByIndex(selectedVehicle.getCarId()).enqueue(new Callback<ResponseBody>() {
             @Override
@@ -701,6 +711,7 @@ public class FirstFragment extends Fragment {
         // Update vehicle buttons
         updateVehicleButtons();
     }
+
 
     // Prompt user to add a new vehicle
     private void promptAddVehicle() {
@@ -1039,6 +1050,91 @@ public class FirstFragment extends Fragment {
             return new ArrayList<>(); // Return empty list on error
         }
     }
+
+
+    private void compileOilConfig() {
+        //Access selected vehicle information
+        String year = VariableAccess.getInstance().getActiveVehicle().get(0);
+        String make = VariableAccess.getInstance().getActiveVehicle().get(1);
+        String model = VariableAccess.getInstance().getActiveVehicle().get(2);
+
+        // API call to the database
+        Call<ResponseBody> checkOilConfig = fortuneApi.checkOilConfig(year, make, model);
+        checkOilConfig.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    try {
+                        String responseString = response.body().string();
+
+                        // Ensure response only contains JSON, handle any extra messages on the server-side
+                        if (responseString.startsWith("{")) {
+                            JSONObject jsonResponse = new JSONObject(responseString);
+
+                            if (jsonResponse.getString("status").equals("success")) {
+                                if (jsonResponse.getString("message").startsWith("Maintenance details found")) {
+                                    String printString = jsonResponse.getString("miles_period");
+                                    printString += ":";
+                                    printString += jsonResponse.getString("maintenance_type");
+
+                                    String finalPrintString = printString;
+                                    requireActivity().runOnUiThread(() ->
+                                    {
+                                        VariableAccess.getInstance().setOilConfig(finalPrintString);
+                                    });
+                                }
+                            } else {
+                                // Show error message in a toast
+                                requireActivity().runOnUiThread(() ->
+                                        {
+                                            Toast.makeText(requireContext(), "JSON status: failure", Toast.LENGTH_SHORT).show();
+                                        }
+                                );
+                            }
+                        } else {
+                            requireActivity().runOnUiThread(() ->
+                                    {
+                                        Toast.makeText(requireContext(), "Invalid response format", Toast.LENGTH_SHORT).show();
+                                    }
+                            );
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        String errorMessage = e.getMessage() != null ? e.getMessage() : "Unknown error 1";
+
+                        requireActivity().runOnUiThread(() ->
+                                Toast.makeText(requireContext(), e.getMessage(), Toast.LENGTH_SHORT).show()
+                        );
+                    }
+                } else {
+                    // Handle HTTP error response
+                    String errorBody = null;
+                    try {
+                        if (response.errorBody() != null) {
+                            errorBody = response.errorBody().string();
+                        }
+                    } catch (Exception e) {
+                        errorBody = "Error processing error response.";
+                    }
+                    final String finalErrorBody = errorBody != null ? errorBody : "Unknown error 2";
+                    requireActivity().runOnUiThread(() ->
+                            Toast.makeText(requireContext(), finalErrorBody, Toast.LENGTH_SHORT).show()
+                    );
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                String errorMessage = t.getMessage() != null ? t.getMessage() : "Unknown error 3";
+
+                requireActivity().runOnUiThread(() ->
+                        Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_SHORT).show()
+
+                );
+            }
+        });
+    }
+
 
     @Override
     public void onDestroyView() {

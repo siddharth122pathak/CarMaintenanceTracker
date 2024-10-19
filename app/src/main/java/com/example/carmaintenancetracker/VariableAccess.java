@@ -1,5 +1,7 @@
 package com.example.carmaintenancetracker;
 
+import java.util.Vector;
+
 public class VariableAccess {
     private static VariableAccess instance;
 
@@ -7,6 +9,8 @@ public class VariableAccess {
     private String exampleVariable;
     private String upcomingMaintenanceMiles;
     private String upcomingMaintenanceTime;
+    private Vector<String> activeVehicle;
+    private String oilConfig;
 
     //private constructor to prevent instantiation
     private VariableAccess() {}
@@ -23,12 +27,10 @@ public class VariableAccess {
     public String getExampleVariable() {
         return exampleVariable;
     }
-    public String getUpcomingMaintenanceMiles() {
-        return upcomingMaintenanceMiles;
-    }
-    public String getUpcomingMaintenanceTime() {
-        return upcomingMaintenanceTime;
-    }
+    public String getUpcomingMaintenanceMiles() { return upcomingMaintenanceMiles; }
+    public String getUpcomingMaintenanceTime() { return upcomingMaintenanceTime; }
+    public Vector<String> getActiveVehicle() { return activeVehicle; }
+    public String getOilConfig() { return oilConfig; }
 
     //SET VARIABLES HERE
     public void setExampleVariable(String exampleVariable) {
@@ -36,4 +38,12 @@ public class VariableAccess {
     }
     public void setUpcomingMaintenanceMiles(String upcomingMaintenanceMiles) { this.upcomingMaintenanceMiles = upcomingMaintenanceMiles; }
     public void setUpcomingMaintenanceTime(String upcomingMaintenanceTime) { this.upcomingMaintenanceTime = upcomingMaintenanceTime; }
+    public void setActiveVehicle(String year, String make, String model) {
+        Vector<String> vector = new Vector<>();
+        vector.add(year);
+        vector.add(make);
+        vector.add(model);
+        this.activeVehicle = vector;
+    }
+    public void setOilConfig(String oilConfig) { this.oilConfig = oilConfig; }
 }
