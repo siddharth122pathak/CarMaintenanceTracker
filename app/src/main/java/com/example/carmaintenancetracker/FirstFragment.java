@@ -3,6 +3,7 @@ package com.example.carmaintenancetracker;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
@@ -26,13 +27,18 @@ import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import okhttp3.ResponseBody;
 import org.jetbrains.annotations.NotNull;
+import org.json.JSONObject;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /** @noinspection CallToPrintStackTrace*/
 public class FirstFragment extends Fragment {
@@ -55,6 +61,9 @@ public class FirstFragment extends Fragment {
     private TextView carDetails1, carMileage1, carDetails2, carMileage2, carDetails3, carMileage3;
     private ImageButton vehicle1ImageButton, vehicle2ImageButton, vehicle3ImageButton;
     private boolean hasNavigatedToAddVehicle = false;
+    private TextView nextMaintenanceTitle;
+    private TextView nextMaintenanceMiles;
+    private TextView nextMaintenanceDate;
 
     private final List<Integer> vehicleMileage = new ArrayList<>();
     private final List<String> vehicleList = new ArrayList<>();
@@ -64,6 +73,7 @@ public class FirstFragment extends Fragment {
     private int currentVehicleIndex = 0;
 
     private UserVehicleApi userVehicleApi;  // Retrofit API interface
+    private FortuneApi fortuneApi;
     UserVehicle userVehicle = new UserVehicle();
 
     @Nullable
@@ -73,6 +83,7 @@ public class FirstFragment extends Fragment {
 
         // Initialize Retrofit and API
         userVehicleApi = RetrofitClient.getRetrofitInstance().create(UserVehicleApi.class);
+        fortuneApi = RetrofitClient.getRetrofitInstance().create(FortuneApi.class);
 
         loadVehiclesFromServer();
         return binding.getRoot();
@@ -116,8 +127,6 @@ public class FirstFragment extends Fragment {
 
     private void loadVehiclesFromServer() {
         String userId = getUserIdFromSession();
-
-
 
         userVehicleApi.getAllVehicles(userId).enqueue(new Callback<ResponseBody>() {
             @Override
@@ -176,6 +185,9 @@ public class FirstFragment extends Fragment {
         lastUpdatedText = view.findViewById(R.id.textView_selected_car_mileage_last_updated);
         carImageView = view.findViewById(R.id.imageView_selected_car);
         carAnimationView = view.findViewById(R.id.carAnimation);
+        nextMaintenanceTitle = view.findViewById(R.id.textView_next_maintenance_title);
+        nextMaintenanceMiles = view.findViewById(R.id.textView_next_maintenance_miles);
+        nextMaintenanceDate = view.findViewById(R.id.textView_next_maintenance_date);
 
         // Initialize new vehicle buttons and animations
         vehicle1ImageButton = view.findViewById(R.id.btn_vehicle_1);
@@ -249,10 +261,6 @@ public class FirstFragment extends Fragment {
         vehicle1Button.setOnLongClickListener(v -> showVehicleOptionsDialog(1));
         vehicle2Button.setOnLongClickListener(v -> showVehicleOptionsDialog(2));
         vehicle3Button.setOnLongClickListener(v -> showVehicleOptionsDialog(3));
-
-        // Assign upcoming maintenance strings
-        VariableAccess.getInstance().setUpcomingMaintenanceMiles("testing miles");
-        VariableAccess.getInstance().setUpcomingMaintenanceTime("testing time");
     }
 
     // Method to set up vehicle buttons
@@ -490,7 +498,120 @@ public class FirstFragment extends Fragment {
                 : year + " " + make + " " + model;
         binding.selectedCarTitle.setText(title);
 
-        // Fetch additional vehicle details if needed (e.g., mileage and last update time)
+        // Set selected car in VariableAccess
+        VariableAccess.getInstance().setActiveVehicle(
+                selectedVehicle.getYear(),
+                selectedVehicle.getMake(),
+                selectedVehicle.getModel()
+        );
+
+        // Callback after configs are fetched
+        Runnable finalCallback = () -> {
+            // Only proceed if all the configs are not null
+            if (VariableAccess.getInstance().getOilConfig() != null
+                    && VariableAccess.getInstance().getOilConfigT() != null
+                    && VariableAccess.getInstance().getTireConfig() != null
+                    && VariableAccess.getInstance().getTireConfigT() != null) {
+
+                //load full mileage string
+                String milesStr = UpcomingMaintenanceMethods.getInstance().concatenateConfigStr(
+                        VariableAccess.getInstance().getOilConfig(),
+                        VariableAccess.getInstance().getTireConfig(),
+                        "",
+                        "",
+                        "",
+                        false
+                );
+
+                //load full time string
+                String timeStr = UpcomingMaintenanceMethods.getInstance().concatenateConfigStr(
+                        VariableAccess.getInstance().getOilConfigT(),
+                        VariableAccess.getInstance().getTireConfigT(),
+                        "",
+                        "",
+                        "",
+                        true
+                );
+
+                //preload strings into variables
+                VariableAccess.getInstance().setUpcomingMaintenanceMiles(milesStr);
+                VariableAccess.getInstance().setUpcomingMaintenanceTime(timeStr);
+
+                //discover next maintenance
+                String nextTitle = VariableAccess.getInstance().getUpcomingMaintenanceMiles();
+                String nextMiles = nextTitle;
+                String nextTime = VariableAccess.getInstance().getUpcomingMaintenanceTime();
+
+                // Regular expressions to extract mileage and maintenance task
+                Pattern mileagePattern = Pattern.compile("(\\d+) miles:");
+                Pattern timePattern = Pattern.compile("In\\s+(\\d+)\\s+(days|months|years):");
+                Pattern taskPattern = Pattern.compile(":\\s*(.+?)(?=\\n|$)");
+
+                // Create matchers for the input string
+                Matcher mileageMatcher = mileagePattern.matcher(nextMiles);
+                Matcher timeMatcher = timePattern.matcher(nextTime);
+                Matcher taskMatcher = taskPattern.matcher(nextTitle);
+
+                String mileage = null;
+                String time = null;
+                String maintenanceTask = null;
+                int totalDays = 0;
+
+                // Find the first mileage
+                if (mileageMatcher.find()) {
+                    mileage = mileageMatcher.group(1); // Extract the mileage value
+
+                    //convert it into readable text
+                    nextMiles = mileage + " miles";
+                }
+
+                // Find the first time
+                if (timeMatcher.find()) {
+                    int amount = Integer.parseInt(timeMatcher.group(1)); // Extract the numeric value
+                    String unit = timeMatcher.group(2); // Extract the unit (days, months, years)
+
+                    // Convert to days based on the unit
+                    switch (unit) {
+                        case "days":
+                            totalDays = amount;
+                            break;
+                        case "months":
+                            totalDays = amount * 30;
+                            break;
+                        case "years":
+                            totalDays = amount * 360;
+                            break;
+                    }
+
+                    //create final string
+                    time = totalDays + "";
+
+                    //convert it into actual time
+                    LocalDate futureDate = LocalDate.now().plusDays(totalDays);
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM dd, yyyy");
+                    nextTime = futureDate.format(formatter);
+                }
+
+                // Find the first maintenance task
+                if (taskMatcher.find()) {
+                    maintenanceTask = taskMatcher.group(1).trim(); // Extract the maintenance task and trim any whitespace
+                    nextTitle = maintenanceTask;
+                }
+
+                //assign text to TextViews
+                nextMaintenanceTitle.setText(nextTitle);
+                nextMaintenanceMiles.setText(nextMiles);
+                nextMaintenanceDate.setText(nextTime);
+
+            } else {
+                Log.d("DEBUG", "NULL CONFIGS");
+            }
+        };
+
+        // Chain the compile methods for configs
+        compileOilConfig(() -> compileTireConfig(finalCallback));
+
+        // Fetch additional vehicle details
         userVehicleApi.getVehicleByIndex(selectedVehicle.getCarId()).enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(@NotNull Call<ResponseBody> call, @NotNull Response<ResponseBody> response) {
@@ -1023,6 +1144,192 @@ public class FirstFragment extends Fragment {
             return new ArrayList<>(); // Return empty list on error
         }
     }
+
+
+    private void compileOilConfig(Runnable callback) {
+        //Access selected vehicle information
+        String year = VariableAccess.getInstance().getActiveVehicle().get(0);
+        String make = VariableAccess.getInstance().getActiveVehicle().get(1);
+        String model = VariableAccess.getInstance().getActiveVehicle().get(2);
+
+        // API call to the database
+        Call<ResponseBody> checkOilConfig = fortuneApi.checkOilConfig(year, make, model);
+        checkOilConfig.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    try {
+                        String responseString = response.body().string();
+
+                        // Ensure response only contains JSON, handle any extra messages on the server-side
+                        if (responseString.startsWith("{")) {
+                            JSONObject jsonResponse = new JSONObject(responseString);
+
+                            if (jsonResponse.getString("status").equals("success")) {
+                                if (jsonResponse.getString("message").startsWith("Maintenance details found")) {
+                                    //set variables
+                                    String type = jsonResponse.getString("maintenance_type");
+                                    String miles = jsonResponse.getString("miles_period");
+                                    String time = jsonResponse.getString("maintenance_period");
+
+                                    //Set strings
+                                    final String printString1 = miles + ":" + type;
+                                    final String printString2 = time + ":" + type;
+
+                                    requireActivity().runOnUiThread(() ->
+                                    {
+                                        VariableAccess.getInstance().setOilConfig(printString1);
+                                        VariableAccess.getInstance().setOilConfigT(printString2);
+                                    });
+
+                                    if (callback != null) {
+                                        callback.run();
+                                    }
+                                }
+                            } else {
+                                // Show error message in a toast
+                                requireActivity().runOnUiThread(() ->
+                                        {
+                                            Toast.makeText(requireContext(), "JSON status: failure", Toast.LENGTH_SHORT).show();
+                                        }
+                                );
+                            }
+                        } else {
+                            requireActivity().runOnUiThread(() ->
+                                    {
+                                        Toast.makeText(requireContext(), "Invalid response format", Toast.LENGTH_SHORT).show();
+                                    }
+                            );
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        String errorMessage = e.getMessage() != null ? e.getMessage() : "Unknown error 1";
+
+                        requireActivity().runOnUiThread(() ->
+                                Toast.makeText(requireContext(), e.getMessage(), Toast.LENGTH_SHORT).show()
+                        );
+                    }
+                } else {
+                    // Handle HTTP error response
+                    String errorBody = null;
+                    try {
+                        if (response.errorBody() != null) {
+                            errorBody = response.errorBody().string();
+                        }
+                    } catch (Exception e) {
+                        errorBody = "Error processing error response.";
+                    }
+                    final String finalErrorBody = errorBody != null ? errorBody : "Unknown error 2";
+                    requireActivity().runOnUiThread(() ->
+                            Toast.makeText(requireContext(), finalErrorBody, Toast.LENGTH_SHORT).show()
+                    );
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                String errorMessage = t.getMessage() != null ? t.getMessage() : "Unknown error 3";
+
+                requireActivity().runOnUiThread(() ->
+                        Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_SHORT).show()
+
+                );
+            }
+        });
+    }
+
+    private void compileTireConfig(Runnable callback) {
+        //Access selected vehicle information
+        String year = VariableAccess.getInstance().getActiveVehicle().get(0);
+        String make = VariableAccess.getInstance().getActiveVehicle().get(1);
+        String model = VariableAccess.getInstance().getActiveVehicle().get(2);
+
+        // API call to the database
+        Call<ResponseBody> checkTireConfig = fortuneApi.checkTireConfig(year, make, model);
+        checkTireConfig.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    try {
+                        String responseString = response.body().string();
+
+                        // Ensure response only contains JSON, handle any extra messages on the server-side
+                        if (responseString.startsWith("{")) {
+                            JSONObject jsonResponse = new JSONObject(responseString);
+
+                            if (jsonResponse.getString("status").equals("success")) {
+                                if (jsonResponse.getString("message").startsWith("Maintenance details found")) {
+                                    //set variables
+                                    String type = jsonResponse.getString("maintenance_type");
+                                    String miles = jsonResponse.getString("miles_period");
+                                    String time = jsonResponse.getString("maintenance_period");
+
+                                    //Set strings
+                                    final String printString1 = miles + ":" + type;
+                                    final String printString2 = time + ":" + type;
+
+                                    requireActivity().runOnUiThread(() ->
+                                    {
+                                        VariableAccess.getInstance().setTireConfig(printString1);
+                                        VariableAccess.getInstance().setTireConfigT(printString2);
+                                    });
+
+                                    if (callback != null) {
+                                        callback.run();
+                                    }
+                                }
+                            } else {
+                                // Show error message in a toast
+                                requireActivity().runOnUiThread(() ->
+                                        {
+                                            Toast.makeText(requireContext(), "JSON status: failure", Toast.LENGTH_SHORT).show();
+                                        }
+                                );
+                            }
+                        } else {
+                            requireActivity().runOnUiThread(() ->
+                                    {
+                                        Toast.makeText(requireContext(), "Invalid response format", Toast.LENGTH_SHORT).show();
+                                    }
+                            );
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        String errorMessage = e.getMessage() != null ? e.getMessage() : "Unknown error 1";
+
+                        requireActivity().runOnUiThread(() ->
+                                Toast.makeText(requireContext(), e.getMessage(), Toast.LENGTH_SHORT).show()
+                        );
+                    }
+                } else {
+                    // Handle HTTP error response
+                    String errorBody = null;
+                    try {
+                        if (response.errorBody() != null) {
+                            errorBody = response.errorBody().string();
+                        }
+                    } catch (Exception e) {
+                        errorBody = "Error processing error response.";
+                    }
+                    final String finalErrorBody = errorBody != null ? errorBody : "Unknown error 2";
+                    requireActivity().runOnUiThread(() ->
+                            Toast.makeText(requireContext(), finalErrorBody, Toast.LENGTH_SHORT).show()
+                    );
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                String errorMessage = t.getMessage() != null ? t.getMessage() : "Unknown error 3";
+
+                requireActivity().runOnUiThread(() ->
+                        Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_SHORT).show()
+
+                );
+            }
+        });
+    }
+
 
     @Override
     public void onDestroyView() {

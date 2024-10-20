@@ -20,8 +20,8 @@
     <string name="notes">Notes</string>
     <string name="maintenance_by_miles_title">Maintenance by Miles</string>
     <string name="maintenance_by_time_title">Maintenance by Time</string>
-    <string name="upcoming_maintenance_miles_text">This is the Maintenance by MILES text</string>
-    <string name="upcoming_maintenance_time_text">This is the Maintenance by TIME text</string>
+    <string name="upcoming_maintenance_miles_text">Vehicle not found in Database</string>
+    <string name="upcoming_maintenance_time_text">Vehicle not found in Database</string>
     <string name="title_add_new_maintenance">Add New Maintenance</string>
     <string name="year_label">Year</string>
     <string name="make_label">Make</string>
