@@ -1,5 +1,8 @@
 package com.example.carmaintenancetracker;
 
+import android.util.Log;
+import android.view.ViewDebug;
+
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
@@ -67,9 +70,15 @@ public class UpcomingMaintenanceMethods {
 
 
     //PUBLIC METHODS
-    public String concatenateConfigStr(String oilConfig, String tireConfig, String brakeConfig, String interiorConfig, String engineConfig) {
+    public String concatenateConfigStr(String oilConfig, String tireConfig, String brakeConfig, String interiorConfig, String engineConfig, boolean time) {
         //assign maintenanceList
         Vector<Vector<String>> maintenanceList = new Vector<>();
+
+        Log.d("DEBUG", "oilConfig: " + oilConfig);
+        Log.d("DEBUG", "tireConfig: " + tireConfig);
+        Log.d("DEBUG", "brakeConfig: " + brakeConfig);
+        Log.d("DEBUG", "interiorConfig: " + interiorConfig);
+        Log.d("DEBUG", "engineConfig: " + engineConfig);
 
         //extract each string
         if (!Objects.equals(oilConfig, "")) {
@@ -135,7 +144,43 @@ public class UpcomingMaintenanceMethods {
         for (Vector<String> maintenance : resultingMaintenanceList) {
             // Get the mileage (first element) and create the heading
             String miles = maintenance.get(0);
-            result.append("At ").append(miles).append(" miles:\n");
+
+            //Check if method is for miles or time and build string accordingly
+            if (!time) {
+                result.append("At ").append(miles).append(" miles:\n");
+            } else {
+                boolean months = false;
+                boolean years = false;
+
+                Log.d("DEBUG", "miles (D): " + miles);
+
+                if (Integer.parseInt(miles) >= 60) {
+                    months = true;
+                    int milesInt = Integer.parseInt(miles);
+                    milesInt /= 30;
+                    miles = milesInt + "";
+                    Log.d("DEBUG", "miles (M): " + miles);
+
+
+                    if (Integer.parseInt(miles) >= 24) {
+                        months = false;
+                        years = true;
+                        milesInt = Integer.parseInt(miles);
+                        milesInt /= 12;
+                        miles = milesInt + "";
+                        Log.d("DEBUG", "miles (Y): " + miles);
+
+                    }
+                }
+
+                if (years) {
+                    result.append("In ").append(miles).append(" years:\n");
+                } else if (months) {
+                    result.append("In ").append(miles).append(" months:\n");
+                } else {
+                    result.append("In ").append(miles).append(" days:\n");
+                }
+            }
 
             // Append each maintenance task (starting from index 1)
             for (int i = 1; i < maintenance.size(); i++) {

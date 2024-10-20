@@ -14,4 +14,12 @@ public interface FortuneApi {
             @Query("make") String make,
             @Query("model") String model
     );
+
+    // GET request to check the tire config
+    @GET("/check_tire_config.php")
+    Call<ResponseBody> checkTireConfig(
+            @Query("year") String year,
+            @Query("make") String make,
+            @Query("model") String model
+    );
 }

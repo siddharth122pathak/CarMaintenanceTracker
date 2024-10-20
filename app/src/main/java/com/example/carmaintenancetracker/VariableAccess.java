@@ -11,6 +11,9 @@ public class VariableAccess {
     private String upcomingMaintenanceTime;
     private Vector<String> activeVehicle;
     private String oilConfig;
+    private String oilConfigT; //T = time version vs miles version used above
+    private String tireConfig;
+    private String tireConfigT;
 
     //private constructor to prevent instantiation
     private VariableAccess() {}
@@ -31,6 +34,9 @@ public class VariableAccess {
     public String getUpcomingMaintenanceTime() { return upcomingMaintenanceTime; }
     public Vector<String> getActiveVehicle() { return activeVehicle; }
     public String getOilConfig() { return oilConfig; }
+    public String getOilConfigT() { return oilConfigT; }
+    public String getTireConfig() { return tireConfig; }
+    public String getTireConfigT() { return tireConfigT; }
 
     //SET VARIABLES HERE
     public void setExampleVariable(String exampleVariable) {
@@ -46,4 +52,7 @@ public class VariableAccess {
         this.activeVehicle = vector;
     }
     public void setOilConfig(String oilConfig) { this.oilConfig = oilConfig; }
+    public void setOilConfigT(String oilConfigT) { this.oilConfigT = oilConfigT; }
+    public void setTireConfig(String tireConfig) { this.tireConfig = tireConfig; }
+    public void setTireConfigT(String tireConfigT) { this.tireConfigT = tireConfigT; }
 }

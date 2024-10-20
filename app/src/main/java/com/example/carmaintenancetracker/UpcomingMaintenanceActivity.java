@@ -3,7 +3,6 @@ package com.example.carmaintenancetracker;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
-import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
@@ -12,13 +11,6 @@ import android.view.View;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import com.example.carmaintenancetracker.databinding.ActivityUpcomingMaintenanceBinding;
-import okhttp3.ResponseBody;
-import org.json.JSONObject;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-
-import java.util.StringTokenizer;
 
 public class UpcomingMaintenanceActivity extends Fragment {
     private TextView mainText;
@@ -69,13 +61,17 @@ public class UpcomingMaintenanceActivity extends Fragment {
         //change main text to default
         String mainStr = getResources().getString(R.string.upcoming_maintenance_miles_text);
 
-        mainStr = UpcomingMaintenanceMethods.getInstance().concatenateConfigStr(
-                VariableAccess.getInstance().getOilConfig(),
-                "",
-                "",
-                "",
-                ""
-        );
+        if (VariableAccess.getInstance().getOilConfig() != null
+                && VariableAccess.getInstance().getTireConfig() != null) {
+            mainStr = UpcomingMaintenanceMethods.getInstance().concatenateConfigStr(
+                    VariableAccess.getInstance().getOilConfig(),
+                    VariableAccess.getInstance().getTireConfig(),
+                    "",
+                    "",
+                    "",
+                    false
+            );
+        }
 
         //change main text
         mainText.setText(mainStr);
@@ -87,11 +83,23 @@ public class UpcomingMaintenanceActivity extends Fragment {
         milesTab.setBackground(ContextCompat.getDrawable(requireContext(), R.drawable.tab_background_unselected));
         timeTab.setBackground(ContextCompat.getDrawable(requireContext(), R.drawable.tab_background_selected));
 
-        //update time text based on vehicle status
-        //oilConfigString = getResources().getString(R.string.upcoming_maintenance_time_text);
+        //change main text to default
+        String mainStr = getResources().getString(R.string.upcoming_maintenance_time_text);
+
+        if (VariableAccess.getInstance().getOilConfigT() != null
+                && VariableAccess.getInstance().getTireConfigT() != null) {
+            mainStr = UpcomingMaintenanceMethods.getInstance().concatenateConfigStr(
+                    VariableAccess.getInstance().getOilConfigT(),
+                    VariableAccess.getInstance().getTireConfigT(),
+                    "",
+                    "",
+                    "",
+                    true
+            );
+        }
 
         //change main text
-        mainText.setText(VariableAccess.getInstance().getUpcomingMaintenanceTime());
+        mainText.setText(mainStr);
     }
 
 }
