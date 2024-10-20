@@ -165,7 +165,7 @@ public class FirstFragment extends Fragment {
 
 
     // Retrieve user ID from shared preferences
-    private String getUserIdFromSession() {
+    public String getUserIdFromSession() {
         SharedPreferences sharedPreferences = Objects.requireNonNull(getActivity()).getSharedPreferences("UserSession", Context.MODE_PRIVATE);
         return sharedPreferences.getString("userId", null);
     }
@@ -720,7 +720,7 @@ public class FirstFragment extends Fragment {
         vehicleList.clear();  // Clear the list to update it with the active vehicle
 
         // Fetch the active vehicle's details from the server
-        userVehicleApi.getActiveVehicle().enqueue(new Callback<ResponseBody>() {
+        userVehicleApi.getActiveVehicle(getUserIdFromSession()).enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(@NotNull Call<ResponseBody> call, @NotNull Response<ResponseBody> response) {
                 if (response.isSuccessful() && response.body() != null) {

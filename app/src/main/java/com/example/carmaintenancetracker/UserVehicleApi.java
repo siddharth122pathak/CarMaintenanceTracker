@@ -31,7 +31,7 @@ public interface UserVehicleApi {
 
     // Get the active vehicle
     @GET("/get_active_vehicle.php")
-    Call<ResponseBody> getActiveVehicle();
+    Call<ResponseBody> getActiveVehicle( @Query("id") String userId);
 
 
     // Update mileage for a vehicle
