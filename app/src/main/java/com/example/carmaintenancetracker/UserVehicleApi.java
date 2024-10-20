@@ -52,9 +52,9 @@ public interface UserVehicleApi {
 
     // Swap two vehicles
     @FormUrlEncoded
-    @POST("/swap_vehicles.php")
+    @POST("/swap_vehicle.php")
     Call<ResponseBody> swapVehicles(
-            @Field("userId") String userId,
+            @Field("id") String userId,
             @Field("primaryVehicleId") String primaryVehicleId,
             @Field("targetVehicleId") String targetVehicleId
     );

@@ -117,6 +117,8 @@ public class FirstFragment extends Fragment {
     private void loadVehiclesFromServer() {
         String userId = getUserIdFromSession();
 
+
+
         userVehicleApi.getAllVehicles(userId).enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(@NotNull Call<ResponseBody> call, @NotNull Response<ResponseBody> response) {
@@ -248,33 +250,29 @@ public class FirstFragment extends Fragment {
         vehicle2Button.setOnLongClickListener(v -> showVehicleOptionsDialog(2));
         vehicle3Button.setOnLongClickListener(v -> showVehicleOptionsDialog(3));
 
-        //assign upcoming maintenance strings
+        // Assign upcoming maintenance strings
         VariableAccess.getInstance().setUpcomingMaintenanceMiles("testing miles");
         VariableAccess.getInstance().setUpcomingMaintenanceTime("testing time");
     }
 
     // Method to set up vehicle buttons
     private void setupVehicleButtons(View view) {
-        ImageButton vehicle1Button = view.findViewById(R.id.btn_vehicle_1);
-        ImageButton vehicle2Button = view.findViewById(R.id.btn_vehicle_2);
-        ImageButton vehicle3Button = view.findViewById(R.id.btn_vehicle_3);
+        vehicle1ImageButton = view.findViewById(R.id.btn_vehicle_1);
+        vehicle2ImageButton = view.findViewById(R.id.btn_vehicle_2);
+        vehicle3ImageButton = view.findViewById(R.id.btn_vehicle_3);
+        vehicle1Button = view.findViewById(R.id.btn_vehicle_1_text);
+        vehicle2Button = view.findViewById(R.id.btn_vehicle_2_text);
+        vehicle3Button = view.findViewById(R.id.btn_vehicle_3_text);
 
         // Set up button click listeners to swap or add vehicles
-        vehicle1Button.setOnClickListener(v -> switchOrAddVehicle(1));
-        vehicle2Button.setOnClickListener(v -> switchOrAddVehicle(2));
-        vehicle3Button.setOnClickListener(v -> switchOrAddVehicle(3));
+        vehicle1ImageButton.setOnClickListener(v -> promptAddVehicle());
+        vehicle2ImageButton.setOnClickListener(v -> promptAddVehicle());
+        vehicle3ImageButton.setOnClickListener(v -> promptAddVehicle());
+        vehicle1Button.setOnClickListener(v -> switchVehicle(1));
+        vehicle2Button.setOnClickListener(v -> switchVehicle(2));
+        vehicle3Button.setOnClickListener(v -> switchVehicle(3));
     }
 
-    // Method to handle switching to or adding a vehicle
-    private void switchOrAddVehicle(int vehicleIndex) {
-        if (vehicleIndex < vehicleList.size()) {
-            // Call switchVehicle for the specified index
-            switchVehicle(vehicleIndex);
-        } else {
-            // If vehicleIndex exceeds list size, prompt to add a new vehicle
-            promptAddVehicle();
-        }
-    }
 
     // Method to update the last updated text
     @SuppressLint("SetTextI18n")
@@ -570,6 +568,8 @@ public class FirstFragment extends Fragment {
             String userId = getUserIdFromSession();  // Retrieve the user ID
             String primaryVehicleId = getCarId(0);   // The currently active vehicle (index 0)
             String targetVehicleId = getCarId(vehicleIndex);  // Get the target vehicle's ID to swap with
+            Log.d("DEBUG",primaryVehicleId);
+            Log.d("DEBUG",targetVehicleId);
 
             // Use Retrofit to make the POST request to swap vehicles
             userVehicleApi.swapVehicles(userId, primaryVehicleId, targetVehicleId).enqueue(new Callback<ResponseBody>() {
@@ -577,6 +577,7 @@ public class FirstFragment extends Fragment {
                 public void onResponse(@NotNull Call<ResponseBody> call, @NotNull Response<ResponseBody> response) {
                     if (response.isSuccessful()) {
                         // Update UI to reflect the newly active vehicle
+                        loadVehiclesFromServer();
                         updateActiveVehicleUI();
                         updateVehicleButtons();
                         Toast.makeText(getContext(), "Vehicle switched successfully", Toast.LENGTH_SHORT).show();
@@ -742,7 +743,7 @@ public class FirstFragment extends Fragment {
                 carAnimation1.setAnimation(animationResource);
                 carAnimation1.playAnimation();
 
-                vehicle1Button.setOnClickListener(v -> showVehicle(index));
+                vehicle1Button.setOnClickListener(v -> switchVehicle(index));
                 break;
 
             case 2:
@@ -757,7 +758,7 @@ public class FirstFragment extends Fragment {
                 carAnimation2.setAnimation(animationResource);
                 carAnimation2.playAnimation();
 
-                vehicle2Button.setOnClickListener(v -> showVehicle(index));
+                vehicle2Button.setOnClickListener(v -> switchVehicle(index));
                 break;
 
             case 3:
@@ -772,7 +773,7 @@ public class FirstFragment extends Fragment {
                 carAnimation3.setAnimation(animationResource);
                 carAnimation3.playAnimation();
 
-                vehicle3Button.setOnClickListener(v -> showVehicle(index));
+                vehicle3Button.setOnClickListener(v -> switchVehicle(index));
                 break;
 
             default:
