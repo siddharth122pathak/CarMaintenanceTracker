@@ -59,6 +59,9 @@ public class FirstFragment extends Fragment {
     private TextView carDetails1, carMileage1, carDetails2, carMileage2, carDetails3, carMileage3;
     private ImageButton vehicle1ImageButton, vehicle2ImageButton, vehicle3ImageButton;
     private boolean hasNavigatedToAddVehicle = false;
+    private TextView nextMaintenanceTitle;
+    private TextView nextMaintenanceMiles;
+    private TextView nextMaintenanceDate;
 
     private final List<Integer> vehicleMileage = new ArrayList<>();
     private final List<String> vehicleList = new ArrayList<>();
@@ -224,6 +227,9 @@ public class FirstFragment extends Fragment {
         lastUpdatedText = view.findViewById(R.id.textView_selected_car_mileage_last_updated);
         carImageView = view.findViewById(R.id.imageView_selected_car);
         carAnimationView = view.findViewById(R.id.carAnimation);
+        nextMaintenanceTitle = view.findViewById(R.id.textView_next_maintenance_title);
+        nextMaintenanceMiles = view.findViewById(R.id.textView_next_maintenance_miles);
+        nextMaintenanceDate = view.findViewById(R.id.textView_next_maintenance_date);
 
         // Initialize new vehicle buttons and animations
         vehicle1ImageButton = view.findViewById(R.id.btn_vehicle_1);
@@ -297,10 +303,6 @@ public class FirstFragment extends Fragment {
         vehicle1Button.setOnLongClickListener(v -> showVehicleOptionsDialog(1));
         vehicle2Button.setOnLongClickListener(v -> showVehicleOptionsDialog(2));
         vehicle3Button.setOnLongClickListener(v -> showVehicleOptionsDialog(3));
-
-        //assign upcoming maintenance strings
-        VariableAccess.getInstance().setUpcomingMaintenanceMiles("testing miles");
-        VariableAccess.getInstance().setUpcomingMaintenanceTime("testing time");
     }
 
     // Method to set up vehicle buttons
@@ -549,9 +551,44 @@ public class FirstFragment extends Fragment {
                 selectedVehicle.getModel()
         );
 
-        //update upcoming maintenance configs
-        compileOilConfig();
-        compileTireConfig();
+        // Callback after both configs are fetched
+        Runnable finalCallback = () -> {
+            // Only proceed if all the configs are not null
+            if (VariableAccess.getInstance().getOilConfig() != null
+                    && VariableAccess.getInstance().getOilConfigT() != null
+                    && VariableAccess.getInstance().getTireConfig() != null
+                    && VariableAccess.getInstance().getTireConfigT() != null) {
+
+                //load full mileage string
+                String milesStr = UpcomingMaintenanceMethods.getInstance().concatenateConfigStr(
+                        VariableAccess.getInstance().getOilConfig(),
+                        VariableAccess.getInstance().getTireConfig(),
+                        "",
+                        "",
+                        "",
+                        false
+                );
+
+                //load full time string
+                String timeStr = UpcomingMaintenanceMethods.getInstance().concatenateConfigStr(
+                        VariableAccess.getInstance().getOilConfigT(),
+                        VariableAccess.getInstance().getTireConfigT(),
+                        "",
+                        "",
+                        "",
+                        true
+                );
+
+                //preload strings into variables
+                VariableAccess.getInstance().setUpcomingMaintenanceMiles(milesStr);
+                VariableAccess.getInstance().setUpcomingMaintenanceTime(timeStr);
+            } else {
+                Log.d("DEBUG", "NULL CONFIGS");
+            }
+        };
+
+        // Chain the compile methods
+        compileOilConfig(() -> compileTireConfig(finalCallback));
 
         // Fetch additional vehicle details
         userVehicleApi.getVehicleByIndex(selectedVehicle.getCarId()).enqueue(new Callback<ResponseBody>() {
@@ -1056,7 +1093,7 @@ public class FirstFragment extends Fragment {
     }
 
 
-    private void compileOilConfig() {
+    private void compileOilConfig(Runnable callback) {
         //Access selected vehicle information
         String year = VariableAccess.getInstance().getActiveVehicle().get(0);
         String make = VariableAccess.getInstance().getActiveVehicle().get(1);
@@ -1091,6 +1128,10 @@ public class FirstFragment extends Fragment {
                                         VariableAccess.getInstance().setOilConfig(printString1);
                                         VariableAccess.getInstance().setOilConfigT(printString2);
                                     });
+
+                                    if (callback != null) {
+                                        callback.run();
+                                    }
                                 }
                             } else {
                                 // Show error message in a toast
@@ -1144,7 +1185,7 @@ public class FirstFragment extends Fragment {
         });
     }
 
-    private void compileTireConfig() {
+    private void compileTireConfig(Runnable callback) {
         //Access selected vehicle information
         String year = VariableAccess.getInstance().getActiveVehicle().get(0);
         String make = VariableAccess.getInstance().getActiveVehicle().get(1);
@@ -1179,6 +1220,10 @@ public class FirstFragment extends Fragment {
                                         VariableAccess.getInstance().setTireConfig(printString1);
                                         VariableAccess.getInstance().setTireConfigT(printString2);
                                     });
+
+                                    if (callback != null) {
+                                        callback.run();
+                                    }
                                 }
                             } else {
                                 // Show error message in a toast

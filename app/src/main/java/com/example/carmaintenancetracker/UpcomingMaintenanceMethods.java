@@ -74,12 +74,6 @@ public class UpcomingMaintenanceMethods {
         //assign maintenanceList
         Vector<Vector<String>> maintenanceList = new Vector<>();
 
-        Log.d("DEBUG", "oilConfig: " + oilConfig);
-        Log.d("DEBUG", "tireConfig: " + tireConfig);
-        Log.d("DEBUG", "brakeConfig: " + brakeConfig);
-        Log.d("DEBUG", "interiorConfig: " + interiorConfig);
-        Log.d("DEBUG", "engineConfig: " + engineConfig);
-
         //extract each string
         if (!Objects.equals(oilConfig, "")) {
             Vector<String> oilVec = extractString(oilConfig);
@@ -152,14 +146,11 @@ public class UpcomingMaintenanceMethods {
                 boolean months = false;
                 boolean years = false;
 
-                Log.d("DEBUG", "miles (D): " + miles);
-
                 if (Integer.parseInt(miles) >= 60) {
                     months = true;
                     int milesInt = Integer.parseInt(miles);
                     milesInt /= 30;
                     miles = milesInt + "";
-                    Log.d("DEBUG", "miles (M): " + miles);
 
 
                     if (Integer.parseInt(miles) >= 24) {
@@ -168,7 +159,6 @@ public class UpcomingMaintenanceMethods {
                         milesInt = Integer.parseInt(miles);
                         milesInt /= 12;
                         miles = milesInt + "";
-                        Log.d("DEBUG", "miles (Y): " + miles);
 
                     }
                 }

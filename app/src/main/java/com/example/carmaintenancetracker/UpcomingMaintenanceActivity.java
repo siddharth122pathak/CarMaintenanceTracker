@@ -45,7 +45,7 @@ public class UpcomingMaintenanceActivity extends Fragment {
         String year = VariableAccess.getInstance().getActiveVehicle().get(0);
         String make = VariableAccess.getInstance().getActiveVehicle().get(1);
         String model = VariableAccess.getInstance().getActiveVehicle().get(2);
-        String ymmFinal = year + " " + make + " " + model;
+        final String ymmFinal = year + " " + make + " " + model;
         selectedCar.setText(ymmFinal);
 
         // load first page
@@ -61,16 +61,8 @@ public class UpcomingMaintenanceActivity extends Fragment {
         //change main text to default
         String mainStr = getResources().getString(R.string.upcoming_maintenance_miles_text);
 
-        if (VariableAccess.getInstance().getOilConfig() != null
-                && VariableAccess.getInstance().getTireConfig() != null) {
-            mainStr = UpcomingMaintenanceMethods.getInstance().concatenateConfigStr(
-                    VariableAccess.getInstance().getOilConfig(),
-                    VariableAccess.getInstance().getTireConfig(),
-                    "",
-                    "",
-                    "",
-                    false
-            );
+        if (VariableAccess.getInstance().getUpcomingMaintenanceMiles() != null) {
+            mainStr = VariableAccess.getInstance().getUpcomingMaintenanceMiles();
         }
 
         //change main text
@@ -86,16 +78,8 @@ public class UpcomingMaintenanceActivity extends Fragment {
         //change main text to default
         String mainStr = getResources().getString(R.string.upcoming_maintenance_time_text);
 
-        if (VariableAccess.getInstance().getOilConfigT() != null
-                && VariableAccess.getInstance().getTireConfigT() != null) {
-            mainStr = UpcomingMaintenanceMethods.getInstance().concatenateConfigStr(
-                    VariableAccess.getInstance().getOilConfigT(),
-                    VariableAccess.getInstance().getTireConfigT(),
-                    "",
-                    "",
-                    "",
-                    true
-            );
+        if (VariableAccess.getInstance().getUpcomingMaintenanceTime() != null) {
+            mainStr = VariableAccess.getInstance().getUpcomingMaintenanceTime();
         }
 
         //change main text

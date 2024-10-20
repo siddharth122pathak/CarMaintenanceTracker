@@ -7,6 +7,7 @@ public class VariableAccess {
 
     //ADD VARIABLES HERE
     private String exampleVariable;
+    private String upcomingMaintenanceTitle;
     private String upcomingMaintenanceMiles;
     private String upcomingMaintenanceTime;
     private Vector<String> activeVehicle;
@@ -30,6 +31,7 @@ public class VariableAccess {
     public String getExampleVariable() {
         return exampleVariable;
     }
+    public String getUpcomingMaintenanceTitle() { return upcomingMaintenanceTitle; }
     public String getUpcomingMaintenanceMiles() { return upcomingMaintenanceMiles; }
     public String getUpcomingMaintenanceTime() { return upcomingMaintenanceTime; }
     public Vector<String> getActiveVehicle() { return activeVehicle; }
@@ -39,9 +41,8 @@ public class VariableAccess {
     public String getTireConfigT() { return tireConfigT; }
 
     //SET VARIABLES HERE
-    public void setExampleVariable(String exampleVariable) {
-        this.exampleVariable = exampleVariable;
-    }
+    public void setExampleVariable(String exampleVariable) { this.exampleVariable = exampleVariable; }
+    public void setUpcomingMaintenanceTitle(String upcomingMaintenanceTitle) { this.upcomingMaintenanceTitle = upcomingMaintenanceTitle; }
     public void setUpcomingMaintenanceMiles(String upcomingMaintenanceMiles) { this.upcomingMaintenanceMiles = upcomingMaintenanceMiles; }
     public void setUpcomingMaintenanceTime(String upcomingMaintenanceTime) { this.upcomingMaintenanceTime = upcomingMaintenanceTime; }
     public void setActiveVehicle(String year, String make, String model) {
