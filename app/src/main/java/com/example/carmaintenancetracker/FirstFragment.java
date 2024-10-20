@@ -34,7 +34,11 @@ import retrofit2.Response;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static android.app.Activity.RESULT_OK;
 
@@ -551,7 +555,7 @@ public class FirstFragment extends Fragment {
                 selectedVehicle.getModel()
         );
 
-        // Callback after both configs are fetched
+        // Callback after configs are fetched
         Runnable finalCallback = () -> {
             // Only proceed if all the configs are not null
             if (VariableAccess.getInstance().getOilConfig() != null
@@ -582,12 +586,79 @@ public class FirstFragment extends Fragment {
                 //preload strings into variables
                 VariableAccess.getInstance().setUpcomingMaintenanceMiles(milesStr);
                 VariableAccess.getInstance().setUpcomingMaintenanceTime(timeStr);
+
+                //discover next maintenance
+                String nextTitle = VariableAccess.getInstance().getUpcomingMaintenanceMiles();
+                String nextMiles = nextTitle;
+                String nextTime = VariableAccess.getInstance().getUpcomingMaintenanceTime();
+
+                // Regular expressions to extract mileage and maintenance task
+                Pattern mileagePattern = Pattern.compile("(\\d+) miles:");
+                Pattern timePattern = Pattern.compile("In\\s+(\\d+)\\s+(days|months|years):");
+                Pattern taskPattern = Pattern.compile(":\\s*(.+?)(?=\\n|$)");
+
+                // Create matchers for the input string
+                Matcher mileageMatcher = mileagePattern.matcher(nextMiles);
+                Matcher timeMatcher = timePattern.matcher(nextTime);
+                Matcher taskMatcher = taskPattern.matcher(nextTitle);
+
+                String mileage = null;
+                String time = null;
+                String maintenanceTask = null;
+                int totalDays = 0;
+
+                // Find the first mileage
+                if (mileageMatcher.find()) {
+                    mileage = mileageMatcher.group(1); // Extract the mileage value
+
+                    //convert it into readable text
+                    nextMiles = mileage + " miles";
+                }
+
+                // Find the first time
+                if (timeMatcher.find()) {
+                    int amount = Integer.parseInt(timeMatcher.group(1)); // Extract the numeric value
+                    String unit = timeMatcher.group(2); // Extract the unit (days, months, years)
+
+                    // Convert to days based on the unit
+                    switch (unit) {
+                        case "days":
+                            totalDays = amount;
+                            break;
+                        case "months":
+                            totalDays = amount * 30;
+                            break;
+                        case "years":
+                            totalDays = amount * 360;
+                            break;
+                    }
+
+                    //create final string
+                    time = totalDays + "";
+
+                    //convert it into actual time
+                    LocalDate futureDate = LocalDate.now().plusDays(totalDays);
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM dd, yyyy");
+                    nextTime = futureDate.format(formatter);
+                }
+
+                // Find the first maintenance task
+                if (taskMatcher.find()) {
+                    maintenanceTask = taskMatcher.group(1).trim(); // Extract the maintenance task and trim any whitespace
+                    nextTitle = maintenanceTask;
+                }
+
+                //assign text to TextViews
+                nextMaintenanceTitle.setText(nextTitle);
+                nextMaintenanceMiles.setText(nextMiles);
+                nextMaintenanceDate.setText(nextTime);
+
             } else {
                 Log.d("DEBUG", "NULL CONFIGS");
             }
         };
 
-        // Chain the compile methods
+        // Chain the compile methods for configs
         compileOilConfig(() -> compileTireConfig(finalCallback));
 
         // Fetch additional vehicle details
