@@ -22,13 +22,6 @@ public interface UserVehicleApi {
             @Query("userId") String userId
     );
 
-    // Set a vehicle as active
-    @FormUrlEncoded
-    @POST("/set_active_vehicle.php")
-    Call<ResponseBody> setActiveVehicle(
-            @Field("car_id") String carId
-    );
-
     // Get the active vehicle
     @GET("/get_active_vehicle.php")
     Call<ResponseBody> getActiveVehicle( @Query("id") String userId);
@@ -68,7 +61,8 @@ public interface UserVehicleApi {
     // Get vehicle details by car_id
     @GET("/get_vehicle_by_index.php")
     Call<ResponseBody> getVehicleByIndex(
-            @Query("car_id") String carId
+            @Query("car_id") String carId,
+            @Query("id") String userId
     );
 
     // Get vehicle details by car_id

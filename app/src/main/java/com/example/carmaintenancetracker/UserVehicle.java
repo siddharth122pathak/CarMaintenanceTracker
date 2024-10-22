@@ -4,7 +4,7 @@ public class UserVehicle {
     private String car_id;
     private String make;
     private String model;
-    private String year;
+    private int year;
     private String nickname;
     private int mileage;
     private boolean notificationsOn;
@@ -38,11 +38,11 @@ public class UserVehicle {
         this.model = model;
     }
 
-    public String getYear() {
+    public int getYear() {
         return year;
     }
 
-    public void setYear(String year) {
+    public void setYear(int year) {
         this.year = year;
     }
 

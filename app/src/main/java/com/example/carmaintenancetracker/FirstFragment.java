@@ -3,7 +3,6 @@ package com.example.carmaintenancetracker;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
@@ -27,6 +26,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import okhttp3.ResponseBody;
 import org.jetbrains.annotations.NotNull;
+import org.json.JSONException;
 import org.json.JSONObject;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -43,7 +43,6 @@ import java.util.regex.Pattern;
 /** @noinspection CallToPrintStackTrace*/
 public class FirstFragment extends Fragment {
 
-    private static final int ADD_VEHICLE_REQUEST_CODE = 1;
     private FragmentFirstBinding binding;
     private TextView mileageText;
     private Button notificationToggleButton;
@@ -74,7 +73,6 @@ public class FirstFragment extends Fragment {
 
     private UserVehicleApi userVehicleApi;  // Retrofit API interface
     private FortuneApi fortuneApi;
-    UserVehicle userVehicle = new UserVehicle();
 
     @Nullable
     @Override
@@ -87,42 +85,6 @@ public class FirstFragment extends Fragment {
 
         loadVehiclesFromServer();
         return binding.getRoot();
-    }
-
-    private void setActiveVehicle(String carId) {
-        userVehicleApi.setActiveVehicle(carId).enqueue(new Callback<ResponseBody>() {
-            @Override
-            public void onResponse(@NotNull Call<ResponseBody> call, @NotNull Response<ResponseBody> response) {
-                if (response.isSuccessful()) {
-                    Toast.makeText(getContext(), "Active vehicle updated.", Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(getContext(), "Failed to update active vehicle.", Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onFailure(@NotNull Call<ResponseBody> call, @NotNull Throwable t) {
-                Toast.makeText(getContext(), "Error setting active vehicle.", Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-
-    private void updateMileage(String carId, int newMileage) {
-        userVehicleApi.updateMileage(carId, newMileage).enqueue(new Callback<ResponseBody>() {
-            @Override
-            public void onResponse(@NotNull Call<ResponseBody> call, @NotNull Response<ResponseBody> response) {
-                if (response.isSuccessful()) {
-                    Toast.makeText(getContext(), "Mileage updated.", Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(getContext(), "Failed to update mileage.", Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onFailure(@NotNull Call<ResponseBody> call, @NotNull Throwable t) {
-                Toast.makeText(getContext(), "Error updating mileage.", Toast.LENGTH_SHORT).show();
-            }
-        });
     }
 
     private void loadVehiclesFromServer() {
@@ -162,7 +124,6 @@ public class FirstFragment extends Fragment {
             }
         });
     }
-
 
     // Retrieve user ID from shared preferences
     public String getUserIdFromSession() {
@@ -211,6 +172,8 @@ public class FirstFragment extends Fragment {
 
         // Default state for last updated text and icon
         lastUpdatedFlareIcon.setVisibility(View.INVISIBLE);
+
+        mileageText.setText("Loading mileage...");
 
         // Fetch vehicles from server instead of local database
         loadVehiclesFromServer();
@@ -481,18 +444,18 @@ public class FirstFragment extends Fragment {
             return;
         }
 
-        // Check if make and model are correctly assigned
+        // Ensure make, model, and year are assigned correctly
         String make = selectedVehicle.getMake();
         String model = selectedVehicle.getModel();
-        String year = selectedVehicle.getYear();
+        int year = selectedVehicle.getYear();
         String nickname = selectedVehicle.getNickname();
 
-        if (make == null || model == null || year == null) {
+        if (make == null || model == null) {
             Log.e("showVehicle", "Vehicle data is incomplete: Make - " + make + ", Model - " + model + ", Year - " + year);
             return;
         }
 
-        // Set Title
+        // Set Title (use nickname if available)
         String title = (nickname != null && !nickname.isEmpty())
                 ? nickname
                 : year + " " + make + " " + model;
@@ -500,20 +463,19 @@ public class FirstFragment extends Fragment {
 
         // Set selected car in VariableAccess
         VariableAccess.getInstance().setActiveVehicle(
-                selectedVehicle.getYear(),
+                String.valueOf(selectedVehicle.getYear()),
                 selectedVehicle.getMake(),
                 selectedVehicle.getModel()
         );
 
-        // Callback after configs are fetched
+        // Callback after configurations are fetched
         Runnable finalCallback = () -> {
-            // Only proceed if all the configs are not null
             if (VariableAccess.getInstance().getOilConfig() != null
                     && VariableAccess.getInstance().getOilConfigT() != null
                     && VariableAccess.getInstance().getTireConfig() != null
                     && VariableAccess.getInstance().getTireConfigT() != null) {
 
-                //load full mileage string
+                // Load full mileage string
                 String milesStr = UpcomingMaintenanceMethods.getInstance().concatenateConfigStr(
                         VariableAccess.getInstance().getOilConfig(),
                         VariableAccess.getInstance().getTireConfig(),
@@ -523,7 +485,7 @@ public class FirstFragment extends Fragment {
                         false
                 );
 
-                //load full time string
+                // Load full time string
                 String timeStr = UpcomingMaintenanceMethods.getInstance().concatenateConfigStr(
                         VariableAccess.getInstance().getOilConfigT(),
                         VariableAccess.getInstance().getTireConfigT(),
@@ -533,11 +495,11 @@ public class FirstFragment extends Fragment {
                         true
                 );
 
-                //preload strings into variables
+                // Preload strings into variables
                 VariableAccess.getInstance().setUpcomingMaintenanceMiles(milesStr);
                 VariableAccess.getInstance().setUpcomingMaintenanceTime(timeStr);
 
-                //discover next maintenance
+                // Discover next maintenance
                 String nextTitle = VariableAccess.getInstance().getUpcomingMaintenanceMiles();
                 String nextMiles = nextTitle;
                 String nextTime = VariableAccess.getInstance().getUpcomingMaintenanceTime();
@@ -547,7 +509,6 @@ public class FirstFragment extends Fragment {
                 Pattern timePattern = Pattern.compile("In\\s+(\\d+)\\s+(days|months|years):");
                 Pattern taskPattern = Pattern.compile(":\\s*(.+?)(?=\\n|$)");
 
-                // Create matchers for the input string
                 Matcher mileageMatcher = mileagePattern.matcher(nextMiles);
                 Matcher timeMatcher = timePattern.matcher(nextTime);
                 Matcher taskMatcher = taskPattern.matcher(nextTitle);
@@ -560,8 +521,6 @@ public class FirstFragment extends Fragment {
                 // Find the first mileage
                 if (mileageMatcher.find()) {
                     mileage = mileageMatcher.group(1); // Extract the mileage value
-
-                    //convert it into readable text
                     nextMiles = mileage + " miles";
                 }
 
@@ -583,10 +542,9 @@ public class FirstFragment extends Fragment {
                             break;
                     }
 
-                    //create final string
                     time = totalDays + "";
 
-                    //convert it into actual time
+                    // Convert it into actual time
                     LocalDate futureDate = LocalDate.now().plusDays(totalDays);
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM dd, yyyy");
                     nextTime = futureDate.format(formatter);
@@ -598,25 +556,25 @@ public class FirstFragment extends Fragment {
                     nextTitle = maintenanceTask;
                 }
 
-                //assign text to TextViews
+                // Assign text to TextViews for maintenance
                 nextMaintenanceTitle.setText(nextTitle);
                 nextMaintenanceMiles.setText(nextMiles);
                 nextMaintenanceDate.setText(nextTime);
-
             } else {
                 Log.d("DEBUG", "NULL CONFIGS");
             }
         };
 
-        // Chain the compile methods for configs
+        // Fetch configurations and then call final callback
         compileOilConfig(() -> compileTireConfig(finalCallback));
 
-        // Fetch additional vehicle details
-        userVehicleApi.getVehicleByIndex(selectedVehicle.getCarId()).enqueue(new Callback<ResponseBody>() {
+        // Fetch additional vehicle details (including mileage)
+        userVehicleApi.getVehicleByIndex(selectedVehicle.getCarId(), getUserIdFromSession()).enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(@NotNull Call<ResponseBody> call, @NotNull Response<ResponseBody> response) {
                 if (!response.isSuccessful() || response.body() == null) {
                     Toast.makeText(getContext(), "Failed to retrieve vehicle details", Toast.LENGTH_SHORT).show();
+                    mileageText.setText("Mileage not available");
                     return;
                 }
 
@@ -626,10 +584,11 @@ public class FirstFragment extends Fragment {
 
                     if (vehicleDetails == null) {
                         Toast.makeText(getContext(), "Error parsing vehicle details", Toast.LENGTH_SHORT).show();
+                        mileageText.setText("Mileage not available");
                         return;
                     }
 
-                    // Display vehicle mileage
+                    // Update vehicle mileage
                     int mileage = vehicleDetails.getMileage();
                     mileageText.setText(mileage > 0 ? mileage + " miles" : "Mileage not available");
 
@@ -638,7 +597,7 @@ public class FirstFragment extends Fragment {
                     notificationToggleButton.setText(notificationsOn ? "Turn Off" : "Turn On");
                     notificationText.setText(notificationsOn ? "Notifications for this vehicle are ON" : "Notifications for this vehicle are OFF");
 
-                    // Background Gradient Update
+                    // Update background gradient
                     Context context = getContext();
                     if (context != null) {
                         Drawable gradient = ContextCompat.getDrawable(context,
@@ -646,10 +605,10 @@ public class FirstFragment extends Fragment {
                         notificationBar.setBackground(gradient);
                     }
 
-                    // Last updated timestamp
+                    // Update last updated timestamp
                     updateLastUpdatedText(vehicleDetails.getLastUpdatedTimestamp());
 
-                    // Set Animation for the make
+                    // Set animation for the make
                     String carMake = make.toLowerCase();  // make should be non-null here
                     int animationResource = getAnimationForMake(carMake);
 
@@ -670,14 +629,14 @@ public class FirstFragment extends Fragment {
                     }
                 } catch (IOException e) {
                     Toast.makeText(getContext(), "Error reading vehicle details response", Toast.LENGTH_SHORT).show();
-                    Log.e("showVehicle", "IOException during response parsing", e);
+                    mileageText.setText("Mileage not available");
                 }
             }
 
             @Override
             public void onFailure(@NotNull Call<ResponseBody> call, @NotNull Throwable t) {
                 Toast.makeText(getContext(), "Error loading vehicle details", Toast.LENGTH_SHORT).show();
-                Log.e("showVehicle", "API call failed", t);
+                mileageText.setText("Mileage not available");
             }
         });
     }
@@ -731,7 +690,7 @@ public class FirstFragment extends Fragment {
                         // Extract and format the vehicle details
                         String make = Objects.requireNonNull(activeVehicle).getMake();
                         String model = activeVehicle.getModel();
-                        String year = activeVehicle.getYear();
+                        int year = activeVehicle.getYear();
                         String license = activeVehicle.getNickname();
                         int mileage = activeVehicle.getMileage();
 
@@ -746,7 +705,6 @@ public class FirstFragment extends Fragment {
                         }
 
                         // Update mileage display for the active vehicle
-                        vehicleMileage.clear();
                         vehicleMileage.add(mileage);
                         mileageText.setText(mileage > 0 ? mileage + " miles" : "Mileage not available");
 
@@ -790,7 +748,6 @@ public class FirstFragment extends Fragment {
     private void updateVehicleButtons() {
         // Clear existing lists to prevent duplication
         vehicleList.clear();
-        vehicleMileage.clear();
         vehicleMakes.clear();
 
         String userId = getUserIdFromSession();
@@ -1111,22 +1068,54 @@ public class FirstFragment extends Fragment {
 
     private UserVehicle parseVehicleDetails(String jsonResponse) {
         Gson gson = new Gson();
+
+        // Log method entry
+        Log.d("parseVehicleDetails", "Entering method");
+
         try {
-            // Check if the response is in the expected JSON object format
-            if (jsonResponse.startsWith("{") || jsonResponse.startsWith("[")) {
-                // Parse the JSON into a UserVehicle object
-                return gson.fromJson(jsonResponse, UserVehicle.class);
+            // Log the raw JSON response for debugging purposes
+            Log.d("parseVehicleDetails", "Received JSON: " + jsonResponse);
+
+            // Parse the top-level JSON object
+            JSONObject jsonObject = new JSONObject(jsonResponse);
+            if ("success".equals(jsonObject.getString("status"))) {
+                // Extract the vehicle object from the response
+                JSONObject vehicleObject = jsonObject.getJSONObject("vehicle");
+
+                // Use Gson to parse the vehicle object into a UserVehicle instance
+                UserVehicle vehicle = gson.fromJson(vehicleObject.toString(), UserVehicle.class);
+
+                // Log after parsing
+                if (vehicle != null) {
+                    Log.d("parseVehicleDetails", "Parsed vehicle object: " + vehicle.toString());
+
+                    // Log specific fields to verify they are being correctly extracted
+                    Log.d("parseVehicleDetails", "Parsed Mileage: " + vehicle.getMileage());
+                    Log.d("parseVehicleDetails", "Parsed Model: " + vehicle.getModel());
+                    Log.d("parseVehicleDetails", "Parsed Manufacturer: " + vehicle.getMake());
+                } else {
+                    Log.w("parseVehicleDetails", "Parsed vehicle object is null");
+                }
+
+                // Log method exit on successful parsing
+                Log.d("parseVehicleDetails", "Exiting method successfully");
+                return vehicle;
             } else {
-                // Log an error and return null or a default UserVehicle if the response is unexpected
-                Log.e("parseVehicleDetails", "Unexpected response format: " + jsonResponse);
+                // Log an error if the status is not success
+                Log.e("parseVehicleDetails", "Error: " + jsonObject.getString("message"));
                 return null;
             }
-        } catch (JsonSyntaxException e) {
-            // Log the error and handle the parsing exception
-            Log.e("parseVehicleDetails", "JSON parsing error", e);
+        } catch (JSONException e) {
+            // Log parsing errors and return null
+            Log.e("parseVehicleDetails", "JSON parsing error: " + e.getMessage());
+            Log.e("parseVehicleDetails", "Stack Trace: " + Log.getStackTraceString(e));
+
+            // Log method exit on error
+            Log.d("parseVehicleDetails", "Exiting method with null due to parsing error");
             return null;
         }
     }
+
 
     private List<UserVehicle> parseAllVehicles(String jsonResponse) {
         Gson gson = new Gson();
