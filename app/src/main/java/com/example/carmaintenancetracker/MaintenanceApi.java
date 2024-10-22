@@ -5,6 +5,8 @@ import retrofit2.Call;
 import retrofit2.http.Field;
 import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.POST;
+import retrofit2.http.Query;
+import retrofit2.http.GET;
 
 
 public interface MaintenanceApi {
@@ -25,4 +27,15 @@ public interface MaintenanceApi {
             @Field("maintenance_type") String maintenanceType,
             @Field("maintenance_date") String maintenanceDate
     );
+
+    // Define the HTTP GET request to fetch maintenance data
+    @GET("get_maintenance_data.php")
+    Call<ResponseBody> getMaintenanceData(
+            @Query("table") String table,
+            @Query("make") String make,
+            @Query("model") String model,
+            @Query("year") int year
+    );
+
+
 }

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="16dp">
+
+    <LinearLayout
+            android:id="@+id/category_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+        <!-- Title for the overlay -->
+        <TextView
+                android:id="@+id/dialog_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Select Maintenance Categories"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:background="@drawable/title_border_gradient"
+                android:textColor="@android:color/black"
+                android:padding="12dp"
+                android:layout_marginBottom="10dp" />
+
+        <!-- Categories will be added dynamically here -->
+
+
+    </LinearLayout>
+</ScrollView>

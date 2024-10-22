@@ -1,6 +1,7 @@
 package com.example.carmaintenancetracker;
 
 import android.content.Context;
+import android.graphics.Typeface;
 import android.content.SharedPreferences;
 import android.util.Log;
 import android.app.AlertDialog;
@@ -20,6 +21,8 @@ import org.json.JSONObject;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import android.view.Gravity;
+import android.graphics.Color;
 import com.example.carmaintenancetracker.api.MaintenanceApi;
 import com.example.carmaintenancetracker.UserVehicleApi;
 import com.example.carmaintenancetracker.RetrofitClient;
@@ -47,7 +50,7 @@ public class addnewmaint extends Fragment {
         // Inflate the fragment layout
         View view = inflater.inflate(R.layout.new_maint_add, container, false);
 
-        // Initialize the Spinner
+        // Initialize the views
         maintenanceActionSpinner = view.findViewById(R.id.maintenance_action_spinner);
         editTextDate = view.findViewById(R.id.editTextDate2); // The date input field
         saveButton = view.findViewById(R.id.button2); // The save button
@@ -66,7 +69,7 @@ public class addnewmaint extends Fragment {
         saveButton.setOnClickListener(v -> saveMaintenance());
 
         // Fetch and display the active car's information
-        getActiveVehicle();
+        getActiveVehicle();  // Fetch the vehicle data
 
         return view;
     }
@@ -95,7 +98,7 @@ public class addnewmaint extends Fragment {
                             String nickname = jsonResponse.optString("nickname", "");
                             String make = jsonResponse.optString("make", "");
                             String model = jsonResponse.optString("model", "");
-                            String year = jsonResponse.optString("year", "");
+                            int year = jsonResponse.optInt("year"); // Fetch year as int
 
                             // Update the UI with the vehicle info
                             if (!nickname.isEmpty()) {
@@ -200,53 +203,164 @@ public class addnewmaint extends Fragment {
         }
     }
 
-    // Show the "Add More" dialog
-    private void showAddMoreDialog() {
-        // Inflate the custom dialog layout
-        LayoutInflater inflater = LayoutInflater.from(getContext());
-        View dialogView = inflater.inflate(R.layout.dialog_add_maintenance, null);
+    private void populateMaintenanceCategories(LinearLayout categoryContainer, String make, String model, int year) {
+        String[] tables = {"brake_inspection_config", "cabin_filter_config", "coolant_config", "engine_filter_config", "spark_plugs_config", "transmission_config"};
 
-        // Find views inside the dialog
-        EditText maintenancePerformed = dialogView.findViewById(R.id.editTextMaintenancePerformed);
-        EditText datePerformed = dialogView.findViewById(R.id.editTextDatePerformed);
+        // Convert make and model to lowercase to ensure case-insensitive matching
+        String lowerCaseMake = make.toLowerCase();
+        String lowerCaseModel = model.toLowerCase();
+
+        for (String table : tables) {
+            RetrofitClient.getRetrofitInstance().create(MaintenanceApi.class).getMaintenanceData(table, lowerCaseMake, lowerCaseModel, year)
+                    .enqueue(new Callback<ResponseBody>() {
+                        @Override
+                        public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                            if (response.isSuccessful() && response.body() != null) {
+                                try {
+                                    String jsonResponse = response.body().string();
+                                    Log.d("API_RESPONSE", "Response: " + jsonResponse);  // Log the full response
+
+                                    JSONArray categoriesArray = new JSONArray(jsonResponse);
+
+                                    if (categoriesArray.length() > 0) {
+                                        for (int i = 0; i < categoriesArray.length(); i++) {
+                                            JSONObject maintenanceObject = categoriesArray.getJSONObject(i);
+                                            String categoryTitle = maintenanceObject.getString("maintenance_type");
+                                            String milesPeriod = maintenanceObject.getString("miles_period");
+                                            String maintenancePeriod = maintenanceObject.getString("maintenance_period");
+
+                                            Log.d("CATEGORY_CREATION", "Creating category: " + categoryTitle);
+
+                                            // Create a new layout for the category
+                                            LinearLayout categoryLayout = new LinearLayout(getContext());
+                                            categoryLayout.setOrientation(LinearLayout.VERTICAL);
+                                            categoryLayout.setPadding(10, 10, 10, 10);
+
+                                            // Add a title for the category
+                                            TextView categoryTextView = new TextView(getContext());
+                                            categoryTextView.setText(categoryTitle);
+                                            categoryTextView.setTextSize(18);
+                                            categoryTextView.setTypeface(null, Typeface.BOLD);
+                                            categoryTextView.setGravity(Gravity.CENTER);
+                                            categoryTextView.setBackgroundResource(R.drawable.title_border_gradient);
+                                            categoryTextView.setTextColor(Color.BLACK);
+                                            categoryTextView.setPadding(12, 12, 12, 12);
+
+                                            // Create a layout for the maintenance options under each category
+                                            LinearLayout maintenanceOptionsLayout = new LinearLayout(getContext());
+                                            maintenanceOptionsLayout.setOrientation(LinearLayout.VERTICAL);
+                                            maintenanceOptionsLayout.setVisibility(View.GONE); // Initially hidden
+                                            maintenanceOptionsLayout.setPadding(10, 10, 10, 10);
+                                            maintenanceOptionsLayout.setBackgroundColor(Color.LTGRAY);
+
+                                            // Add checkboxes for each maintenance option
+                                            CheckBox checkBox = new CheckBox(getContext());
+                                            checkBox.setText("Every " + milesPeriod + " miles / " + maintenancePeriod + " days");
+                                            maintenanceOptionsLayout.addView(checkBox); // Add checkbox to the options layout
+
+                                            // Add the title and maintenance options to the category layout
+                                            categoryLayout.addView(categoryTextView);
+                                            categoryLayout.addView(maintenanceOptionsLayout);
+
+                                            // Add onClick to expand/collapse the maintenance options
+                                            categoryTextView.setOnClickListener(v -> {
+                                                if (maintenanceOptionsLayout.getVisibility() == View.GONE) {
+                                                    maintenanceOptionsLayout.setVisibility(View.VISIBLE);
+                                                } else {
+                                                    maintenanceOptionsLayout.setVisibility(View.GONE);
+                                                }
+                                            });
+
+                                            // Add the entire category layout to the container
+                                            categoryContainer.addView(categoryLayout);
+                                            Log.d("CATEGORY_CREATION", "Added category to container");
+
+                                            // Ensure the container refreshes its layout
+                                            categoryContainer.invalidate();
+                                            categoryContainer.requestLayout();
+                                        }
+                                    } else {
+                                        Log.d("API_RESPONSE", "No categories found");
+                                    }
+
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            } else {
+                                Log.d("API_RESPONSE", "API call failed");
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(Call<ResponseBody> call, Throwable t) {
+                            Log.d("API_ERROR", "Error: " + t.getMessage());
+                        }
+                    });
+        }
+    }
+
+    private void showAddMoreDialog() {
+        // Inflate the custom dialog layout for maintenance categories
+        LayoutInflater inflater = LayoutInflater.from(getContext());
+        View dialogView = inflater.inflate(R.layout.dialog_maintenance_categories, null); // Use the dialog layout file
+
+        // Get the category container from the dialog's layout
+        LinearLayout categoryContainer = dialogView.findViewById(R.id.category_container);
+
+        // Call getActiveVehicle and populate the dialog's category container
+        getActiveVehicleForDialog(categoryContainer); // Pass the dialog's container
 
         // Create an AlertDialog
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         builder.setView(dialogView)
-                .setTitle("Add Maintenance")
+                .setTitle(null) // Title is now part of the layout, so no need for the dialog's title
                 .setPositiveButton("Save", (dialog, which) -> {
-                    // Handle saving the entered data
-                    String maintenance = maintenancePerformed.getText().toString();
-                    String date = datePerformed.getText().toString();
-
-                    if (!maintenance.isEmpty() && !date.isEmpty()) {
-                        // Call API to add additional maintenance
-                        MaintenanceApi maintenanceApi = RetrofitClient.getRetrofitInstance().create(MaintenanceApi.class);
-                        Call<ResponseBody> call = maintenanceApi.addAdditionalMaintenance(maintenance, date);
-
-                        call.enqueue(new Callback<ResponseBody>() {
-                            @Override
-                            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                                if (response.isSuccessful()) {
-                                    Toast.makeText(getContext(), "Additional maintenance added", Toast.LENGTH_SHORT).show();
-                                } else {
-                                    Toast.makeText(getContext(), "Failed to add maintenance", Toast.LENGTH_SHORT).show();
-                                }
-                            }
-
-                            @Override
-                            public void onFailure(Call<ResponseBody> call, Throwable t) {
-                                Toast.makeText(getContext(), "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-                            }
-                        });
-                    } else {
-                        Toast.makeText(getContext(), "Please enter both maintenance and date", Toast.LENGTH_SHORT).show();
-                    }
+                    // Handle saving selected categories here
+                    Toast.makeText(getContext(), "Maintenance categories saved", Toast.LENGTH_SHORT).show();
                 })
                 .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
 
         // Show the dialog
         AlertDialog dialog = builder.create();
         dialog.show();
+    }
+
+    private void getActiveVehicleForDialog(LinearLayout categoryContainer) {
+        UserVehicleApi vehicleApi = RetrofitClient.getRetrofitInstance().create(UserVehicleApi.class);
+        Call<ResponseBody> call = vehicleApi.getActiveVehicle(getUserIdFromSession());
+
+        call.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    try {
+                        String responseString = response.body().string();
+                        Log.d("API_RESPONSE", "Response: " + responseString); // Log the full response
+                        JSONObject jsonResponse = new JSONObject(responseString);
+
+                        if (jsonResponse.has("car_id")) {  // Check if the response has the car_id field
+                            carId = jsonResponse.getString("car_id");
+                            String make = jsonResponse.optString("make", "");
+                            String model = jsonResponse.optString("model", "");
+                            int year = jsonResponse.optInt("year");
+
+                            // Now dynamically pass the vehicle information to populate categories in the dialog
+                            populateMaintenanceCategories(categoryContainer, make, model, year);
+                        } else {
+                            Toast.makeText(getContext(), "No active vehicle found", Toast.LENGTH_SHORT).show();
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    Toast.makeText(getContext(), "Failed to get active vehicle", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                Toast.makeText(getContext(), "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }
