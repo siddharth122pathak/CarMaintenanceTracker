@@ -61,8 +61,7 @@ public interface UserVehicleApi {
     // Get vehicle details by car_id
     @GET("/get_vehicle_by_index.php")
     Call<ResponseBody> getVehicleByIndex(
-            @Query("car_id") String carId,
-            @Query("id") String userId
+            @Query("car_id") String carId
     );
 
     // Get vehicle details by car_id

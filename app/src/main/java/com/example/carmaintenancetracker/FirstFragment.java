@@ -33,6 +33,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -52,7 +53,6 @@ public class FirstFragment extends Fragment {
     public TextView titleText;
     private ImageView lastUpdatedFlareIcon;
     private TextView lastUpdatedText;
-    private long lastUpdatedTimestamp;
     private ImageView carImageView;
     private LottieAnimationView carAnimationView;
     private FrameLayout vehicle1Button, vehicle2Button, vehicle3Button;
@@ -247,22 +247,21 @@ public class FirstFragment extends Fragment {
 
     // Method to update the last updated text
     @SuppressLint("SetTextI18n")
-    private void updateLastUpdatedText(long lastUpdatedTimestamp) {
+    private void updateLastUpdatedText(Date lastUpdatedTimestamp) {
         SimpleDateFormat sdf = new SimpleDateFormat("MM-dd-yyyy @ HH:mm", Locale.getDefault());
 
         // If no update has been made, use placeholder text
-        if (lastUpdatedTimestamp == 0) {
+        if (lastUpdatedTimestamp == null) {
             lastUpdatedText.setText("Last updated: never");
             lastUpdatedFlareIcon.setVisibility(View.VISIBLE);
             return;
         }
 
-        Date lastUpdated = new Date(lastUpdatedTimestamp);
-        lastUpdatedText.setText("Last updated: " + sdf.format(lastUpdated));
+        lastUpdatedText.setText("Last updated: " + sdf.format(lastUpdatedTimestamp));
 
         // Check if 3 months have passed since the last update
         Calendar calendar = Calendar.getInstance();
-        calendar.setTimeInMillis(lastUpdatedTimestamp);
+        calendar.setTime(lastUpdatedTimestamp); // Use Date object directly
         calendar.add(Calendar.MONTH, 3); // Add 3 months to the last updated date
 
         // Show or hide the flare icon based on the time elapsed
@@ -347,9 +346,22 @@ public class FirstFragment extends Fragment {
                     try {
                         // Read and parse the response safely
                         String responseBody = response.body().string();
-                        long updatedTimestamp = parseLastUpdatedTime(responseBody);
-                        updateLastUpdatedText(updatedTimestamp); // Refresh the "Last updated" text and icon
-                    } catch (IOException e) {
+                        Log.d("fetchAndUpdateLastUpdated", "Response Body: " + responseBody);
+
+                        // Check for an error in the response
+                        JSONObject jsonObject = new JSONObject(responseBody);
+                        if (jsonObject.has("status") && jsonObject.getString("status").equals("error")) {
+                            Log.e("fetchAndUpdateLastUpdated", "API error: " + jsonObject.getString("message"));
+                            Toast.makeText(getContext(), "Error: " + jsonObject.getString("message"), Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+
+                        // Proceed to parse last updated timestamp
+                        Date updatedTimestamp = parseLastUpdatedTime(responseBody);
+                        if (updatedTimestamp != null) {
+                            updateLastUpdatedText(updatedTimestamp); // Refresh the "Last updated" text and icon
+                        }
+                    } catch (IOException | JSONException e) {
                         e.printStackTrace();
                         Toast.makeText(getContext(), "Error reading response", Toast.LENGTH_SHORT).show();
                     }
@@ -461,6 +473,9 @@ public class FirstFragment extends Fragment {
                 : year + " " + make + " " + model;
         binding.selectedCarTitle.setText(title);
 
+        // Call the method to fetch and update the last updated timestamp
+        fetchAndUpdateLastUpdated(selectedVehicle.getCarId());
+
         // Set selected car in VariableAccess
         VariableAccess.getInstance().setActiveVehicle(
                 String.valueOf(selectedVehicle.getYear()),
@@ -569,7 +584,7 @@ public class FirstFragment extends Fragment {
         compileOilConfig(() -> compileTireConfig(finalCallback));
 
         // Fetch additional vehicle details (including mileage)
-        userVehicleApi.getVehicleByIndex(selectedVehicle.getCarId(), getUserIdFromSession()).enqueue(new Callback<ResponseBody>() {
+        userVehicleApi.getVehicleByIndex(selectedVehicle.getCarId()).enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(@NotNull Call<ResponseBody> call, @NotNull Response<ResponseBody> response) {
                 if (!response.isSuccessful() || response.body() == null) {
@@ -713,7 +728,6 @@ public class FirstFragment extends Fragment {
 
                     } catch (Exception e) {
                         e.printStackTrace();
-                        Toast.makeText(getContext(), "Error parsing vehicle details", Toast.LENGTH_SHORT).show();
                     }
                 } else {
                     Toast.makeText(getContext(), "Failed to retrieve active vehicle details", Toast.LENGTH_SHORT).show();
@@ -1057,65 +1071,91 @@ public class FirstFragment extends Fragment {
         return ""; // Return empty string if index is out of bounds
     }
 
-    private long parseLastUpdatedTime(String response) {
+    private Date parseLastUpdatedTime(String response) {
         try {
-            return Long.parseLong(response.trim());
-        } catch (NumberFormatException e) {
+            // Log the raw response string for debugging
+            Log.d("parseLastUpdatedTime", "Received response: " + response);
+
+            // Parse the JSON response
+            JSONObject jsonObject = new JSONObject(response);
+
+            // Check if the "last_updated" field exists and log it
+            if (jsonObject.has("last_updated")) {
+                String lastUpdatedStr = jsonObject.getString("last_updated");
+                Log.d("parseLastUpdatedTime", "Last updated string: " + lastUpdatedStr);
+
+                // Parse the date string using the correct format
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+
+                // Log the date format being used for parsing
+                Log.d("parseLastUpdatedTime", "Using date format: " + sdf.toPattern());
+
+                // Parse and return the Date object
+                Date parsedDate = sdf.parse(lastUpdatedStr);
+
+                // Log the successfully parsed Date object in the desired format
+                Log.d("parseLastUpdatedTime", "Parsed date (formatted): " + sdf.format(parsedDate));
+
+                return parsedDate;
+            } else {
+                // Log if the "last_updated" field is missing
+                Log.e("parseLastUpdatedTime", "Error: 'last_updated' field is missing in the JSON response.");
+            }
+        } catch (Exception e) {
+            // Log any exceptions that occur during parsing
+            Log.e("parseLastUpdatedTime", "Error parsing date: " + e.getMessage());
             e.printStackTrace();
-            return 0; // Return 0 if parsing fails
         }
+
+        // Return null if parsing fails or if the field is missing
+        return null;
     }
 
     private UserVehicle parseVehicleDetails(String jsonResponse) {
         Gson gson = new Gson();
-
-        // Log method entry
-        Log.d("parseVehicleDetails", "Entering method");
-
         try {
             // Log the raw JSON response for debugging purposes
             Log.d("parseVehicleDetails", "Received JSON: " + jsonResponse);
 
             // Parse the top-level JSON object
             JSONObject jsonObject = new JSONObject(jsonResponse);
-            if ("success".equals(jsonObject.getString("status"))) {
-                // Extract the vehicle object from the response
-                JSONObject vehicleObject = jsonObject.getJSONObject("vehicle");
 
-                // Use Gson to parse the vehicle object into a UserVehicle instance
-                UserVehicle vehicle = gson.fromJson(vehicleObject.toString(), UserVehicle.class);
+            // Check if the "car" object exists in the JSON response
+            if (jsonObject.has("car")) {
+                JSONObject carObject = jsonObject.getJSONObject("car");
 
-                // Log after parsing
-                if (vehicle != null) {
-                    Log.d("parseVehicleDetails", "Parsed vehicle object: " + vehicle.toString());
+                // Extract the "last_updated" field
+                String lastUpdatedStr = carObject.has("last_updated") ? carObject.getString("last_updated") : null;
 
-                    // Log specific fields to verify they are being correctly extracted
-                    Log.d("parseVehicleDetails", "Parsed Mileage: " + vehicle.getMileage());
-                    Log.d("parseVehicleDetails", "Parsed Model: " + vehicle.getModel());
-                    Log.d("parseVehicleDetails", "Parsed Manufacturer: " + vehicle.getMake());
-                } else {
-                    Log.w("parseVehicleDetails", "Parsed vehicle object is null");
+                // Log the extracted last updated timestamp for debugging
+                Log.d("parseVehicleDetails", "Last updated timestamp: " + lastUpdatedStr);
+
+                // Parse the rest of the car details using Gson
+                UserVehicle vehicle = gson.fromJson(carObject.toString(), UserVehicle.class);
+
+                // Manually set the last updated field if it was found
+                if (lastUpdatedStr != null) {
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+                    Date lastUpdatedDate = sdf.parse(lastUpdatedStr);
+                    vehicle.setLastUpdatedTimestamp(lastUpdatedDate); // Assuming you have this setter in UserVehicle
                 }
 
-                // Log method exit on successful parsing
-                Log.d("parseVehicleDetails", "Exiting method successfully");
+                // Log the parsed vehicle object for debugging
+                Log.d("parseVehicleDetails", "Parsed vehicle object: " + vehicle.toString());
+
                 return vehicle;
             } else {
-                // Log an error if the status is not success
-                Log.e("parseVehicleDetails", "Error: " + jsonObject.getString("message"));
+                // Log an error if the "car" object is missing in the response
+                Log.e("parseVehicleDetails", "Car object is missing in the response");
                 return null;
             }
-        } catch (JSONException e) {
+        } catch (JSONException | ParseException e) {
             // Log parsing errors and return null
             Log.e("parseVehicleDetails", "JSON parsing error: " + e.getMessage());
-            Log.e("parseVehicleDetails", "Stack Trace: " + Log.getStackTraceString(e));
-
-            // Log method exit on error
-            Log.d("parseVehicleDetails", "Exiting method with null due to parsing error");
+            e.printStackTrace();
             return null;
         }
     }
-
 
     private List<UserVehicle> parseAllVehicles(String jsonResponse) {
         Gson gson = new Gson();

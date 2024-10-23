@@ -1,5 +1,7 @@
 package com.example.carmaintenancetracker;
 
+import java.util.Date;
+
 public class UserVehicle {
     private String car_id;
     private String make;
@@ -8,7 +10,7 @@ public class UserVehicle {
     private String nickname;
     private int mileage;
     private boolean notificationsOn;
-    private long lastUpdatedTimestamp;
+    private Date lastUpdatedTimestamp;
     private boolean active; //New field to indicate if the vehicle is active
 
 
@@ -70,11 +72,11 @@ public class UserVehicle {
         this.notificationsOn = notificationsOn;
     }
 
-    public long getLastUpdatedTimestamp() {
+    public Date getLastUpdatedTimestamp() {
         return lastUpdatedTimestamp;
     }
 
-    public void setLastUpdatedTimestamp(long lastUpdatedTimestamp) {
+    public void setLastUpdatedTimestamp(Date lastUpdatedTimestamp) {
         this.lastUpdatedTimestamp = lastUpdatedTimestamp;
     }
 
