@@ -22,4 +22,52 @@ public interface FortuneApi {
             @Query("make") String make,
             @Query("model") String model
     );
+
+    // GET request to check the brake inspection config
+    @GET("/check_brake_inspection_config.php")
+    Call<ResponseBody> checkBrakeInspectionConfig(
+            @Query("year") String year,
+            @Query("make") String make,
+            @Query("model") String model
+    );
+
+    // GET request to check the cabin filter config
+    @GET("/check_cabin_filter_config.php")
+    Call<ResponseBody> checkCabinFilterConfig(
+            @Query("year") String year,
+            @Query("make") String make,
+            @Query("model") String model
+    );
+
+    // GET request to check the coolant config
+    @GET("/check_coolant_config.php")
+    Call<ResponseBody> checkCoolantConfig(
+            @Query("year") String year,
+            @Query("make") String make,
+            @Query("model") String model
+    );
+
+    // GET request to check the engine filter config
+    @GET("/check_engine_filter_config.php")
+    Call<ResponseBody> checkEngineFilterConfig(
+            @Query("year") String year,
+            @Query("make") String make,
+            @Query("model") String model
+    );
+
+    // GET request to check the spark plugs config
+    @GET("/check_spark_plugs_config.php")
+    Call<ResponseBody> checkSparkPlugsConfig(
+            @Query("year") String year,
+            @Query("make") String make,
+            @Query("model") String model
+    );
+
+    // GET request to check the transmission config
+    @GET("/check_transmission_config.php")
+    Call<ResponseBody> checkTransmissionConfig(
+            @Query("year") String year,
+            @Query("make") String make,
+            @Query("model") String model
+    );
 }

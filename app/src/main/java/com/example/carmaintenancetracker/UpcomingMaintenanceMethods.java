@@ -1,8 +1,5 @@
 package com.example.carmaintenancetracker;
 
-import android.util.Log;
-import android.view.ViewDebug;
-
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
@@ -70,7 +67,7 @@ public class UpcomingMaintenanceMethods {
 
 
     //PUBLIC METHODS
-    public String concatenateConfigStr(String oilConfig, String tireConfig, String brakeConfig, String interiorConfig, String engineConfig, boolean time) {
+    public String concatenateConfigStr(String oilConfig, String tireConfig, String brakeInspectionConfig, String cabinFilterConfig, String coolantConfig, String engineFilterConfig, String sparkPlugsConfig, String transmissionConfig, boolean time) {
         //assign maintenanceList
         Vector<Vector<String>> maintenanceList = new Vector<>();
 
@@ -87,22 +84,40 @@ public class UpcomingMaintenanceMethods {
                 maintenanceList.add(tireVec);
             }
         }
-        if (!Objects.equals(brakeConfig, "")) {
-            Vector<String> brakeVec = extractString(brakeConfig);
-            if (!Objects.equals(brakeVec.get(0), "")) {
-                maintenanceList.add(brakeVec);
+        if (!Objects.equals(brakeInspectionConfig, "")) {
+            Vector<String> brakeInspectionVec = extractString(brakeInspectionConfig);
+            if (!Objects.equals(brakeInspectionVec.get(0), "")) {
+                maintenanceList.add(brakeInspectionVec);
             }
         }
-        if (!Objects.equals(interiorConfig, "")) {
-            Vector<String> interiorVec = extractString(interiorConfig);
-            if (!Objects.equals(interiorVec.get(0), "")) {
-                maintenanceList.add(interiorVec);
+        if (!Objects.equals(cabinFilterConfig, "")) {
+            Vector<String> cabinFilterVec = extractString(cabinFilterConfig);
+            if (!Objects.equals(cabinFilterVec.get(0), "")) {
+                maintenanceList.add(cabinFilterVec);
             }
         }
-        if (!Objects.equals(engineConfig, "")) {
-            Vector<String> engineVec = extractString(engineConfig);
-            if (!Objects.equals(engineVec.get(0), "")) {
-                maintenanceList.add(engineVec);
+        if (!Objects.equals(coolantConfig, "")) {
+            Vector<String> coolantVec = extractString(coolantConfig);
+            if (!Objects.equals(coolantVec.get(0), "")) {
+                maintenanceList.add(coolantVec);
+            }
+        }
+        if (!Objects.equals(engineFilterConfig, "")) {
+            Vector<String> engineFilterVec = extractString(engineFilterConfig);
+            if (!Objects.equals(engineFilterVec.get(0), "")) {
+                maintenanceList.add(engineFilterVec);
+            }
+        }
+        if (!Objects.equals(sparkPlugsConfig, "")) {
+            Vector<String> sparkPlugsVec = extractString(sparkPlugsConfig);
+            if (!Objects.equals(sparkPlugsVec.get(0), "")) {
+                maintenanceList.add(sparkPlugsVec);
+            }
+        }
+        if (!Objects.equals(transmissionConfig, "")) {
+            Vector<String> transmissionVec = extractString(transmissionConfig);
+            if (!Objects.equals(transmissionVec.get(0), "")) {
+                maintenanceList.add(transmissionVec);
             }
         }
 

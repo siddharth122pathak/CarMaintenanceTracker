@@ -488,15 +488,31 @@ public class FirstFragment extends Fragment {
             if (VariableAccess.getInstance().getOilConfig() != null
                     && VariableAccess.getInstance().getOilConfigT() != null
                     && VariableAccess.getInstance().getTireConfig() != null
-                    && VariableAccess.getInstance().getTireConfigT() != null) {
+                    && VariableAccess.getInstance().getTireConfigT() != null
+                    && VariableAccess.getInstance().getBrakeInspectionConfig() != null
+                    && VariableAccess.getInstance().getBrakeInspectionConfigT() != null
+                    && VariableAccess.getInstance().getCabinFilterConfig() != null
+                    && VariableAccess.getInstance().getCabinFilterConfigT() != null
+                    && VariableAccess.getInstance().getCoolantConfig() != null
+                    && VariableAccess.getInstance().getCoolantConfigT() != null
+                    && VariableAccess.getInstance().getEngineFilterConfig() != null
+                    && VariableAccess.getInstance().getEngineFilterConfigT() != null
+                    && VariableAccess.getInstance().getSparkPlugsConfig() != null
+                    && VariableAccess.getInstance().getSparkPlugsConfigT() != null
+                    && VariableAccess.getInstance().getTransmissionConfig() != null
+                    && VariableAccess.getInstance().getTransmissionConfigT() != null
+            ) {
 
                 // Load full mileage string
                 String milesStr = UpcomingMaintenanceMethods.getInstance().concatenateConfigStr(
                         VariableAccess.getInstance().getOilConfig(),
                         VariableAccess.getInstance().getTireConfig(),
-                        "",
-                        "",
-                        "",
+                        VariableAccess.getInstance().getBrakeInspectionConfig(),
+                        VariableAccess.getInstance().getCabinFilterConfig(),
+                        VariableAccess.getInstance().getCoolantConfig(),
+                        VariableAccess.getInstance().getEngineFilterConfig(),
+                        VariableAccess.getInstance().getSparkPlugsConfig(),
+                        VariableAccess.getInstance().getTransmissionConfig(),
                         false
                 );
 
@@ -504,9 +520,12 @@ public class FirstFragment extends Fragment {
                 String timeStr = UpcomingMaintenanceMethods.getInstance().concatenateConfigStr(
                         VariableAccess.getInstance().getOilConfigT(),
                         VariableAccess.getInstance().getTireConfigT(),
-                        "",
-                        "",
-                        "",
+                        VariableAccess.getInstance().getBrakeInspectionConfigT(),
+                        VariableAccess.getInstance().getCabinFilterConfigT(),
+                        VariableAccess.getInstance().getCoolantConfigT(),
+                        VariableAccess.getInstance().getEngineFilterConfigT(),
+                        VariableAccess.getInstance().getSparkPlugsConfigT(),
+                        VariableAccess.getInstance().getTransmissionConfigT(),
                         true
                 );
 
@@ -576,12 +595,28 @@ public class FirstFragment extends Fragment {
                 nextMaintenanceMiles.setText(nextMiles);
                 nextMaintenanceDate.setText(nextTime);
             } else {
-                Log.d("DEBUG", "NULL CONFIGS");
+                Log.d("ERROR", "NULL CONFIGS in showVehicle() method for upcoming maintenance");
             }
         };
 
         // Fetch configurations and then call final callback
-        compileOilConfig(() -> compileTireConfig(finalCallback));
+        compileOilConfig(
+                () -> compileTireConfig(
+                        () -> compileBrakeInspectionConfig(
+                                () -> compileCabinFilterConfig(
+                                        () -> compileCoolantConfig(
+                                                () -> compileEngineFilterConfig(
+                                                        () -> compileSparkPlugsConfig(
+                                                                () -> compileTransmissionConfig(
+                                                                        finalCallback
+                                                                )
+                                                        )
+                                                )
+                                        )
+                                )
+                        )
+                )
+        );
 
         // Fetch additional vehicle details (including mileage)
         userVehicleApi.getVehicleByIndex(selectedVehicle.getCarId()).enqueue(new Callback<ResponseBody>() {
@@ -1359,6 +1394,557 @@ public class FirstFragment extends Fragment {
         });
     }
 
+    private void compileBrakeInspectionConfig(Runnable callback) {
+        //Access selected vehicle information
+        String year = VariableAccess.getInstance().getActiveVehicle().get(0);
+        String make = VariableAccess.getInstance().getActiveVehicle().get(1);
+        String model = VariableAccess.getInstance().getActiveVehicle().get(2);
+
+        // API call to the database
+        Call<ResponseBody> checkBrakeInspectionConfig = fortuneApi.checkBrakeInspectionConfig(year, make, model);
+        checkBrakeInspectionConfig.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    try {
+                        String responseString = response.body().string();
+
+                        // Ensure response only contains JSON, handle any extra messages on the server-side
+                        if (responseString.startsWith("{")) {
+                            JSONObject jsonResponse = new JSONObject(responseString);
+
+                            if (jsonResponse.getString("status").equals("success")) {
+                                if (jsonResponse.getString("message").startsWith("Maintenance details found")) {
+                                    //set variables
+                                    String type = jsonResponse.getString("maintenance_type");
+                                    String miles = jsonResponse.getString("miles_period");
+                                    String time = jsonResponse.getString("maintenance_period");
+
+                                    //Set strings
+                                    final String printString1 = miles + ":" + type;
+                                    final String printString2 = time + ":" + type;
+
+                                    requireActivity().runOnUiThread(() ->
+                                    {
+                                        VariableAccess.getInstance().setBrakeInspectionConfig(printString1);
+                                        VariableAccess.getInstance().setBrakeInspectionConfigT(printString2);
+                                    });
+
+                                    if (callback != null) {
+                                        callback.run();
+                                    }
+                                }
+                            } else {
+                                // Show error message in a toast
+                                requireActivity().runOnUiThread(() ->
+                                        {
+                                            Toast.makeText(requireContext(), "JSON status: failure", Toast.LENGTH_SHORT).show();
+                                        }
+                                );
+                            }
+                        } else {
+                            requireActivity().runOnUiThread(() ->
+                                    {
+                                        Toast.makeText(requireContext(), "Invalid response format", Toast.LENGTH_SHORT).show();
+                                    }
+                            );
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        String errorMessage = e.getMessage() != null ? e.getMessage() : "Unknown error 1";
+
+                        requireActivity().runOnUiThread(() ->
+                                Toast.makeText(requireContext(), e.getMessage(), Toast.LENGTH_SHORT).show()
+                        );
+                    }
+                } else {
+                    // Handle HTTP error response
+                    String errorBody = null;
+                    try {
+                        if (response.errorBody() != null) {
+                            errorBody = response.errorBody().string();
+                        }
+                    } catch (Exception e) {
+                        errorBody = "Error processing error response.";
+                    }
+                    final String finalErrorBody = errorBody != null ? errorBody : "Unknown error 2";
+                    requireActivity().runOnUiThread(() ->
+                            Toast.makeText(requireContext(), finalErrorBody, Toast.LENGTH_SHORT).show()
+                    );
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                String errorMessage = t.getMessage() != null ? t.getMessage() : "Unknown error 3";
+
+                requireActivity().runOnUiThread(() ->
+                        Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_SHORT).show()
+
+                );
+            }
+        });
+    }
+
+    private void compileCabinFilterConfig(Runnable callback) {
+        //Access selected vehicle information
+        String year = VariableAccess.getInstance().getActiveVehicle().get(0);
+        String make = VariableAccess.getInstance().getActiveVehicle().get(1);
+        String model = VariableAccess.getInstance().getActiveVehicle().get(2);
+
+        // API call to the database
+        Call<ResponseBody> checkCabinFilterConfig = fortuneApi.checkCabinFilterConfig(year, make, model);
+        checkCabinFilterConfig.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    try {
+                        String responseString = response.body().string();
+
+                        // Ensure response only contains JSON, handle any extra messages on the server-side
+                        if (responseString.startsWith("{")) {
+                            JSONObject jsonResponse = new JSONObject(responseString);
+
+                            if (jsonResponse.getString("status").equals("success")) {
+                                if (jsonResponse.getString("message").startsWith("Maintenance details found")) {
+                                    //set variables
+                                    String type = jsonResponse.getString("maintenance_type");
+                                    String miles = jsonResponse.getString("miles_period");
+                                    String time = jsonResponse.getString("maintenance_period");
+
+                                    //Set strings
+                                    final String printString1 = miles + ":" + type;
+                                    final String printString2 = time + ":" + type;
+
+                                    requireActivity().runOnUiThread(() ->
+                                    {
+                                        VariableAccess.getInstance().setCabinFilterConfig(printString1);
+                                        VariableAccess.getInstance().setCabinFilterConfigT(printString2);
+                                    });
+
+                                    if (callback != null) {
+                                        callback.run();
+                                    }
+                                }
+                            } else {
+                                // Show error message in a toast
+                                requireActivity().runOnUiThread(() ->
+                                        {
+                                            Toast.makeText(requireContext(), "JSON status: failure", Toast.LENGTH_SHORT).show();
+                                        }
+                                );
+                            }
+                        } else {
+                            requireActivity().runOnUiThread(() ->
+                                    {
+                                        Toast.makeText(requireContext(), "Invalid response format", Toast.LENGTH_SHORT).show();
+                                    }
+                            );
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        String errorMessage = e.getMessage() != null ? e.getMessage() : "Unknown error 1";
+
+                        requireActivity().runOnUiThread(() ->
+                                Toast.makeText(requireContext(), e.getMessage(), Toast.LENGTH_SHORT).show()
+                        );
+                    }
+                } else {
+                    // Handle HTTP error response
+                    String errorBody = null;
+                    try {
+                        if (response.errorBody() != null) {
+                            errorBody = response.errorBody().string();
+                        }
+                    } catch (Exception e) {
+                        errorBody = "Error processing error response.";
+                    }
+                    final String finalErrorBody = errorBody != null ? errorBody : "Unknown error 2";
+                    requireActivity().runOnUiThread(() ->
+                            Toast.makeText(requireContext(), finalErrorBody, Toast.LENGTH_SHORT).show()
+                    );
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                String errorMessage = t.getMessage() != null ? t.getMessage() : "Unknown error 3";
+
+                requireActivity().runOnUiThread(() ->
+                        Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_SHORT).show()
+
+                );
+            }
+        });
+    }
+
+    private void compileCoolantConfig(Runnable callback) {
+        //Access selected vehicle information
+        String year = VariableAccess.getInstance().getActiveVehicle().get(0);
+        String make = VariableAccess.getInstance().getActiveVehicle().get(1);
+        String model = VariableAccess.getInstance().getActiveVehicle().get(2);
+
+        // API call to the database
+        Call<ResponseBody> checkCoolantConfig = fortuneApi.checkCoolantConfig(year, make, model);
+        checkCoolantConfig.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    try {
+                        String responseString = response.body().string();
+
+                        // Ensure response only contains JSON, handle any extra messages on the server-side
+                        if (responseString.startsWith("{")) {
+                            JSONObject jsonResponse = new JSONObject(responseString);
+
+                            if (jsonResponse.getString("status").equals("success")) {
+                                if (jsonResponse.getString("message").startsWith("Maintenance details found")) {
+                                    //set variables
+                                    String type = jsonResponse.getString("maintenance_type");
+                                    String miles = jsonResponse.getString("miles_period");
+                                    String time = jsonResponse.getString("maintenance_period");
+
+                                    //Set strings
+                                    final String printString1 = miles + ":" + type;
+                                    final String printString2 = time + ":" + type;
+
+                                    requireActivity().runOnUiThread(() ->
+                                    {
+                                        VariableAccess.getInstance().setCoolantConfig(printString1);
+                                        VariableAccess.getInstance().setCoolantConfigT(printString2);
+                                    });
+
+                                    if (callback != null) {
+                                        callback.run();
+                                    }
+                                }
+                            } else {
+                                // Show error message in a toast
+                                requireActivity().runOnUiThread(() ->
+                                        {
+                                            Toast.makeText(requireContext(), "JSON status: failure", Toast.LENGTH_SHORT).show();
+                                        }
+                                );
+                            }
+                        } else {
+                            requireActivity().runOnUiThread(() ->
+                                    {
+                                        Toast.makeText(requireContext(), "Invalid response format", Toast.LENGTH_SHORT).show();
+                                    }
+                            );
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        String errorMessage = e.getMessage() != null ? e.getMessage() : "Unknown error 1";
+
+                        requireActivity().runOnUiThread(() ->
+                                Toast.makeText(requireContext(), e.getMessage(), Toast.LENGTH_SHORT).show()
+                        );
+                    }
+                } else {
+                    // Handle HTTP error response
+                    String errorBody = null;
+                    try {
+                        if (response.errorBody() != null) {
+                            errorBody = response.errorBody().string();
+                        }
+                    } catch (Exception e) {
+                        errorBody = "Error processing error response.";
+                    }
+                    final String finalErrorBody = errorBody != null ? errorBody : "Unknown error 2";
+                    requireActivity().runOnUiThread(() ->
+                            Toast.makeText(requireContext(), finalErrorBody, Toast.LENGTH_SHORT).show()
+                    );
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                String errorMessage = t.getMessage() != null ? t.getMessage() : "Unknown error 3";
+
+                requireActivity().runOnUiThread(() ->
+                        Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_SHORT).show()
+
+                );
+            }
+        });
+    }
+
+    private void compileEngineFilterConfig(Runnable callback) {
+        //Access selected vehicle information
+        String year = VariableAccess.getInstance().getActiveVehicle().get(0);
+        String make = VariableAccess.getInstance().getActiveVehicle().get(1);
+        String model = VariableAccess.getInstance().getActiveVehicle().get(2);
+
+        // API call to the database
+        Call<ResponseBody> checkEngineFilterConfig = fortuneApi.checkEngineFilterConfig(year, make, model);
+        checkEngineFilterConfig.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    try {
+                        String responseString = response.body().string();
+
+                        // Ensure response only contains JSON, handle any extra messages on the server-side
+                        if (responseString.startsWith("{")) {
+                            JSONObject jsonResponse = new JSONObject(responseString);
+
+                            if (jsonResponse.getString("status").equals("success")) {
+                                if (jsonResponse.getString("message").startsWith("Maintenance details found")) {
+                                    //set variables
+                                    String type = jsonResponse.getString("maintenance_type");
+                                    String miles = jsonResponse.getString("miles_period");
+                                    String time = jsonResponse.getString("maintenance_period");
+
+                                    //Set strings
+                                    final String printString1 = miles + ":" + type;
+                                    final String printString2 = time + ":" + type;
+
+                                    requireActivity().runOnUiThread(() ->
+                                    {
+                                        VariableAccess.getInstance().setEngineFilterConfig(printString1);
+                                        VariableAccess.getInstance().setEngineFilterConfigT(printString2);
+                                    });
+
+                                    if (callback != null) {
+                                        callback.run();
+                                    }
+                                }
+                            } else {
+                                // Show error message in a toast
+                                requireActivity().runOnUiThread(() ->
+                                        {
+                                            Toast.makeText(requireContext(), "JSON status: failure", Toast.LENGTH_SHORT).show();
+                                        }
+                                );
+                            }
+                        } else {
+                            requireActivity().runOnUiThread(() ->
+                                    {
+                                        Toast.makeText(requireContext(), "Invalid response format", Toast.LENGTH_SHORT).show();
+                                    }
+                            );
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        String errorMessage = e.getMessage() != null ? e.getMessage() : "Unknown error 1";
+
+                        requireActivity().runOnUiThread(() ->
+                                Toast.makeText(requireContext(), e.getMessage(), Toast.LENGTH_SHORT).show()
+                        );
+                    }
+                } else {
+                    // Handle HTTP error response
+                    String errorBody = null;
+                    try {
+                        if (response.errorBody() != null) {
+                            errorBody = response.errorBody().string();
+                        }
+                    } catch (Exception e) {
+                        errorBody = "Error processing error response.";
+                    }
+                    final String finalErrorBody = errorBody != null ? errorBody : "Unknown error 2";
+                    requireActivity().runOnUiThread(() ->
+                            Toast.makeText(requireContext(), finalErrorBody, Toast.LENGTH_SHORT).show()
+                    );
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                String errorMessage = t.getMessage() != null ? t.getMessage() : "Unknown error 3";
+
+                requireActivity().runOnUiThread(() ->
+                        Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_SHORT).show()
+
+                );
+            }
+        });
+    }
+
+    private void compileSparkPlugsConfig(Runnable callback) {
+        //Access selected vehicle information
+        String year = VariableAccess.getInstance().getActiveVehicle().get(0);
+        String make = VariableAccess.getInstance().getActiveVehicle().get(1);
+        String model = VariableAccess.getInstance().getActiveVehicle().get(2);
+
+        // API call to the database
+        Call<ResponseBody> checkSparkPlugsConfig = fortuneApi.checkSparkPlugsConfig(year, make, model);
+        checkSparkPlugsConfig.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    try {
+                        String responseString = response.body().string();
+
+                        // Ensure response only contains JSON, handle any extra messages on the server-side
+                        if (responseString.startsWith("{")) {
+                            JSONObject jsonResponse = new JSONObject(responseString);
+
+                            if (jsonResponse.getString("status").equals("success")) {
+                                if (jsonResponse.getString("message").startsWith("Maintenance details found")) {
+                                    //set variables
+                                    String type = jsonResponse.getString("maintenance_type");
+                                    String miles = jsonResponse.getString("miles_period");
+                                    String time = jsonResponse.getString("maintenance_period");
+
+                                    //Set strings
+                                    final String printString1 = miles + ":" + type;
+                                    final String printString2 = time + ":" + type;
+
+                                    requireActivity().runOnUiThread(() ->
+                                    {
+                                        VariableAccess.getInstance().setSparkPlugsConfig(printString1);
+                                        VariableAccess.getInstance().setSparkPlugsConfigT(printString2);
+                                    });
+
+                                    if (callback != null) {
+                                        callback.run();
+                                    }
+                                }
+                            } else {
+                                // Show error message in a toast
+                                requireActivity().runOnUiThread(() ->
+                                        {
+                                            Toast.makeText(requireContext(), "JSON status: failure", Toast.LENGTH_SHORT).show();
+                                        }
+                                );
+                            }
+                        } else {
+                            requireActivity().runOnUiThread(() ->
+                                    {
+                                        Toast.makeText(requireContext(), "Invalid response format", Toast.LENGTH_SHORT).show();
+                                    }
+                            );
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        String errorMessage = e.getMessage() != null ? e.getMessage() : "Unknown error 1";
+
+                        requireActivity().runOnUiThread(() ->
+                                Toast.makeText(requireContext(), e.getMessage(), Toast.LENGTH_SHORT).show()
+                        );
+                    }
+                } else {
+                    // Handle HTTP error response
+                    String errorBody = null;
+                    try {
+                        if (response.errorBody() != null) {
+                            errorBody = response.errorBody().string();
+                        }
+                    } catch (Exception e) {
+                        errorBody = "Error processing error response.";
+                    }
+                    final String finalErrorBody = errorBody != null ? errorBody : "Unknown error 2";
+                    requireActivity().runOnUiThread(() ->
+                            Toast.makeText(requireContext(), finalErrorBody, Toast.LENGTH_SHORT).show()
+                    );
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                String errorMessage = t.getMessage() != null ? t.getMessage() : "Unknown error 3";
+
+                requireActivity().runOnUiThread(() ->
+                        Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_SHORT).show()
+
+                );
+            }
+        });
+    }
+
+    private void compileTransmissionConfig(Runnable callback) {
+        //Access selected vehicle information
+        String year = VariableAccess.getInstance().getActiveVehicle().get(0);
+        String make = VariableAccess.getInstance().getActiveVehicle().get(1);
+        String model = VariableAccess.getInstance().getActiveVehicle().get(2);
+
+        // API call to the database
+        Call<ResponseBody> checkTransmissionConfig = fortuneApi.checkTransmissionConfig(year, make, model);
+        checkTransmissionConfig.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    try {
+                        String responseString = response.body().string();
+
+                        // Ensure response only contains JSON, handle any extra messages on the server-side
+                        if (responseString.startsWith("{")) {
+                            JSONObject jsonResponse = new JSONObject(responseString);
+
+                            if (jsonResponse.getString("status").equals("success")) {
+                                if (jsonResponse.getString("message").startsWith("Maintenance details found")) {
+                                    //set variables
+                                    String type = jsonResponse.getString("maintenance_type");
+                                    String miles = jsonResponse.getString("miles_period");
+                                    String time = jsonResponse.getString("maintenance_period");
+
+                                    //Set strings
+                                    final String printString1 = miles + ":" + type;
+                                    final String printString2 = time + ":" + type;
+
+                                    requireActivity().runOnUiThread(() ->
+                                    {
+                                        VariableAccess.getInstance().setTransmissionConfig(printString1);
+                                        VariableAccess.getInstance().setTransmissionConfigT(printString2);
+                                    });
+
+                                    if (callback != null) {
+                                        callback.run();
+                                    }
+                                }
+                            } else {
+                                // Show error message in a toast
+                                requireActivity().runOnUiThread(() ->
+                                        {
+                                            Toast.makeText(requireContext(), "JSON status: failure", Toast.LENGTH_SHORT).show();
+                                        }
+                                );
+                            }
+                        } else {
+                            requireActivity().runOnUiThread(() ->
+                                    {
+                                        Toast.makeText(requireContext(), "Invalid response format", Toast.LENGTH_SHORT).show();
+                                    }
+                            );
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        String errorMessage = e.getMessage() != null ? e.getMessage() : "Unknown error 1";
+
+                        requireActivity().runOnUiThread(() ->
+                                Toast.makeText(requireContext(), e.getMessage(), Toast.LENGTH_SHORT).show()
+                        );
+                    }
+                } else {
+                    // Handle HTTP error response
+                    String errorBody = null;
+                    try {
+                        if (response.errorBody() != null) {
+                            errorBody = response.errorBody().string();
+                        }
+                    } catch (Exception e) {
+                        errorBody = "Error processing error response.";
+                    }
+                    final String finalErrorBody = errorBody != null ? errorBody : "Unknown error 2";
+                    requireActivity().runOnUiThread(() ->
+                            Toast.makeText(requireContext(), finalErrorBody, Toast.LENGTH_SHORT).show()
+                    );
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                String errorMessage = t.getMessage() != null ? t.getMessage() : "Unknown error 3";
+
+                requireActivity().runOnUiThread(() ->
+                        Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_SHORT).show()
+
+                );
+            }
+        });
+    }
 
     @Override
     public void onDestroyView() {
