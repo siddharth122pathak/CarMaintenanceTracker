@@ -172,11 +172,12 @@ public class FirstFragment extends Fragment {
 
         // Default state for last updated text and icon
         lastUpdatedFlareIcon.setVisibility(View.INVISIBLE);
-
         mileageText.setText("Loading mileage...");
 
         // Fetch vehicles from server instead of local database
         loadVehiclesFromServer();
+
+        String currentVehicleId = getCarId(currentVehicleIndex);
 
         // Restore saved state if available
         if (savedInstanceState != null) {
@@ -195,6 +196,22 @@ public class FirstFragment extends Fragment {
         // Update Mileage Button
         Button updateButton = view.findViewById(R.id.btn_selected_car_mileage_update);
         updateButton.setOnClickListener(v -> showUpdateMileageDialog());
+
+        // Load notification state from SharedPreferences
+        notificationsOn = loadNotificationPreference(currentVehicleId);
+
+        // Set UI based on the saved state
+        if (notificationsOn) {
+            notificationToggleButton.setText("Turn Off");
+            Drawable greenGradient = ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.green_border_gradient);
+            notificationBar.setBackground(greenGradient);
+            notificationText.setText("Notifications for this vehicle are ON");
+        } else {
+            notificationToggleButton.setText("Turn On");
+            Drawable grayGradient = ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.gray_border_gradient);
+            notificationBar.setBackground(grayGradient);
+            notificationText.setText("Notifications for this vehicle are OFF");
+        }
 
         // Notification Toggle Button
         notificationToggleButton.setOnClickListener(v -> toggleNotifications());
@@ -224,6 +241,13 @@ public class FirstFragment extends Fragment {
         vehicle1Button.setOnLongClickListener(v -> showVehicleOptionsDialog(1));
         vehicle2Button.setOnLongClickListener(v -> showVehicleOptionsDialog(2));
         vehicle3Button.setOnLongClickListener(v -> showVehicleOptionsDialog(3));
+    }
+
+
+    private boolean loadNotificationPreference(String vehicleId) {
+        SharedPreferences sharedPreferences = requireContext().getSharedPreferences("CarMaintenancePrefs", Context.MODE_PRIVATE);
+        // Use vehicleId to retrieve the unique key
+        return sharedPreferences.getBoolean("notificationsOn_" + vehicleId, false); // Default is false if not set
     }
 
     // Method to set up vehicle buttons
@@ -380,13 +404,13 @@ public class FirstFragment extends Fragment {
     // Method to toggle notifications on/off
     @SuppressLint("SetTextI18n")
     private void toggleNotifications() {
-        // Check if there are any vehicles added
-        if (vehicleList.isEmpty()) {
-            showNoVehicleSelectedDialog();
-            return;
-        }
-
         notificationsOn = !notificationsOn; // Toggle the notification state
+
+        // Get the current vehicle ID
+        String currentVehicleId = getCarId(currentVehicleIndex); // Assume you have a method to get current vehicle ID
+
+        // Save the notification state for the current vehicle
+        saveNotificationPreference(currentVehicleId, notificationsOn);
 
         // Update the UI based on the new state
         if (notificationsOn) {
@@ -400,46 +424,14 @@ public class FirstFragment extends Fragment {
             notificationBar.setBackground(grayGradient);
             notificationText.setText("Notifications for this vehicle are OFF");
         }
-
-        // Update the notification setting on the server
-        String carId = getCarId(currentVehicleIndex);
-        userVehicleApi.updateNotificationSetting(carId, notificationsOn ? 1 : 0).enqueue(new Callback<ResponseBody>() {
-            @Override
-            public void onResponse(@NotNull Call<ResponseBody> call, @NotNull Response<ResponseBody> response) {
-                if (response.isSuccessful()) {
-                    Toast.makeText(getContext(), "Notification setting updated", Toast.LENGTH_SHORT).show();
-                } else {
-                    // Revert the UI and toggle if update fails
-                    notificationsOn = !notificationsOn;
-                    revertNotificationUI();
-                    Toast.makeText(getContext(), "Failed to update notification setting", Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onFailure(@NotNull Call<ResponseBody> call, @NotNull Throwable t) {
-                // Revert the UI and toggle if there's a server error
-                notificationsOn = !notificationsOn;
-                revertNotificationUI();
-                Toast.makeText(getContext(), "Error updating notification setting", Toast.LENGTH_SHORT).show();
-            }
-        });
     }
 
-    // Method to revert the UI to previous notification state if update fails
-    @SuppressLint("SetTextI18n")
-    private void revertNotificationUI() {
-        if (notificationsOn) {
-            notificationToggleButton.setText("Turn Off");
-            Drawable greenGradient = ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.green_border_gradient);
-            notificationBar.setBackground(greenGradient);
-            notificationText.setText("Notifications for this vehicle are ON");
-        } else {
-            notificationToggleButton.setText("Turn On");
-            Drawable grayGradient = ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.gray_border_gradient);
-            notificationBar.setBackground(grayGradient);
-            notificationText.setText("Notifications for this vehicle are OFF");
-        }
+    private void saveNotificationPreference(String vehicleId, boolean notificationsOn) {
+        SharedPreferences sharedPreferences = requireContext().getSharedPreferences("CarMaintenancePrefs", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        // Use vehicleId to create a unique key
+        editor.putBoolean("notificationsOn_" + vehicleId, notificationsOn);
+        editor.apply();
     }
 
     // Method to display mileage for the selected vehicle
@@ -461,6 +453,7 @@ public class FirstFragment extends Fragment {
         String model = selectedVehicle.getModel();
         int year = selectedVehicle.getYear();
         String nickname = selectedVehicle.getNickname();
+        String vehicleId = selectedVehicle.getCarId();  // Get the vehicle's unique ID for notifications
 
         if (make == null || model == null) {
             Log.e("showVehicle", "Vehicle data is incomplete: Make - " + make + ", Model - " + model + ", Year - " + year);
@@ -474,7 +467,7 @@ public class FirstFragment extends Fragment {
         binding.selectedCarTitle.setText(title);
 
         // Call the method to fetch and update the last updated timestamp
-        fetchAndUpdateLastUpdated(selectedVehicle.getCarId());
+        fetchAndUpdateLastUpdated(vehicleId);
 
         // Set selected car in VariableAccess
         VariableAccess.getInstance().setActiveVehicle(
@@ -482,6 +475,25 @@ public class FirstFragment extends Fragment {
                 selectedVehicle.getMake(),
                 selectedVehicle.getModel()
         );
+
+        // Load the notification settings for the current vehicle
+        notificationsOn = loadNotificationPreference(vehicleId);
+
+        // Update the UI based on the loaded notification state
+        if (notificationsOn) {
+            notificationToggleButton.setText("Turn Off");
+            Drawable greenGradient = ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.green_border_gradient);
+            notificationBar.setBackground(greenGradient);
+            notificationText.setText("Notifications for this vehicle are ON");
+        } else {
+            notificationToggleButton.setText("Turn On");
+            Drawable grayGradient = ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.gray_border_gradient);
+            notificationBar.setBackground(grayGradient);
+            notificationText.setText("Notifications for this vehicle are OFF");
+        }
+
+        // Set up the notification toggle button to handle toggling for this specific vehicle
+        notificationToggleButton.setOnClickListener(v -> toggleNotifications());
 
         // Callback after configurations are fetched
         Runnable finalCallback = () -> {
@@ -619,7 +631,7 @@ public class FirstFragment extends Fragment {
         );
 
         // Fetch additional vehicle details (including mileage)
-        userVehicleApi.getVehicleByIndex(selectedVehicle.getCarId()).enqueue(new Callback<ResponseBody>() {
+        userVehicleApi.getVehicleByIndex(vehicleId).enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(@NotNull Call<ResponseBody> call, @NotNull Response<ResponseBody> response) {
                 if (!response.isSuccessful() || response.body() == null) {
@@ -641,19 +653,6 @@ public class FirstFragment extends Fragment {
                     // Update vehicle mileage
                     int mileage = vehicleDetails.getMileage();
                     mileageText.setText(mileage > 0 ? mileage + " miles" : "Mileage not available");
-
-                    // Notification settings update
-                    notificationsOn = vehicleDetails.isNotificationsOn();
-                    notificationToggleButton.setText(notificationsOn ? "Turn Off" : "Turn On");
-                    notificationText.setText(notificationsOn ? "Notifications for this vehicle are ON" : "Notifications for this vehicle are OFF");
-
-                    // Update background gradient
-                    Context context = getContext();
-                    if (context != null) {
-                        Drawable gradient = ContextCompat.getDrawable(context,
-                                notificationsOn ? R.drawable.green_border_gradient : R.drawable.gray_border_gradient);
-                        notificationBar.setBackground(gradient);
-                    }
 
                     // Update last updated timestamp
                     updateLastUpdatedText(vehicleDetails.getLastUpdatedTimestamp());
@@ -690,6 +689,7 @@ public class FirstFragment extends Fragment {
             }
         });
     }
+
 
     //Method to switch between vehicles
     @SuppressLint("Range")
