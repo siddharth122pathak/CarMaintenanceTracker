@@ -67,6 +67,7 @@ public class UpcomingMaintenanceMethods {
 
 
     //PUBLIC METHODS
+
     public String concatenateConfigStr(String oilConfig, String tireConfig, String brakeInspectionConfig, String cabinFilterConfig, String coolantConfig, String engineFilterConfig, String sparkPlugsConfig, String transmissionConfig, boolean time) {
         //assign maintenanceList
         Vector<Vector<String>> maintenanceList = new Vector<>();
@@ -121,12 +122,12 @@ public class UpcomingMaintenanceMethods {
             }
         }
 
-        //combine values
-        Map<String, Vector<String>> maintenanceMap = new TreeMap<>();
+        // Combine values using a TreeMap with Integer as key for numerical sorting
+        Map<Integer, Vector<String>> maintenanceMap = new TreeMap<>();
 
         // Iterate through the list of vectors
         for (Vector<String> maintenance : maintenanceList) {
-            String miles = maintenance.get(0); // Get the mileage
+            int miles = Integer.parseInt(maintenance.get(0)); // Parse mileage as an integer
             String task = maintenance.get(1);  // Get the maintenance task
 
             // If the mileage is already in the map, add the task to its list
@@ -135,24 +136,18 @@ public class UpcomingMaintenanceMethods {
             } else {
                 // Otherwise, create a new list with the task
                 Vector<String> tasks = new Vector<>();
-                tasks.add(miles); // First element is the mileage
                 tasks.add(task);  // Add the task
                 maintenanceMap.put(miles, tasks);
             }
         }
 
-        // Convert the map back to a vector of vectors
-        Vector<Vector<String>> resultingMaintenanceList = new Vector<>();
-        for (Map.Entry<String, Vector<String>> entry : maintenanceMap.entrySet()) {
-            resultingMaintenanceList.add(entry.getValue());
-        }
-
-        //concatenate vector of vectors
+        //concatenate map entries into a result string
         StringBuilder result = new StringBuilder();
 
-        for (Vector<String> maintenance : resultingMaintenanceList) {
-            // Get the mileage (first element) and create the heading
-            String miles = maintenance.get(0);
+        // Iterate through the sorted map (TreeMap guarantees sorted keys numerically)
+        for (Map.Entry<Integer, Vector<String>> entry : maintenanceMap.entrySet()) {
+            int miles = entry.getKey();
+            Vector<String> tasks = entry.getValue();
 
             //Check if method is for miles or time and build string accordingly
             if (!time) {
@@ -161,20 +156,14 @@ public class UpcomingMaintenanceMethods {
                 boolean months = false;
                 boolean years = false;
 
-                if (Integer.parseInt(miles) >= 60) {
+                if (miles >= 60) {
                     months = true;
-                    int milesInt = Integer.parseInt(miles);
-                    milesInt /= 30;
-                    miles = milesInt + "";
+                    miles /= 30;
 
-
-                    if (Integer.parseInt(miles) >= 24) {
+                    if (miles >= 24) {
                         months = false;
                         years = true;
-                        milesInt = Integer.parseInt(miles);
-                        milesInt /= 12;
-                        miles = milesInt + "";
-
+                        miles /= 12;
                     }
                 }
 
@@ -187,9 +176,8 @@ public class UpcomingMaintenanceMethods {
                 }
             }
 
-            // Append each maintenance task (starting from index 1)
-            for (int i = 1; i < maintenance.size(); i++) {
-                String task = maintenance.get(i);
+            // Append each maintenance task
+            for (String task : tasks) {
                 result.append(capitalize(task)).append("\n"); // Capitalize each maintenance task
             }
 
