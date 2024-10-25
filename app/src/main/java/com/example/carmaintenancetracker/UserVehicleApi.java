@@ -65,6 +65,7 @@ public interface UserVehicleApi {
     );
 
     // Get vehicle details by car_id
+    @FormUrlEncoded
     @POST("/update_vehicle_nickname.php")
     Call<ResponseBody> updateVehicleNickname(
             @Field("car_id") String carId,

@@ -724,42 +724,30 @@ public class FirstFragment extends Fragment {
         }
     }
 
-    @SuppressLint({"Range", "SetTextI18n"})
+    @SuppressLint({"SetTextI18n", "Range"})
     private void updateActiveVehicleUI() {
         vehicleList.clear();  // Clear the list to update it with the active vehicle
 
-        // Fetch the active vehicle's details from the server
         userVehicleApi.getActiveVehicle(getUserIdFromSession()).enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(@NotNull Call<ResponseBody> call, @NotNull Response<ResponseBody> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     try {
-                        // Parse the response to extract active vehicle details
                         UserVehicle activeVehicle = parseVehicleDetails(response.body().string());
 
-                        // Extract and format the vehicle details
-                        String make = Objects.requireNonNull(activeVehicle).getMake();
-                        String model = activeVehicle.getModel();
-                        int year = activeVehicle.getYear();
-                        String license = activeVehicle.getNickname();
-                        int mileage = activeVehicle.getMileage();
+                        if (activeVehicle != null) {
+                            // Update the nickname and vehicle details
+                            String nickname = activeVehicle.getNickname();
+                            String make = activeVehicle.getMake();
+                            String model = activeVehicle.getModel();
+                            int year = activeVehicle.getYear();
+                            String title = (nickname != null && !nickname.isEmpty())
+                                    ? nickname
+                                    : year + " " + make + " " + model;
 
-                        // Add vehicle details to the list
-                        vehicleList.add(make + " " + model + " " + year + " " + license);
-
-                        // Update title based on license or year, make, and model
-                        if (license != null && !license.isEmpty()) {
-                            titleText.setText(license);  // Use nickname if available
-                        } else {
-                            titleText.setText(year + " " + make + " " + model);
+                            titleText.setText(title);  // Update title with nickname or default to make/model/year
+                            // Any additional UI updates related to the active vehicle
                         }
-
-                        // Update mileage display for the active vehicle
-                        vehicleMileage.add(mileage);
-                        mileageText.setText(mileage > 0 ? mileage + " miles" : "Mileage not available");
-
-                        // Display the active vehicle in the UI
-                        showVehicle(0);
 
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -775,7 +763,7 @@ public class FirstFragment extends Fragment {
             }
         });
 
-        // Update vehicle buttons
+        // Update vehicle buttons as well if needed
         updateVehicleButtons();
     }
 
@@ -1056,14 +1044,11 @@ public class FirstFragment extends Fragment {
         builder.setPositiveButton("Update", (dialog, which) -> {
             String newName = input.getText().toString();
 
-            // Get the vehicle ID based on the vehicle index
-            String vehicleId = getCarId(vehicleIndex);
-
             // Handle the case where the name is empty (delete nickname)
             if (newName.isEmpty()) {
-                updateVehicleNameOnServer(vehicleId, null);
+                updateVehicleNameOnServer(vehicleIndex, null);  // Passing null to remove the nickname
             } else {
-                updateVehicleNameOnServer(vehicleId, newName);
+                updateVehicleNameOnServer(vehicleIndex, newName);  // Update with new name
             }
         });
 
@@ -1072,28 +1057,59 @@ public class FirstFragment extends Fragment {
     }
 
     // Helper method to update vehicle name on the server
-    private void updateVehicleNameOnServer(String vehicleId, String newName) {
-        Call<ResponseBody> call;
-        if (newName == null) {
-            call = userVehicleApi.updateVehicleNickname(vehicleId, ""); // Set nickname to empty string for deletion
-        } else {
-            call = userVehicleApi.updateVehicleNickname(vehicleId, newName);
+    private void updateVehicleNameOnServer(int vehicleIndex, String newName) {
+        // Get the car ID based on the vehicle index
+        String carId = getCarId(vehicleIndex);
+
+        if (carId == null || carId.isEmpty()) {
+            Log.e("UpdateVehicle", "Error: Vehicle ID is missing for index: " + vehicleIndex);
+            Toast.makeText(getContext(), "Error: Vehicle ID is missing", Toast.LENGTH_SHORT).show();
+            return;
         }
 
-        call.enqueue(new Callback<ResponseBody>() {
+        Log.d("UpdateVehicle", "Updating vehicle with ID: " + carId + " with new name: " + newName);
+
+        if (newName == null) {
+            newName = "";  // Set to an empty string to remove the nickname
+        }
+
+        // Call the Retrofit API to update the vehicle nickname on the server
+        userVehicleApi.updateVehicleNickname(carId, newName).enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(@NotNull Call<ResponseBody> call, @NotNull Response<ResponseBody> response) {
                 if (response.isSuccessful()) {
-                    Toast.makeText(getContext(), "Vehicle name updated", Toast.LENGTH_SHORT).show();
-                    updateActiveVehicleUI(); // Refresh UI to reflect updated name
+                    try {
+                        String responseString = response.body().string();
+                        Log.d("UpdateVehicle", "Response: " + responseString);  // Log the raw response
+
+                        JSONObject jsonResponse = new JSONObject(responseString);
+
+                        if (jsonResponse.getString("status").equals("success")) {
+                            Log.d("UpdateVehicle", "Vehicle name updated successfully");
+                            Toast.makeText(getContext(), "Vehicle name updated", Toast.LENGTH_SHORT).show();
+                            String newNickname = jsonResponse.getString("message"); // Assuming the new nickname is returned in the message
+                            TextView selectedCarTitle = getView().findViewById(R.id.selected_car_title);
+                            selectedCarTitle.setText(newNickname);
+                            updateActiveVehicleUI();  // Refresh the UI after a successful update
+                        } else {
+                            Log.e("UpdateVehicle", "Failed to update vehicle name: " + jsonResponse.getString("message"));
+                            Toast.makeText(getContext(), "Failed to update vehicle name: " + jsonResponse.getString("message"), Toast.LENGTH_SHORT).show();
+                        }
+                    } catch (Exception e) {
+                        Log.e("UpdateVehicle", "Error parsing response: " + e.getMessage());
+                        e.printStackTrace();
+                        Toast.makeText(getContext(), "Error parsing response", Toast.LENGTH_SHORT).show();
+                    }
                 } else {
-                    Toast.makeText(getContext(), "Failed to update vehicle name", Toast.LENGTH_SHORT).show();
+                    Log.e("UpdateVehicle", "Error: " + response.message());
+                    Toast.makeText(getContext(), "Error: " + response.message(), Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(@NotNull Call<ResponseBody> call, @NotNull Throwable t) {
-                Toast.makeText(getContext(), "Error updating vehicle name", Toast.LENGTH_SHORT).show();
+                Log.e("UpdateVehicle", "Failed to update vehicle name: " + t.getMessage());
+                Toast.makeText(getContext(), "Failed to update vehicle name: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
