@@ -1,5 +1,7 @@
 package com.example.carmaintenancetracker;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,6 +12,11 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 import com.airbnb.lottie.LottieAnimationView;
+import org.jetbrains.annotations.NotNull;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import okhttp3.ResponseBody;
 
 public class AddVehicleActivity extends Fragment {
 
@@ -22,50 +29,33 @@ public class AddVehicleActivity extends Fragment {
 
         carAnimationView = rootView.findViewById(R.id.carAnimation);
 
-        // Set up Car Make Spinner with custom layout
         Spinner spinnerCarMake = rootView.findViewById(R.id.spinnerCarMake);
         ArrayAdapter<CharSequence> adapterCarMake = ArrayAdapter.createFromResource(getContext(),
                 R.array.car_makes, R.layout.spinner_item);
         adapterCarMake.setDropDownViewResource(R.layout.spinner_item);
         spinnerCarMake.setAdapter(adapterCarMake);
 
-        // Set up Car Model Spinner with custom layout
         Spinner spinnerCarModel = rootView.findViewById(R.id.spinnerCarModel);
         ArrayAdapter<CharSequence> adapterCarModel = ArrayAdapter.createFromResource(getContext(),
                 R.array.car_models, R.layout.spinner_item);
         adapterCarModel.setDropDownViewResource(R.layout.spinner_item);
         spinnerCarModel.setAdapter(adapterCarModel);
 
-        // Set up Year Spinner with custom layout
         Spinner spinnerCarYear = rootView.findViewById(R.id.spinnerCarYear);
         ArrayAdapter<CharSequence> adapterCarYear = ArrayAdapter.createFromResource(getContext(),
                 R.array.car_years, R.layout.spinner_item);
         adapterCarYear.setDropDownViewResource(R.layout.spinner_item);
         spinnerCarYear.setAdapter(adapterCarYear);
 
-        //Save button functionality
         Button saveButton = rootView.findViewById(R.id.btnSave);
-
         saveButton.setOnClickListener(v -> {
             String make = spinnerCarMake.getSelectedItem().toString();
             String model = spinnerCarModel.getSelectedItem().toString();
             String year = spinnerCarYear.getSelectedItem().toString();
             String nickname = ((EditText) rootView.findViewById(R.id.inputNickName)).getText().toString();
-
-            //Save the vehicle data to the Sqlite database
-            VehicleDatabaseHelper dbHelper = new VehicleDatabaseHelper(getContext());
-            dbHelper.addVehicle(make, model, year, nickname);
-
-            Bundle bundle = new Bundle();
-            bundle.putString("vehicleMake", make);
-            bundle.putString("vehicleModel", model);
-            bundle.putString("vehicleYear", year);
-            bundle.putString("vehicleLicensePlate", nickname);
-
-            NavHostFragment.findNavController(AddVehicleActivity.this).navigate(R.id.action_AddVehicleActivity_to_addnewmaint, bundle);
+            saveVehicle(make, model, year, nickname);
         });
 
-        // Listener for Car Make Spinner to change the animation dynamically
         spinnerCarMake.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
@@ -78,11 +68,12 @@ public class AddVehicleActivity extends Fragment {
                 // No action needed
             }
         });
+
         return rootView;
     }
 
+    // Method to update car animation based on selected car make
     private void updateCarAnimation(String carMake) {
-        // Change the animation based on selected car make
         switch (carMake) {
             case "Toyota":
                 carAnimationView.setAnimation(R.raw.car_animation_toyota);
@@ -104,5 +95,44 @@ public class AddVehicleActivity extends Fragment {
                 break;
         }
         carAnimationView.playAnimation(); // Start playing the new animation
+    }
+
+    // Save vehicle information to the database
+    private void saveVehicle(String make, String model, String year, String nickname) {
+
+        String userId = getUserIdFromSession();
+
+        if (make.isEmpty() || model.isEmpty() || year.isEmpty()) {
+            Toast.makeText(getContext(), "Please fill in the make, model, and year fields!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        UserVehicleApi vehicleApi = RetrofitClient.getRetrofitInstance().create(UserVehicleApi.class);
+        Call<ResponseBody> call = vehicleApi.setVehicle(userId, make, model, year, nickname.isEmpty() ? null : nickname);
+
+        call.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(@NotNull Call<ResponseBody> call, @NotNull Response<ResponseBody> response) {
+                if (response.isSuccessful()) {
+                    Toast.makeText(getContext(), "Vehicle added successfully", Toast.LENGTH_SHORT).show();
+                    NavHostFragment.findNavController(AddVehicleActivity.this)
+                            .navigate(R.id.action_AddVehicleActivity_to_addnewmaint);
+                } else {
+                    Toast.makeText(getContext(), "Failed to add vehicle", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(@NotNull Call<ResponseBody> call, @NotNull Throwable t) {
+                Toast.makeText(getContext(), "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    // Retrieve user ID from shared preferences
+    private String getUserIdFromSession() {
+        SharedPreferences sharedPreferences = getActivity().getSharedPreferences("UserSession", Context.MODE_PRIVATE);
+        String userId = sharedPreferences.getString("userId", null);
+        return userId;
     }
 }

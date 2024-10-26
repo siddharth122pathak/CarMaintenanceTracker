@@ -1,6 +1,7 @@
 package com.example.carmaintenancetracker;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -15,6 +16,7 @@ public class UpcomingMaintenanceActivity extends Fragment {
     private TextView mainText;
     private TextView milesTab;
     private TextView timeTab;
+    private TextView selectedCar;
 
     //View binding for the fragment's layout
     private ActivityUpcomingMaintenanceBinding binding;
@@ -33,10 +35,21 @@ public class UpcomingMaintenanceActivity extends Fragment {
         milesTab = view.findViewById(R.id.textView_tab_maintenance_by_miles);
         timeTab = view.findViewById(R.id.textView_tab_maintenance_by_time);
         mainText = view.findViewById(R.id.textView_upcoming_maintenance_main);
+        selectedCar = view.findViewById(R.id.selected_car_title2);
 
         //Add OnClickListener for each tab
         milesTab.setOnClickListener(v -> loadMiles());
         timeTab.setOnClickListener(v -> loadTime());
+
+        //get selected car
+        String year = VariableAccess.getInstance().getActiveVehicle().get(0);
+        String make = VariableAccess.getInstance().getActiveVehicle().get(1);
+        String model = VariableAccess.getInstance().getActiveVehicle().get(2);
+        final String ymmFinal = year + " " + make + " " + model;
+        selectedCar.setText(ymmFinal);
+
+        // load first page
+        loadMiles();
     }
 
     //Maintenance by Miles method
@@ -45,8 +58,15 @@ public class UpcomingMaintenanceActivity extends Fragment {
         milesTab.setBackground(ContextCompat.getDrawable(requireContext(), R.drawable.tab_background_selected));
         timeTab.setBackground(ContextCompat.getDrawable(requireContext(), R.drawable.tab_background_unselected));
 
+        //change main text to default
+        String mainStr = getResources().getString(R.string.upcoming_maintenance_miles_text);
+
+        if (VariableAccess.getInstance().getUpcomingMaintenanceMiles() != null) {
+            mainStr = VariableAccess.getInstance().getUpcomingMaintenanceMiles();
+        }
+
         //change main text
-        mainText.setText("This is the Maintenance by MILES text");
+        mainText.setText(mainStr);
     }
 
     //Maintenance by Time method
@@ -55,7 +75,16 @@ public class UpcomingMaintenanceActivity extends Fragment {
         milesTab.setBackground(ContextCompat.getDrawable(requireContext(), R.drawable.tab_background_unselected));
         timeTab.setBackground(ContextCompat.getDrawable(requireContext(), R.drawable.tab_background_selected));
 
+        //change main text to default
+        String mainStr = getResources().getString(R.string.upcoming_maintenance_time_text);
+
+        if (VariableAccess.getInstance().getUpcomingMaintenanceTime() != null) {
+            mainStr = VariableAccess.getInstance().getUpcomingMaintenanceTime();
+        }
+
         //change main text
-        mainText.setText("This is the Maintenance by TIME text");
+        mainText.setText(mainStr);
     }
+
 }
+

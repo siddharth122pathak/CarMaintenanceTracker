@@ -2,11 +2,11 @@
 <androidx.constraintlayout.widget.ConstraintLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
-        xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
         android:layout_height="match_parent">
 
     <!-- Title occupying the top part -->
-
     <!-- Form content -->
     <LinearLayout
             android:orientation="vertical"
@@ -25,15 +25,17 @@
                 android:background="@drawable/title_border_gradient"
                 android:textSize="24sp"
                 android:textStyle="bold"
-                android:padding="1dp"
-        />
+                android:padding="1dp"/>
+
         <TextView
                 android:text="@string/homepage_selected_car"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" android:id="@+id/notes_sub"
+                android:layout_height="wrap_content"
+                android:id="@+id/selected_car_title3"
                 android:textAlignment="center"
                 android:textSize="24sp"
-                android:textStyle="bold" android:padding="1dp"
+                android:textStyle="bold"
+                android:padding="1dp"
                 android:background="@drawable/light_green_title_color"/>
 
         <!-- Current Mileage Input -->
@@ -51,9 +53,11 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
             <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/mileage_input"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="@string/hint_enter_mileage"
+                    android:inputType="number"
                     android:layout_marginStart="20dp"
                     android:layout_marginEnd="15dp"/>
         </com.google.android.material.textfield.TextInputLayout>
@@ -138,6 +142,24 @@
                     android:textStyle="bold"/>
         </LinearLayout>
 
+        <!-- Scrollable Section for Maintenance Categories -->
+        <ScrollView
+                android:id="@+id/maintenance_category_scroll"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="10dp"
+                android:layout_marginTop="10dp">
+
+            <LinearLayout
+                    android:id="@+id/category_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+                <!-- Maintenance categories will be added dynamically here -->
+            </LinearLayout>
+        </ScrollView>
+
         <!-- Larger gap between Add More and Notification Text -->
         <Space
                 android:layout_width="match_parent"
@@ -190,7 +212,6 @@
                     android:textSize="16sp"
                     android:layout_marginStart="10dp"/>
         </LinearLayout>
-
     </LinearLayout>
 
     <!-- Save button inside grey square at the bottom -->

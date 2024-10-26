@@ -2,29 +2,25 @@ package com.example.carmaintenancetracker;
 
 import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
-import androidx.work.PeriodicWorkRequest;
-import androidx.work.WorkManager;
 import com.example.carmaintenancetracker.databinding.ActivityMainBinding;
 
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
 
     // AppBarConfiguration to handle navigation with a toolbar
     private final ThreadLocal<AppBarConfiguration> appBarConfiguration = new ThreadLocal<>();
+    public String upcomingMaintenanceMiles;
+    public String upcomingMaintenanceTime;
 
     @SuppressLint("ObsoleteSdkInt")
     @Override
@@ -42,12 +38,23 @@ public class MainActivity extends AppCompatActivity {
         //Set up navigation controller for navigating between fragments
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
         navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
-            if (destination.getId() == R.id.AddVehicleActivity) { // Check if you're on AddVehicleFragment
-                // Hide the toolbar and the entire AppBarLayout
-                binding.appBarLayout.setVisibility(View.GONE);
+            // Check if the destination is AddVehicleActivity, addnewmaint, or UpcomingMaintenanceActivity
+            if (destination.getId() == R.id.AddVehicleActivity ||
+                    destination.getId() == R.id.addnewmaint ||
+                    destination.getId() == R.id.upcomingMaintenanceActivity) {
+
+                // Hide specific buttons in the toolbar
+                binding.btnTutorial.setVisibility(View.GONE);
+                binding.textViewTutorial.setVisibility(View.GONE);
+                binding.btnNotes.setVisibility(View.GONE);
+                binding.textViewNotes.setVisibility(View.GONE);
+
             } else {
-                // Show toolbar and AppBarLayout for other fragments
-                binding.appBarLayout.setVisibility(View.VISIBLE);
+                // Show buttons on other pages
+                binding.btnTutorial.setVisibility(View.VISIBLE);
+                binding.textViewTutorial.setVisibility(View.VISIBLE);
+                binding.btnNotes.setVisibility(View.VISIBLE);
+                binding.textViewNotes.setVisibility(View.VISIBLE);
             }
         });
 
@@ -71,18 +78,18 @@ public class MainActivity extends AppCompatActivity {
         //Create the notification channel
         NotificationHelper.createNotificationChannel(this);
 
-        //Schedule periodic work for mileage check (runs every 24 hours)
-        PeriodicWorkRequest mileageCheckWorkRequest = new PeriodicWorkRequest.Builder(MileageCheckWorker.class, 24, TimeUnit.HOURS).build();
-
-        //Enqueue the work request
-        WorkManager.getInstance(this).enqueue(mileageCheckWorkRequest);
-        // Check and request notification permission on Android 13+ (API level 33 and above)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS)
-                    != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, 101);
-            }
-        }
+//       //Schedule periodic work for mileage check (runs every 24 hours)
+//        PeriodicWorkRequest mileageCheckWorkRequest = new PeriodicWorkRequest.Builder(MileageCheckWorker.class, 24, TimeUnit.HOURS).build();
+//
+//        //Enqueue the work request
+//        WorkManager.getInstance(this).enqueue(mileageCheckWorkRequest);
+//        // Check and request notification permission on Android 13+ (API level 33 and above)
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+//            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS)
+//                    != PackageManager.PERMISSION_GRANTED) {
+//                ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, 101);
+//            }
+//        }
     }
 
     //Method to display the tutorial
