@@ -228,6 +228,19 @@ public class Notes_Activity extends Fragment {
 
         // read notes from file and populate editText fields
         File file = new File(Objects.requireNonNull(getContext()).getFilesDir(), "notes.txt");
+
+        if (!file.exists() || file.length() == 0) {
+            try {
+                FileWriter writer = new FileWriter(file);
+                for (int i = 1; i <= 10; i++) {
+                    writer.write("Line " + i + ": \n");
+                }
+                writer.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
         try {
             FileReader reader = new FileReader(file);
             BufferedReader bufferedReader = new BufferedReader(reader);
@@ -280,14 +293,43 @@ public class Notes_Activity extends Fragment {
     private void saveTextToFile(String text, int lineNumber) {
         String fileName = "notes.txt";
         File file = new File(Objects.requireNonNull(getContext()).getFilesDir(), fileName);
+
         try {
-            FileWriter writer = new FileWriter(file, true); // append to file
-            writer.write("Line " + lineNumber + ": " + text + "\n");
+            // Read all lines from the file
+            BufferedReader reader = new BufferedReader(new FileReader(file));
+            StringBuilder content = new StringBuilder();
+            String line;
+            int currentLine = 1;
+
+            while ((line = reader.readLine()) != null) {
+                if (currentLine == lineNumber) {
+                    // Replace the line with the updated text
+                    content.append("Line ").append(lineNumber).append(": ").append(text).append("\n");
+                } else {
+                    // Retain the existing line
+                    content.append(line).append("\n");
+                }
+                currentLine++;
+            }
+
+            reader.close();
+
+            // If new lines are added beyond the current line count
+            while (currentLine <= lineNumber) {
+                if (currentLine == lineNumber) {
+                    content.append("Line ").append(lineNumber).append(": ").append(text).append("\n");
+                } else {
+                    content.append("Line ").append(currentLine).append(": \n");
+                }
+                currentLine++;
+            }
+
+            // Write updated content back to the file
+            FileWriter writer = new FileWriter(file, false); // overwrite mode
+            writer.write(content.toString());
             writer.close();
-        } catch (java.io.IOException e) {
-            // handle error
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
-
 }
