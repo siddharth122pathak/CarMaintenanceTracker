@@ -71,4 +71,11 @@ public interface UserVehicleApi {
             @Field("car_id") String carId,
             @Field("nickname") String nickname
     );
+
+    // Delete active vehicle
+    @FormUrlEncoded
+    @POST("/delete_active_vehicle.php")
+    Call<ResponseBody> deleteActiveVehicle(
+            @Field("car_id") String carId
+    );
 }

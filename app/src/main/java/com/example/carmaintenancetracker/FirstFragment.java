@@ -1025,7 +1025,66 @@ public class FirstFragment extends Fragment {
 
     // Placeholder for handling the delete vehicle action
     private void handleDeleteVehicle(int vehicleIndex) {
-        Toast.makeText(getContext(), "Delete Vehicle feature coming soon", Toast.LENGTH_SHORT).show();
+        // Get the car ID based on the vehicle index
+        String carId = getCarId(vehicleIndex);
+
+        if (carId == null || carId.isEmpty()) {
+            Log.e("DeleteVehicle", "Error: Vehicle ID is missing for index: " + vehicleIndex);
+            Toast.makeText(getContext(), "Error: Vehicle ID is missing", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Log.d("DeleteVehicle", "Deleting vehicle with ID: " + carId);
+
+        // Call the Retrofit API to delete the vehicle on the server
+        userVehicleApi.deleteActiveVehicle(carId).enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(@NotNull Call<ResponseBody> call, @NotNull Response<ResponseBody> response) {
+                if (response.isSuccessful()) {
+                    try {
+                        String responseString = response.body().string();
+                        Log.d("DeleteVehicle", "Response: " + responseString);  // Log the raw response
+
+                        JSONObject jsonResponse = new JSONObject(responseString);
+
+                        if (jsonResponse.getString("status").equals("success")) {
+                            Log.d("DeleteVehicle", "Vehicle deleted successfully");
+                            Toast.makeText(getContext(), "Vehicle deleted", Toast.LENGTH_SHORT).show();
+
+                            // Remove the vehicle from the local list
+                            userVehicles.remove(vehicleIndex);
+
+                            // If vehicles remain, show the first one or a new one in the list
+                            if (!userVehicles.isEmpty()) {
+                                currentVehicleIndex = 0;  // Reset to the first vehicle
+                                showVehicle(currentVehicleIndex);  // Display the first vehicle after deletion
+                            } else {
+                                // If no vehicles are left, prompt the user to add a new vehicle
+                                promptAddVehicle();
+                            }
+
+                            updateVehicleButtons();  // Refresh the vehicle buttons
+                        } else {
+                            Log.e("DeleteVehicle", "Failed to delete vehicle: " + jsonResponse.getString("message"));
+                            Toast.makeText(getContext(), "Failed to delete vehicle: " + jsonResponse.getString("message"), Toast.LENGTH_SHORT).show();
+                        }
+                    } catch (Exception e) {
+                        Log.e("DeleteVehicle", "Error parsing response: " + e.getMessage());
+                        e.printStackTrace();
+                        Toast.makeText(getContext(), "Error parsing response", Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    Log.e("DeleteVehicle", "Error: " + response.message());
+                    Toast.makeText(getContext(), "Error: " + response.message(), Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(@NotNull Call<ResponseBody> call, @NotNull Throwable t) {
+                Log.e("DeleteVehicle", "Failed to delete vehicle: " + t.getMessage());
+                Toast.makeText(getContext(), "Failed to delete vehicle: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     // Method to pop up dialog box to update vehicle name
